@@ -11,6 +11,7 @@ use std::{
 use anyhow::{Context, Ok, Result, bail};
 use clap::Parser;
 use regex::Regex;
+use tempfile::NamedTempFile;
 
 /// Split the given patchfile(s) into new files
 ///
@@ -74,11 +75,51 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &PathBuf, args: &Args) 
     }
 
     if args.hunks {
-        let parsed_diff = parse_diff(diff)?;
+        let mut parsed_diff = parse_diff(diff)?;
         if args.changes {
-            let hunks = split_hunk(parsed_diff.hunks);
+            parsed_diff.hunks = parsed_diff
+                .hunks
+                .into_iter()
+                .flat_map(|hunk| split_hunk(hunk))
+                .collect();
         }
-        for hunk in hunks {}
+        for (idx, hunk) in parsed_diff.hunks.iter().enumerate() {
+            let diff = [
+                Some(parsed_diff.diff_line),
+                parsed_diff.newfile_line,
+                Some(parsed_diff.minus_line),
+                Some(parsed_diff.plus_line),
+                Some(hunk),
+            ]
+            .into_iter()
+            .flatten()
+            .collect::<Vec<_>>()
+            .join("\n");
+            
+            let suffix = format!("{:03}", idx);
+
+            let path2 = add_suffix(patch_filename, &suffix)?;
+
+            let mut file = NamedTempFile::new()?;
+
+            let new_head = rewrite_head(head, &diff, patch_filename);
+
+            file.write_all(new_head.as_bytes())?;
+            file.write_all(diff.as_bytes())?;
+            file.path().metadata()?.permissions().set_mode(0666);
+            // XXX: will other processes access the file? 
+            file.into_temp_path();
+            fs::rename(file.path(), patch_file_dir.join(path))?;
+
+            // XXX: move this out of if/else block to prevent duplication
+            if !args.quiet {
+                let mut out = BufWriter::new(stdout().lock());
+                out.write_all(file.path().as_os_str().as_bytes())?;
+                out.write_all(b"\n")?;
+                // file.write_all(buf)
+            }
+
+        }
     } else {
         let tmp_path_buf = temp_dir().join(&path);
         let tmp_path = Path::new(&tmp_path_buf);
@@ -91,7 +132,7 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &PathBuf, args: &Args) 
         fs::rename(tmp_path, patch_file_dir.join(path))?;
 
         if !args.quiet {
-            let mut out = BufWriter::new(stdout());
+            let mut out = BufWriter::new(stdout().lock());
             out.write_all(tmp_path.as_os_str().as_bytes())?;
             out.write_all(b"\n")?;
             // file.write_all(buf)
@@ -182,7 +223,9 @@ fn parse_diff(diff: &str) -> Result<ParsedDiff> {
     let plus_line = line;
 
     // rest: everything after `+++` line
-    let plus_start = diff.find(plus_line).context("Should have found the `+++` line")?;
+    let plus_start = diff
+        .find(plus_line)
+        .context("Should have found the `+++` line")?;
     let rest_start = plus_start + plus_line.len() + 1;
     let rest = &diff[rest_start..];
 
@@ -212,7 +255,20 @@ fn gather_hunks(s: &str) -> Vec<&str> {
     hunks
 }
 
-fn split_hunk(hunks: Vec<&'a str>) -> Result<()> {
+fn split_hunk<'a>(hunks: &str) -> Result<()> {
+    let head = hunks.first().context("hunk is empty")?;
+
+    let re = Regex::new(r"^@@ -(\d+),(\d+) \+(\d+),(\d+) (.*)")?;
+
+    let caps = re.captures(head).context("invalid hunk head: {head}")?;
+
+    let mut orig_start: usize = caps[1].parse()?;
+    let mut patched_start: usize = caps[3].parse()?;
+    let head_post = &caps[5];
+
+    let mut rest = &hunks[1..];
+
+    // @@ -9,6 +9,7 @@
     todo!()
 }
 fn main() -> Result<()> {
