@@ -74,6 +74,11 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &PathBuf, args: &Args) 
     }
 
     if args.hunks {
+        let parsed_diff = parse_diff(diff)?;
+        if args.changes {
+            let hunks = split_hunk(parsed_diff.hunks);
+        }
+        for hunk in hunks {}
     } else {
         let tmp_path_buf = temp_dir().join(&path);
         let tmp_path = Path::new(&tmp_path_buf);
@@ -122,10 +127,94 @@ fn add_suffix(orig_path: &OsStr, addon: &str) -> Result<String> {
     }
 }
 
-fn parse_diff(diff: &str) -> Result<()> {
-    todo!()
+struct ParsedDiff<'a> {
+    diff_line: &'a str,
+    newfile_line: Option<&'a str>,
+    index_line: Option<&'a str>,
+    minus_line: &'a str,
+    plus_line: &'a str,
+    hunks: Vec<&'a str>,
+}
+fn parse_diff(diff: &str) -> Result<ParsedDiff> {
+    // XXX: use slice instead
+    let mut lines = diff.lines();
+
+    let diff_line = lines
+        .next()
+        .filter(|l| l.starts_with("diff "))
+        .context("invalid patch file format [missing diff line]: {diff}")?;
+
+    let mut line = lines
+        .next()
+        .context("invalid patch file format [diff ended unexpectedly]: {diff}")?;
+
+    let newfile_line = if line.starts_with("new file mode ") {
+        let l = line;
+        line = lines
+            .next()
+            .context("invalid patch file format [missing `index` or `---` line]: {diff}")?;
+        Some(l)
+    } else {
+        None
+    };
+
+    let index_line = if line.starts_with("index ") {
+        let l = line;
+        line = lines
+            .next()
+            .context("invalid patch file format [missing `---` line]: {diff}")?;
+        Some(l)
+    } else {
+        None
+    };
+
+    if !line.starts_with("--- ") {
+        bail!("invalid patch file format [expected `---` line]: {diff}");
+    }
+    let minus_line = line;
+
+    line = lines
+        .next()
+        .context("invalid patch file format [missing `+++` line]: {diff}")?;
+    if !line.starts_with("+++ ") {
+        bail!("invalid patch file format [expected `+++` line]: {diff}");
+    }
+    let plus_line = line;
+
+    // rest: everything after `+++` line
+    let plus_start = diff.find(plus_line).context("Should have found the `+++` line")?;
+    let rest_start = plus_start + plus_line.len() + 1;
+    let rest = &diff[rest_start..];
+
+    let hunks = gather_hunks(&rest);
+
+    Ok(ParsedDiff {
+        diff_line,
+        newfile_line,
+        index_line,
+        minus_line,
+        plus_line,
+        hunks,
+    })
 }
 
+fn gather_hunks(s: &str) -> Vec<&str> {
+    let mut hunks = Vec::new();
+    let mut start = 0;
+
+    for (idx, _) in s.match_indices("\n@@ ") {
+        let split_at = idx + 1; // newline stays with previous hunk
+        hunks.push(&s[start..split_at]);
+        start = split_at
+    }
+
+    hunks.push(&s[start..]);
+    hunks
+}
+
+fn split_hunk(hunks: Vec<&'a str>) -> Result<()> {
+    todo!()
+}
 fn main() -> Result<()> {
     let mut args = Args::parse();
 
