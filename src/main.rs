@@ -1,11 +1,10 @@
 use std::{
-    env::{self, temp_dir},
+    env::temp_dir,
     ffi::OsStr,
     fs::{self, File, read_to_string},
-    io::{BufRead, BufReader, BufWriter, Read, Write, stdout},
+    io::{BufWriter, Write, stdout},
     os::unix::{ffi::OsStrExt, fs::PermissionsExt},
     path::{Path, PathBuf},
-    str::Lines,
 };
 
 use anyhow::{Context, Ok, Result, bail};
@@ -39,7 +38,7 @@ struct Args {
 
 // XX: should the entire args really be passed?
 // or create a sub args for what's truly needed here?
-fn write_diff(head: &[&str], diff: &str, patch_filepath: &PathBuf, args: &Args) -> Result<()> {
+fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> Result<()> {
     if !diff.starts_with("diff") {
         bail!("missing file in first line of diff: {:?}", diff);
     }
@@ -109,19 +108,19 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &PathBuf, args: &Args) 
 
             file.write_all(new_head.as_bytes())?;
             file.write_all(diff.as_bytes())?;
-            file.path().metadata()?.permissions().set_mode(0666);
-            fs::rename(&file.path(), patch_file_dir.join(&path))?;
+            file.path().metadata()?.permissions().set_mode(0o666);
+            fs::rename(file.path(), patch_file_dir.join(&path))?;
 
             // XXX: move this out of if/else block to prevent duplication
             if !args.quiet {
                 let mut out = BufWriter::new(stdout().lock());
-                out.write_all(&file.path().as_os_str().as_bytes())?;
+                out.write_all(file.path().as_os_str().as_bytes())?;
                 out.write_all(b"\n")?;
                 // file.write_all(buf)
             }
 
             // XXX: will other processes access the file?
-            &file.into_temp_path();
+            file.into_temp_path();
         }
     } else {
         let tmp_path_buf = temp_dir().join(&path);
@@ -131,7 +130,7 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &PathBuf, args: &Args) 
         let mut file = File::create(tmp_path).context("Failed to create temp file")?;
         file.write_all(new_head.as_bytes())?;
 
-        file.metadata()?.permissions().set_mode(0666);
+        file.metadata()?.permissions().set_mode(0o666);
         fs::rename(tmp_path, patch_file_dir.join(path))?;
 
         if !args.quiet {
@@ -233,7 +232,7 @@ fn parse_diff(diff: &str) -> Result<ParsedDiff> {
     let rest_start = plus_start + plus_line.len() + 1;
     let rest = &diff[rest_start..];
 
-    let hunks = gather_hunks(&rest).into_iter().map(str::to_owned).collect();
+    let hunks = gather_hunks(rest).into_iter().map(str::to_owned).collect();
 
     Ok(ParsedDiff {
         diff_line,
@@ -277,8 +276,8 @@ fn split_hunk<'a>(hunks: &'a str) -> Result<Vec<String>> {
 
     while !remaining.is_empty() {
         let (pre, rest) = take_while(remaining, |l| l.starts_with(' '));
-        let (group, rest2) = take_while(&rest, |l| l.starts_with(['-', '+']));
-        let (post, rest3) = take_while(&rest2, |l| l.starts_with(' '));
+        let (group, rest2) = take_while(rest, |l| l.starts_with(['-', '+']));
+        let (post, rest3) = take_while(rest2, |l| l.starts_with(' '));
 
         let pre_len = pre.len();
 
@@ -364,7 +363,7 @@ fn main() -> Result<()> {
     };
 
     for diff in diffs {
-        let result = write_diff(head, diff, &args.patch_file, &args)?;
+        write_diff(head, diff, &args.patch_file, &args)?;
     }
     // dbg!((&head).len());
     // dbg!(&head);
