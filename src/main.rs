@@ -80,7 +80,10 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &PathBuf, args: &Args) 
             parsed_diff.hunks = parsed_diff
                 .hunks
                 .into_iter()
-                .flat_map(|hunk| split_hunk(hunk))
+                .map(|hunk| split_hunk(&hunk))
+                .collect::<Result<Vec<Vec<String>>>>()?
+                .into_iter()
+                .flatten()
                 .collect();
         }
         for (idx, hunk) in parsed_diff.hunks.iter().enumerate() {
@@ -95,7 +98,7 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &PathBuf, args: &Args) 
             .flatten()
             .collect::<Vec<_>>()
             .join("\n");
-            
+
             let suffix = format!("{:03}", idx);
 
             let path2 = add_suffix(patch_filename, &suffix)?;
@@ -107,18 +110,18 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &PathBuf, args: &Args) 
             file.write_all(new_head.as_bytes())?;
             file.write_all(diff.as_bytes())?;
             file.path().metadata()?.permissions().set_mode(0666);
-            // XXX: will other processes access the file? 
-            file.into_temp_path();
-            fs::rename(file.path(), patch_file_dir.join(path))?;
+            fs::rename(&file.path(), patch_file_dir.join(&path))?;
 
             // XXX: move this out of if/else block to prevent duplication
             if !args.quiet {
                 let mut out = BufWriter::new(stdout().lock());
-                out.write_all(file.path().as_os_str().as_bytes())?;
+                out.write_all(&file.path().as_os_str().as_bytes())?;
                 out.write_all(b"\n")?;
                 // file.write_all(buf)
             }
 
+            // XXX: will other processes access the file?
+            &file.into_temp_path();
         }
     } else {
         let tmp_path_buf = temp_dir().join(&path);
@@ -174,7 +177,8 @@ struct ParsedDiff<'a> {
     index_line: Option<&'a str>,
     minus_line: &'a str,
     plus_line: &'a str,
-    hunks: Vec<&'a str>,
+    hunks: Vec<String>,
+    // hunks: Vec<&'a str>,
 }
 fn parse_diff(diff: &str) -> Result<ParsedDiff> {
     // XXX: use slice instead
@@ -229,7 +233,7 @@ fn parse_diff(diff: &str) -> Result<ParsedDiff> {
     let rest_start = plus_start + plus_line.len() + 1;
     let rest = &diff[rest_start..];
 
-    let hunks = gather_hunks(&rest);
+    let hunks = gather_hunks(&rest).into_iter().map(str::to_owned).collect();
 
     Ok(ParsedDiff {
         diff_line,
@@ -255,8 +259,10 @@ fn gather_hunks(s: &str) -> Vec<&str> {
     hunks
 }
 
-fn split_hunk<'a>(hunks: &str) -> Result<()> {
-    let head = hunks.first().context("hunk is empty")?;
+fn split_hunk<'a>(hunks: &'a str) -> Result<Vec<String>> {
+    let lines: Vec<&'a str> = hunks.lines().collect();
+
+    let head = lines.first().context("hunk is empty")?;
 
     let re = Regex::new(r"^@@ -(\d+),(\d+) \+(\d+),(\d+) (.*)")?;
 
@@ -266,10 +272,65 @@ fn split_hunk<'a>(hunks: &str) -> Result<()> {
     let mut patched_start: usize = caps[3].parse()?;
     let head_post = &caps[5];
 
-    let mut rest = &hunks[1..];
+    let mut remaining: &[&str] = &lines[1..];
+    let mut result = Vec::new();
 
-    // @@ -9,6 +9,7 @@
-    todo!()
+    while !remaining.is_empty() {
+        let (pre, rest) = take_while(remaining, |l| l.starts_with(' '));
+        let (group, rest2) = take_while(&rest, |l| l.starts_with(['-', '+']));
+        let (post, rest3) = take_while(&rest2, |l| l.starts_with(' '));
+
+        let pre_len = pre.len();
+
+        let new_pre = if pre.len() > 3 {
+            &pre[pre.len() - 3..]
+        } else {
+            pre
+        };
+        let new_pre_len = new_pre.len();
+
+        let new_post = if post.len() > 3 { &post[..3] } else { post };
+        let new_post_len = new_post.len();
+
+        let group_minus_len = group.iter().filter(|l| l.starts_with('-')).count();
+        // XXX is it safe to assume that ?
+        // group_minus_len = group.len() - group_minus_len
+        let group_plus_len = group.iter().filter(|l| l.starts_with('+')).count();
+
+        let orig_len = new_pre_len + group_minus_len + new_post_len;
+        let patched_len = new_pre_len + group_plus_len + new_post_len;
+
+        let header = format!(
+            "@@ -{},{} +{},{} {}",
+            orig_start, orig_len, patched_start, patched_len, head_post
+        );
+
+        let mut out = vec![header];
+        out.extend(new_pre.iter().map(|s| s.to_string()));
+        out.extend(group.iter().map(|s| s.to_string()));
+        out.extend(new_post.iter().map(|s| s.to_string()));
+
+        result.push(out.join("\n"));
+
+        if rest3.is_empty() {
+            break;
+        }
+
+        orig_start += pre_len + group_minus_len;
+        patched_start += pre_len + group_plus_len;
+
+        remaining = rest2;
+    }
+
+    Ok(result)
+}
+fn take_while<'a>(
+    lines: &'a [&'a str],
+    predicate: impl Fn(&str) -> bool,
+) -> (&'a [&'a str], &'a [&'a str]) {
+    let count = lines.iter().take_while(|l| predicate(l)).count();
+
+    lines.split_at(count)
 }
 fn main() -> Result<()> {
     let mut args = Args::parse();
