@@ -21,7 +21,8 @@ use tempfile::NamedTempFile;
 struct Args {
     /// Path to patch file
     // patch_file: Vec<PathBuf>,
-    patch_file: PathBuf,
+    #[arg(required=true)]
+    patch_file: Vec<PathBuf>,
 
     /// Split on hunk boundaries, too.
     #[arg(long)]
@@ -376,38 +377,40 @@ fn main() -> Result<()> {
     }
 
     // 1. Read the patchfile in the current directory
-    let content = read_to_string(&args.patch_file)?;
+    for file in &args.patch_file {
+        let content = read_to_string(&file)?;
 
-    let re = Regex::new(r"\n(?:-- \n(?:[^\n]*\n){0,3})?$")?;
-    let content = re.replace(&content, "\n");
+        let re = Regex::new(r"\n(?:-- \n(?:[^\n]*\n){0,3})?$")?;
+        let content = re.replace(&content, "\n");
 
-    // 2. Split the patches in the file to obtain the diffs
-    let mut chunks = Vec::new();
-    let mut start = 0;
-    for (idx, _) in content.match_indices("\ndiff ") {
-        let split_at = idx + 1;
-        chunks.push(&content[start..split_at]);
-        start = split_at;
+        // 2. Split the patches in the file to obtain the diffs
+        let mut chunks = Vec::new();
+        let mut start = 0;
+        for (idx, _) in content.match_indices("\ndiff ") {
+            let split_at = idx + 1;
+            chunks.push(&content[start..split_at]);
+            start = split_at;
+        }
+
+        chunks.push(&content[start..]);
+
+        let Some((head, diffs)) = chunks.split_at_checked(1) else {
+            bail!(
+                "file does not appear to contain diffs: {:#?}",
+                &file
+            );
+        };
+
+        for diff in diffs {
+            write_diff(head, diff, &file, &args)?;
+        }
+        // dbg!((&head).len());
+        // dbg!(&head);
+        // dbg!((&diffs).len());
+        // dbg!(&diffs);
+
+        // 3. Write the diffs to individual (separate) files
     }
-
-    chunks.push(&content[start..]);
-
-    let Some((head, diffs)) = chunks.split_at_checked(1) else {
-        bail!(
-            "file does not appear to contain diffs: {:#?}",
-            &args.patch_file
-        );
-    };
-
-    for diff in diffs {
-        write_diff(head, diff, &args.patch_file, &args)?;
-    }
-    // dbg!((&head).len());
-    // dbg!(&head);
-    // dbg!((&diffs).len());
-    // dbg!(&diffs);
-
-    // 3. Write the diffs to individual (separate) files
 
     Ok(())
 }
