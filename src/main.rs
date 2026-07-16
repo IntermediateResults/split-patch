@@ -183,7 +183,7 @@ fn add_suffix(orig_path: &OsStr, addon: &str) -> Result<String> {
             };
 
             Ok(parent
-                .join(format!("{}-{}-{}", stem, addon, ext.to_string_lossy()))
+                .join(format!("{}-{}.{}", stem, addon, ext.to_string_lossy()))
                 .to_string_lossy()
                 .into_owned())
         }
