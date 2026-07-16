@@ -100,7 +100,7 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
 
             let suffix = format!("{:03}", idx);
 
-            let path2 = add_suffix(patch_filename, &suffix)?;
+            let path2 = add_suffix(OsStr::new(&path), &suffix)?;
 
             let mut file = NamedTempFile::new()?;
 
@@ -116,7 +116,7 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
             // XXX: move this out of if/else block to prevent duplication
             if !args.quiet {
                 let mut out = BufWriter::new(stdout().lock());
-                out.write_all(file.path().as_os_str().as_bytes())?;
+                out.write_all(patch_file_dir.join(&path2).as_os_str().as_bytes())?;
                 out.write_all(b"\n")?;
                 // file.write_all(buf)
             }
