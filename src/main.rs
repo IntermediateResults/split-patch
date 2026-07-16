@@ -111,6 +111,12 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
 
             file.write_all(new_head.as_bytes())?;
             file.write_all(diff.as_bytes())?;
+
+            // End the diff (file) with a newline
+            if !diff.ends_with('\n') {
+                println!("doesnt end with newline");
+                file.write_all(b"\n")?;
+            }
             file.path().metadata()?.permissions().set_mode(0o666);
 
             // XXX: move this out of if/else block to prevent duplication
