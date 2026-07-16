@@ -9,7 +9,7 @@ use std::{
 
 use anyhow::{Context, Ok, Result, bail};
 use clap::Parser;
-use regex::Regex;
+use regex::{Captures, Regex};
 use tempfile::NamedTempFile;
 
 /// Split the given patchfile(s) into new files
@@ -104,12 +104,14 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
 
             let mut file = NamedTempFile::new()?;
 
-            let new_head = rewrite_head(head, &diff, patch_filename);
+            let new_head = {
+                let prefix = format!("{prefix} {suffix}: ");
+                rewrite_head(head, &prefix, patch_filename)
+            }?;
 
             file.write_all(new_head.as_bytes())?;
             file.write_all(diff.as_bytes())?;
             file.path().metadata()?.permissions().set_mode(0o666);
-            fs::rename(file.path(), patch_file_dir.join(&path))?;
 
             // XXX: move this out of if/else block to prevent duplication
             if !args.quiet {
@@ -119,13 +121,17 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
                 // file.write_all(buf)
             }
 
+            file.persist(path2)?;
             // XXX: will other processes access the file?
-            file.into_temp_path();
+            // file.into_temp_path();
         }
     } else {
         let tmp_path_buf = temp_dir().join(&path);
         let tmp_path = Path::new(&tmp_path_buf);
-        let new_head = rewrite_head(head, diff, patch_filename);
+        let new_head = {
+            let prefix = format!("{}: ", prefix);
+            rewrite_head(head, &prefix, patch_filename)
+        }?;
 
         let mut file = File::create(tmp_path).context("Failed to create temp file")?;
         file.write_all(new_head.as_bytes())?;
@@ -144,8 +150,22 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
     Ok(())
 }
 
-fn rewrite_head(head: &[&str], diff: &str, patch_filename: &OsStr) -> String {
-    todo!()
+fn rewrite_head(head: &[&str], prefix: &str, patch_filename: &OsStr) -> Result<String> {
+    let re = Regex::new(r"(?i)(\nsubject:\s*(?:\[PATCH]\s*)?)([^'n]*)")?;
+    let head = head.join("\n");
+    if re.is_match(&head) {
+        Ok(re
+            .replace(&head, |caps: &Captures| {
+                format!("{}{}{}", &caps[1], prefix, &caps[2])
+            })
+            .into_owned())
+    } else {
+        eprintln!(
+            "Warning: could not find subject in head of file: {}",
+            patch_filename.display()
+        );
+        Ok(head)
+    }
 }
 
 fn add_suffix(orig_path: &OsStr, addon: &str) -> Result<String> {
