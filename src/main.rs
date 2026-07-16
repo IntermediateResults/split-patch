@@ -121,7 +121,7 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
                 // file.write_all(buf)
             }
 
-            file.persist(path2)?;
+            file.persist(patch_file_dir.join(path2))?;
             // XXX: will other processes access the file?
             // file.into_temp_path();
         }
