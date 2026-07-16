@@ -284,7 +284,13 @@ fn split_hunk<'a>(hunks: &'a str) -> Result<Vec<String>> {
 
     let head = lines.first().context("hunk is empty")?;
 
-    let re = Regex::new(r"^@@ -(\d+),(\d+) \+(\d+),(\d+) (.*)")?;
+    // XXX: are all these valid patterns? What happens if captures
+    // fail?
+    // @@ -0,0 +1,2 @@
+    // @@ -42 42 @@
+    // @@ -42 +1,2 @@
+    // @@ -0,0 +1 @@
+    let re = Regex::new(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? (.*)")?;
 
     let caps = re.captures(head).context(format!("invalid hunk head: {head}"))?;
 
