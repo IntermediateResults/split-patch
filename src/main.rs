@@ -135,6 +135,7 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
 
         let mut file = File::create(tmp_path).context("Failed to create temp file")?;
         file.write_all(new_head.as_bytes())?;
+        file.write_all(diff.as_bytes())?;
 
         file.metadata()?.permissions().set_mode(0o666);
         fs::rename(tmp_path, patch_file_dir.join(path))?;
