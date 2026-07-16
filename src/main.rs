@@ -207,17 +207,17 @@ fn parse_diff(diff: &str) -> Result<ParsedDiff> {
     let diff_line = lines
         .next()
         .filter(|l| l.starts_with("diff "))
-        .context("invalid patch file format [missing diff line]: {diff}")?;
+        .context(format!("invalid patch file format [missing diff line]: {diff}"))?;
 
     let mut line = lines
         .next()
-        .context("invalid patch file format [diff ended unexpectedly]: {diff}")?;
+        .context(format!("invalid patch file format [diff ended unexpectedly]: {diff}"))?;
 
     let newfile_line = if line.starts_with("new file mode ") {
         let l = line;
         line = lines
             .next()
-            .context("invalid patch file format [missing `index` or `---` line]: {diff}")?;
+            .context(format!("invalid patch file format [missing `index` or `---` line]: {diff}"))?;
         Some(l)
     } else {
         None
@@ -227,7 +227,7 @@ fn parse_diff(diff: &str) -> Result<ParsedDiff> {
         let l = line;
         line = lines
             .next()
-            .context("invalid patch file format [missing `---` line]: {diff}")?;
+            .context(format!("invalid patch file format [missing `---` line]: {diff}"))?;
         Some(l)
     } else {
         None
@@ -240,7 +240,7 @@ fn parse_diff(diff: &str) -> Result<ParsedDiff> {
 
     line = lines
         .next()
-        .context("invalid patch file format [missing `+++` line]: {diff}")?;
+        .context(format!("invalid patch file format [missing `+++` line]: {diff}"))?;
     if !line.starts_with("+++ ") {
         bail!("invalid patch file format [expected `+++` line]: {diff}");
     }
@@ -286,7 +286,7 @@ fn split_hunk<'a>(hunks: &'a str) -> Result<Vec<String>> {
 
     let re = Regex::new(r"^@@ -(\d+),(\d+) \+(\d+),(\d+) (.*)")?;
 
-    let caps = re.captures(head).context("invalid hunk head: {head}")?;
+    let caps = re.captures(head).context(format!("invalid hunk head: {head}"))?;
 
     let mut orig_start: usize = caps[1].parse()?;
     let mut patched_start: usize = caps[3].parse()?;
