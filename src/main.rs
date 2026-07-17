@@ -71,7 +71,7 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
     let path = add_suffix(patch_filename, &addon)?;
 
     if *path == *patch_filename {
-        bail!("path is the same as origpath: {path}");
+        bail!(format!("path is the same as origpath: {}", path.display()));
     }
 
     if args.hunks {
@@ -176,25 +176,31 @@ fn rewrite_head(head: &[&str], prefix: &str, patch_filename: &OsStr) -> Result<S
     }
 }
 
-fn add_suffix(orig_path: &OsStr, addon: &str) -> Result<String> {
+fn add_suffix(orig_path: &OsStr, addon: &str) -> Result<PathBuf> {
     let path = Path::new(&orig_path);
     match path.extension() {
         Some(ext) => {
             let stem = path
                 .file_stem()
-                .context("Failed to extract stem from patch filename")?
-                .to_string_lossy();
+                .context("Failed to extract stem from patch filename")?;
             let parent = match path.parent() {
                 Some(parent) => parent,
                 None => Path::new(""),
             };
 
-            Ok(parent
-                .join(format!("{}-{}.{}", stem, addon, ext.to_string_lossy()))
-                .to_string_lossy()
-                .into_owned())
+            let mut name = stem.to_os_string();
+            name.push("-");
+            name.push(addon);
+
+            Ok(parent.join(name).with_added_extension(ext))
         }
-        None => Ok(format!("{orig_path:?}-{addon}")),
+        None => {
+            let mut name = orig_path.to_os_string();
+            name.push("-");
+            name.push(addon);
+
+            Ok(PathBuf::from(name))
+        }
     }
 }
 
