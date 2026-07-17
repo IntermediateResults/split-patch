@@ -220,6 +220,7 @@ struct ParsedDiff<'a> {
     hunks: Vec<String>,
     // hunks: Vec<&'a str>,
 }
+
 fn parse_diff(diff: &str) -> Result<ParsedDiff<'_>> {
     // XXX: use slice instead
     let mut lines = diff.lines();
@@ -380,6 +381,7 @@ fn split_hunk<'a>(hunks: &'a str) -> Result<Vec<String>> {
 
     Ok(result)
 }
+
 fn take_while<'a>(
     lines: &'a [&'a str],
     predicate: impl Fn(&str) -> bool,
@@ -388,6 +390,7 @@ fn take_while<'a>(
 
     lines.split_at(count)
 }
+
 fn main() -> Result<()> {
     let mut args = Args::parse();
 
