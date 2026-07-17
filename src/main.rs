@@ -20,8 +20,7 @@ use tempfile::NamedTempFile;
 #[command(version, about, long_about)]
 struct Args {
     /// Path to patch file
-    // patch_file: Vec<PathBuf>,
-    #[arg(required=true)]
+    #[arg(required = true)]
     patch_file: Vec<PathBuf>,
 
     /// Split on hunk boundaries, too.
@@ -56,16 +55,17 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
 
     let re = Regex::new(r"^diff.* (\S+)")?;
 
-    let file = re
-        .captures(diff)
-        .and_then(|cap| cap.get(1))
-        .map(|m| m.as_str())
-        .context("missing file in the first line of diff")?;
+    let prefix = {
+        let file = re
+            .captures(diff)
+            .and_then(|cap| cap.get(1))
+            .map(|m| m.as_str())
+            .context("missing file in the first line of diff")?;
 
-    let prefix = file
-        .strip_prefix("a/")
-        .or_else(|| file.strip_prefix("b/"))
-        .unwrap_or(file);
+        file.strip_prefix("a/")
+            .or_else(|| file.strip_prefix("b/"))
+            .unwrap_or(file)
+    };
 
     let addon = prefix.replace("/", "_");
     let path = add_suffix(patch_filename, &addon)?;
@@ -372,12 +372,14 @@ fn take_while<'a>(
 fn main() -> Result<()> {
     let mut args = Args::parse();
 
+    // `--changes` implies `--hunks`
+    // XXX: perhaps this can be handled natively by `clap`
     if args.changes {
         args.hunks = true;
     }
 
-    // 1. Read the patchfile in the current directory
     for file in &args.patch_file {
+        // 1. Read the patchfile
         let content = read_to_string(&file)?;
 
         let re = Regex::new(r"\n(?:-- \n(?:[^\n]*\n){0,3})?$")?;
@@ -395,21 +397,13 @@ fn main() -> Result<()> {
         chunks.push(&content[start..]);
 
         let Some((head, diffs)) = chunks.split_at_checked(1) else {
-            bail!(
-                "file does not appear to contain diffs: {:#?}",
-                &file
-            );
+            bail!("file does not appear to contain diffs: {:#?}", &file);
         };
 
+        // 3. Write the diffs to individual (separate) files
         for diff in diffs {
             write_diff(head, diff, &file, &args)?;
         }
-        // dbg!((&head).len());
-        // dbg!(&head);
-        // dbg!((&diffs).len());
-        // dbg!(&diffs);
-
-        // 3. Write the diffs to individual (separate) files
     }
 
     Ok(())
