@@ -410,7 +410,7 @@ fn split_patch(patch_file: &Path, args: &Args) -> Result<()> {
     chunks.push(&content[start..]);
 
     let Some((head, diffs)) = chunks.split_at_checked(1) else {
-        bail!("file does not appear to contain diffs: {:#?}", &patch_file);
+        bail!("file does not appear to contain diffs");
     };
 
     // 3. Write the diffs to individual (separate) files
