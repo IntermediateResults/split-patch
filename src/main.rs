@@ -7,7 +7,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{Context, Ok, Result, bail};
+use anyhow::{Context, Ok, Result, anyhow, bail};
 use clap::Parser;
 use regex::{Captures, Regex};
 use tempfile::NamedTempFile;
@@ -391,6 +391,36 @@ fn take_while<'a>(
     lines.split_at(count)
 }
 
+fn split_patch(patch_file: &Path, args: &Args) -> Result<()> {
+    // 1. Read the patchfile
+    let content = read_to_string(&patch_file)?;
+
+    let re = Regex::new(r"\n(?:-- \n(?:[^\n]*\n){0,3})?$")?;
+    let content = re.replace(&content, "\n");
+
+    // 2. Split the patches in the file to obtain the diffs
+    let mut chunks = Vec::new();
+    let mut start = 0;
+    for (idx, _) in content.match_indices("\ndiff ") {
+        let split_at = idx + 1;
+        chunks.push(&content[start..split_at]);
+        start = split_at;
+    }
+
+    chunks.push(&content[start..]);
+
+    let Some((head, diffs)) = chunks.split_at_checked(1) else {
+        bail!("file does not appear to contain diffs: {:#?}", &patch_file);
+    };
+
+    // 3. Write the diffs to individual (separate) files
+    for diff in diffs {
+        write_diff(head, diff, &patch_file, &args)?;
+    }
+
+    Ok(())
+}
+
 fn main() -> Result<()> {
     let mut args = Args::parse();
 
@@ -401,31 +431,8 @@ fn main() -> Result<()> {
     }
 
     for patch_file in &args.patch_file {
-        // 1. Read the patchfile
-        let content = read_to_string(&patch_file)?;
-
-        let re = Regex::new(r"\n(?:-- \n(?:[^\n]*\n){0,3})?$")?;
-        let content = re.replace(&content, "\n");
-
-        // 2. Split the patches in the file to obtain the diffs
-        let mut chunks = Vec::new();
-        let mut start = 0;
-        for (idx, _) in content.match_indices("\ndiff ") {
-            let split_at = idx + 1;
-            chunks.push(&content[start..split_at]);
-            start = split_at;
-        }
-
-        chunks.push(&content[start..]);
-
-        let Some((head, diffs)) = chunks.split_at_checked(1) else {
-            bail!("file does not appear to contain diffs: {:#?}", &patch_file);
-        };
-
-        // 3. Write the diffs to individual (separate) files
-        for diff in diffs {
-            write_diff(head, diff, &patch_file, &args)?;
-        }
+        split_patch(&patch_file, &args)
+            .with_context(|| anyhow!("splitting the patch file {patch_file:?}"))?;
     }
 
     Ok(())
