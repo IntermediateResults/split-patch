@@ -213,7 +213,7 @@ struct ParsedDiff<'a> {
     hunks: Vec<String>,
     // hunks: Vec<&'a str>,
 }
-fn parse_diff(diff: &str) -> Result<ParsedDiff> {
+fn parse_diff(diff: &str) -> Result<ParsedDiff<'_>> {
     // XXX: use slice instead
     let mut lines = diff.lines();
 
