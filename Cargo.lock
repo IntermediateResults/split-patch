@@ -104,6 +104,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap-with-warnings"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbfc6bd24edf9fedc5b85f136cc39480cd00961bc52b8daa352c28866e7d98a8"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "clap_builder"
 version = "4.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -321,6 +332,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
+ "clap-with-warnings",
  "regex",
  "tempfile",
 ]
