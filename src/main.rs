@@ -337,6 +337,12 @@ fn split_hunk<'a>(hunks: &'a str) -> Result<Vec<String>> {
         let orig_len = new_pre_len + group_minus_len + new_post_len;
         let patched_len = new_pre_len + group_plus_len + new_post_len;
 
+        // XXX: Does the header need to be adapted to the following
+        // patterns? As discovered for `split_hunk`
+        // @@ -0,0 +1,2 @@
+        // @@ -42 42 @@
+        // @@ -42 +1,2 @@
+        // @@ -0,0 +1 @@
         let header = format!(
             "@@ -{},{} +{},{} {}",
             orig_start, orig_len, patched_start, patched_len, head_post
