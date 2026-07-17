@@ -8,7 +8,7 @@ use std::{
 };
 
 use anyhow::{Context, Ok, Result, anyhow, bail};
-use clap::Parser;
+use clap_with_warnings::clap_with_warnings;
 use regex::{Captures, Regex};
 use tempfile::NamedTempFile;
 
@@ -16,23 +16,24 @@ use tempfile::NamedTempFile;
 ///
 /// So that each new file only contains the part of the patch for
 /// one particular target file.
-#[derive(Debug, Parser)]
+#[clap_with_warnings]
+#[derive(Debug, clap::Parser)]
 #[command(version, about, long_about)]
 struct Args {
     /// Path to patch file(s)
-    #[arg(required = true)]
+    #[clap(required = true)]
     patch_file: Vec<PathBuf>,
 
     /// Split on hunk boundaries, too.
-    #[arg(long)]
+    #[clap(long)]
     hunks: bool,
 
     /// Split on individual change groups, too (implies --hunks)
-    #[arg(short, long)]
+    #[clap(short, long)]
     changes: bool,
 
     /// Do not print the generated files.
-    #[arg(short, long)]
+    #[clap(short, long)]
     quiet: bool,
 }
 
