@@ -400,9 +400,9 @@ fn main() -> Result<()> {
         args.hunks = true;
     }
 
-    for file in &args.patch_file {
+    for patch_file in &args.patch_file {
         // 1. Read the patchfile
-        let content = read_to_string(&file)?;
+        let content = read_to_string(&patch_file)?;
 
         let re = Regex::new(r"\n(?:-- \n(?:[^\n]*\n){0,3})?$")?;
         let content = re.replace(&content, "\n");
@@ -419,12 +419,12 @@ fn main() -> Result<()> {
         chunks.push(&content[start..]);
 
         let Some((head, diffs)) = chunks.split_at_checked(1) else {
-            bail!("file does not appear to contain diffs: {:#?}", &file);
+            bail!("file does not appear to contain diffs: {:#?}", &patch_file);
         };
 
         // 3. Write the diffs to individual (separate) files
         for diff in diffs {
-            write_diff(head, diff, &file, &args)?;
+            write_diff(head, diff, &patch_file, &args)?;
         }
     }
 
