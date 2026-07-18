@@ -106,8 +106,8 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
 
             let new_head = {
                 let prefix = format!("{prefix} {suffix}: ");
-                rewrite_head(head, &prefix, patch_filename)
-            }?;
+                rewrite_head(head, &prefix, patch_filename)?
+            };
 
             file.write_all(new_head.as_bytes())?;
             file.write_all(diff.as_bytes())?;
@@ -136,8 +136,8 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
         let tmp_path = Path::new(&tmp_path_buf);
         let new_head = {
             let prefix = format!("{}: ", prefix);
-            rewrite_head(head, &prefix, patch_filename)
-        }?;
+            rewrite_head(head, &prefix, patch_filename)?
+        };
 
         let mut file = File::create(tmp_path).context("Failed to create temp file")?;
         file.write_all(new_head.as_bytes())?;
