@@ -77,7 +77,7 @@ fn write_diff(
             parsed_diff
                 .hunks
                 .into_iter()
-                .map(|hunk| split_hunk(&hunk))
+                .map(|hunk| split_hunk_into_changes(&hunk))
                 .collect::<Result<Vec<Vec<String>>>>()?
                 .into_iter()
                 .flatten()
@@ -239,8 +239,8 @@ fn gather_hunks(s: &str) -> Vec<&str> {
     hunks
 }
 
-fn split_hunk<'a>(hunks: &'a str) -> Result<Vec<String>> {
-    let lines: Vec<&'a str> = hunks.lines().collect();
+fn split_hunk_into_changes<'a>(hunk: &'a str) -> Result<Vec<String>> {
+    let lines: Vec<&'a str> = hunk.lines().collect();
 
     let head = lines.first().context("hunk is empty")?;
 
