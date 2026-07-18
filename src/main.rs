@@ -67,8 +67,7 @@ fn write_diff(
             .unwrap_or(file)
     };
 
-    let path: Arc<Path> =
-        add_suffix(original_path, &format!("-{}", prefix.replace("/", "_")))?.into();
+    let path = add_suffix(original_path, &format!("-{}", prefix.replace("/", "_")))?;
 
     if *path == *original_path {
         bail!("path is the same as origpath: {}", path.display());
@@ -102,44 +101,23 @@ fn write_diff(
             .flatten()
             .join("\n");
 
-            let suffix = format!("-{:03}", idx);
-
-            let path2 = add_suffix(&path, &suffix)?;
-
-            let mut file = temp_file_for(&*path2, None)?;
-
-            let new_head =
-                prefix_subject_in_head(head, format!("{prefix} {suffix}: "), original_path);
-
-            file.write_all(new_head.as_bytes())?;
-            file.write_all(diff.as_bytes())?;
-
-            // End the diff (file) with a newline
-            if !diff.ends_with('\n') {
-                eprintln!("doesnt end with newline");
-                file.write_all(b"\n")?;
-            }
-
-            let written = file.persist()?;
-            written_paths.push(written);
+            written_paths.push(write_patch_file(
+                head_with_subject_prefix(head, format!("{prefix} {idx:03}: "), original_path),
+                &diff,
+                add_suffix(&path, &format!("-{:03}", idx))?.into(),
+            )?);
         }
         Ok(written_paths)
     } else {
-        let new_head = prefix_subject_in_head(head, format!("{}: ", prefix), original_path);
-
-        let mut file = temp_file_for(&*path, None)?;
-        (|| {
-            file.write_all(new_head.as_bytes())?;
-            file.write_all(diff.as_bytes())
-        })()
-        .with_context(|| anyhow!("writing to {:?}", file.temp_path()))?;
-        file.persist()?;
-
-        Ok(vec![path])
+        Ok(vec![write_patch_file(
+            head_with_subject_prefix(head, format!("{}: ", prefix), original_path),
+            diff,
+            path,
+        )?])
     }
 }
 
-fn prefix_subject_in_head(head: &[&str], prefix: String, original_path: &Path) -> String {
+fn head_with_subject_prefix(head: &[&str], prefix: String, original_path: &Path) -> String {
     let head = head.join("\n");
     let new_head = re!(r"(?i)(\nsubject:\s*(?:\[PATCH]\s*)?)([^'n]*)")
         .replace(&head, |c: &Captures| {
@@ -155,6 +133,22 @@ fn prefix_subject_in_head(head: &[&str], prefix: String, original_path: &Path) -
         }
         Cow::Owned(_) => new_head.into_owned(),
     }
+}
+
+fn write_patch_file(new_head: String, diff: &str, output_path: PathBuf) -> Result<Arc<Path>> {
+    let mut file = temp_file_for(output_path, None)?;
+    (|| {
+        file.write_all(new_head.as_bytes())?;
+        file.write_all(diff.as_bytes())?;
+        // End the diff file with a newline
+        if !diff.ends_with('\n') {
+            eprintln!("doesnt end with newline");
+            file.write_all(b"\n")?;
+        }
+        Ok(())
+    })()
+    .with_context(|| anyhow!("writing to {:?}", file.temp_path()))?;
+    Ok(file.persist()?)
 }
 
 struct ParsedDiff<'a> {
