@@ -67,8 +67,7 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
             .unwrap_or(file)
     };
 
-    let addon = prefix.replace("/", "_");
-    let path = add_suffix(patch_filename, &addon)?;
+    let path = add_suffix(patch_filepath, &format!("-{}", prefix.replace("/", "_")))?;
 
     if *path == *patch_filename {
         bail!(format!("path is the same as origpath: {}", path.display()));
@@ -99,9 +98,9 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
             .collect::<Vec<_>>()
             .join("\n");
 
-            let suffix = format!("{:03}", idx);
+            let suffix = format!("-{:03}", idx);
 
-            let path2 = add_suffix(OsStr::new(&path), &suffix)?;
+            let path2 = add_suffix(&path, &suffix)?;
 
             let mut file = NamedTempFile::new()?;
 
@@ -176,32 +175,39 @@ fn rewrite_head(head: &[&str], prefix: &str, patch_filename: &OsStr) -> Result<S
     }
 }
 
-fn add_suffix(orig_path: &OsStr, addon: &str) -> Result<PathBuf> {
-    let path = Path::new(&orig_path);
-    match path.extension() {
-        Some(ext) => {
-            let stem = path
-                .file_stem()
-                .context("Failed to extract stem from patch filename")?;
-            let parent = match path.parent() {
-                Some(parent) => parent,
-                None => Path::new(""),
-            };
-
-            let mut name = stem.to_os_string();
-            name.push("-");
-            name.push(addon);
-
-            Ok(parent.join(name).with_added_extension(ext))
+/// This does not add a file extension, but adds a suffix to the file
+/// name *before* the existing and unchanged file extension
+fn add_suffix(path: &Path, addon: &str) -> Result<PathBuf> {
+    let file_name = {
+        let mut stem = path
+            .file_stem()
+            .context("failed to extract file stem from path")?
+            .to_owned();
+        stem.push(addon);
+        if let Some(ext) = path.extension() {
+            stem.push(".");
+            stem.push(ext);
         }
-        None => {
-            let mut name = orig_path.to_os_string();
-            name.push("-");
-            name.push(addon);
-
-            Ok(PathBuf::from(name))
-        }
+        stem
+    };
+    if let Some(parent) = path.parent() {
+        Ok(parent.join(file_name))
+    } else {
+        Ok(PathBuf::from(file_name))
     }
+}
+
+#[test]
+fn t_add_suffix() {
+    let t = |path: &str, addon| -> String {
+        add_suffix(path.as_ref(), addon)
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_owned()
+    };
+    assert_eq!(t("foo.png", "-123"), "foo-123.png");
+    assert_eq!(t("bar/baz/foo.png", "-123"), "bar/baz/foo-123.png");
 }
 
 struct ParsedDiff<'a> {
