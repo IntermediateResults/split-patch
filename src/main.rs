@@ -54,13 +54,11 @@ fn write_diff(
     }
 
     let re = Regex::new(r"^diff.* (\S+)")?;
-
+    let cap = re
+        .captures(diff)
+        .context("missing file in the first line of diff")?;
     let prefix = {
-        let file = re
-            .captures(diff)
-            .and_then(|cap| cap.get(1))
-            .context("missing file in the first line of diff")?
-            .as_str();
+        let file = &cap[1];
 
         file.strip_prefix("a/")
             .or_else(|| file.strip_prefix("b/"))
