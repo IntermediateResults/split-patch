@@ -70,7 +70,7 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
     let path = add_suffix(patch_filepath, &format!("-{}", prefix.replace("/", "_")))?;
 
     if *path == *patch_filename {
-        bail!(format!("path is the same as origpath: {}", path.display()));
+        bail!("path is the same as origpath: {}", path.display());
     }
 
     if args.hunks {
