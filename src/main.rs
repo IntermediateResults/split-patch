@@ -75,20 +75,22 @@ fn write_diff(
     }
 
     if split_options.hunks {
-        let mut parsed_diff = parse_diff(diff)?;
-        if split_options.changes {
-            parsed_diff.hunks = parsed_diff
+        let parsed_diff = parse_diff(diff)?;
+        let hunks = if split_options.changes {
+            parsed_diff
                 .hunks
                 .into_iter()
                 .map(|hunk| split_hunk(&hunk))
                 .collect::<Result<Vec<Vec<String>>>>()?
                 .into_iter()
                 .flatten()
-                .collect();
-        }
+                .collect()
+        } else {
+            parsed_diff.hunks
+        };
 
         let mut written_paths = Vec::new();
-        for (idx, hunk) in parsed_diff.hunks.iter().enumerate() {
+        for (idx, hunk) in hunks.iter().enumerate() {
             let diff = [
                 Some(parsed_diff.diff_line),
                 parsed_diff.newfile_line,
