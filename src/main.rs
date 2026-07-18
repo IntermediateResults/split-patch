@@ -1,3 +1,5 @@
+pub mod re;
+
 use std::{
     fs::read_to_string,
     io::{BufWriter, Write, stdout},
@@ -9,7 +11,7 @@ use std::{
 use anyhow::{Context, Ok, Result, anyhow, bail};
 use cj_path_util::temp_file::temp_file_for;
 use clap_with_warnings::clap_with_warnings;
-use regex::{Captures, Regex};
+use regex::Captures;
 
 #[derive(Debug, clap::Args)]
 struct SplitOptions {
@@ -53,8 +55,7 @@ fn write_diff(
         bail!("missing file in first line of diff: {:?}", diff);
     }
 
-    let re = Regex::new(r"^diff.* (\S+)")?;
-    let cap = re
+    let cap = re!(r"^diff.* (\S+)")
         .captures(diff)
         .context("missing file in the first line of diff")?;
     let prefix = {
@@ -142,7 +143,7 @@ fn write_diff(
 }
 
 fn rewrite_head(head: &[&str], prefix: &str, original_path: &Path) -> Result<String> {
-    let re = Regex::new(r"(?i)(\nsubject:\s*(?:\[PATCH]\s*)?)([^'n]*)")?;
+    let re = re!(r"(?i)(\nsubject:\s*(?:\[PATCH]\s*)?)([^'n]*)");
     let head = head.join("\n");
     if re.is_match(&head) {
         Ok(re
@@ -297,9 +298,7 @@ fn split_hunk<'a>(hunks: &'a str) -> Result<Vec<String>> {
     // @@ -42 42 @@
     // @@ -42 +1,2 @@
     // @@ -0,0 +1 @@
-    let re = Regex::new(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? (.*)")?;
-
-    let caps = re
+    let caps = re!(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? (.*)")
         .captures(head)
         .context(format!("invalid hunk head: {head}"))?;
 
@@ -380,8 +379,7 @@ fn split_patch(patch_file: &Path, split_options: &SplitOptions) -> Result<Vec<Ar
     // 1. Read the patchfile
     let content = read_to_string(&patch_file)?;
 
-    let re = Regex::new(r"\n(?:-- \n(?:[^\n]*\n){0,3})?$")?;
-    let content = re.replace(&content, "\n");
+    let content = re!(r"\n(?:-- \n(?:[^\n]*\n){0,3})?$").replace(&content, "\n");
 
     // 2. Split the patches in the file to obtain the diffs
     let mut chunks = Vec::new();
