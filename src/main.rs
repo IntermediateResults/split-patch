@@ -11,6 +11,7 @@ use std::{
 use anyhow::{Context, Ok, Result, anyhow, bail};
 use cj_path_util::temp_file::temp_file_for;
 use clap_with_warnings::clap_with_warnings;
+use itertools::Itertools;
 use regex::Captures;
 
 #[derive(Debug, clap::Args)]
@@ -97,7 +98,6 @@ fn write_diff(
             ]
             .into_iter()
             .flatten()
-            .collect::<Vec<_>>()
             .join("\n");
 
             let suffix = format!("-{:03}", idx);
