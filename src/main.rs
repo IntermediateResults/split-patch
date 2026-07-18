@@ -69,9 +69,7 @@ fn write_diff(
 
     let path = add_suffix(original_path, &format!("-{}", prefix.replace("/", "_")))?;
 
-    if *path == *original_path {
-        bail!("path is the same as origpath: {}", path.display());
-    }
+    assert_ne!(*path, *original_path);
 
     if split_options.hunks {
         let parsed_diff = parse_diff(diff)?;
