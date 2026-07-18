@@ -1,4 +1,5 @@
 pub mod re;
+pub mod utils;
 
 use std::{
     fs::read_to_string,
@@ -13,6 +14,8 @@ use cj_path_util::temp_file::temp_file_for;
 use clap_with_warnings::clap_with_warnings;
 use itertools::Itertools;
 use regex::Captures;
+
+use crate::utils::{add_suffix, take_while};
 
 #[derive(Debug, clap::Args)]
 struct SplitOptions {
@@ -160,41 +163,6 @@ fn rewrite_head(head: &[&str], prefix: &str, original_path: &Path) -> Result<Str
         );
         Ok(head)
     }
-}
-
-/// This does not add a file extension, but adds a suffix to the file
-/// name *before* the existing and unchanged file extension
-fn add_suffix(path: &Path, addon: &str) -> Result<PathBuf> {
-    let file_name = {
-        let mut stem = path
-            .file_stem()
-            .context("failed to extract file stem from path")?
-            .to_owned();
-        stem.push(addon);
-        if let Some(ext) = path.extension() {
-            stem.push(".");
-            stem.push(ext);
-        }
-        stem
-    };
-    if let Some(parent) = path.parent() {
-        Ok(parent.join(file_name))
-    } else {
-        Ok(PathBuf::from(file_name))
-    }
-}
-
-#[test]
-fn t_add_suffix() {
-    let t = |path: &str, addon| -> String {
-        add_suffix(path.as_ref(), addon)
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .to_owned()
-    };
-    assert_eq!(t("foo.png", "-123"), "foo-123.png");
-    assert_eq!(t("bar/baz/foo.png", "-123"), "bar/baz/foo-123.png");
 }
 
 struct ParsedDiff<'a> {
@@ -365,15 +333,6 @@ fn split_hunk<'a>(hunks: &'a str) -> Result<Vec<String>> {
     }
 
     Ok(result)
-}
-
-fn take_while<'a>(
-    lines: &'a [&'a str],
-    predicate: impl Fn(&str) -> bool,
-) -> (&'a [&'a str], &'a [&'a str]) {
-    let count = lines.iter().take_while(|l| predicate(l)).count();
-
-    lines.split_at(count)
 }
 
 /// Returns the list of files created
