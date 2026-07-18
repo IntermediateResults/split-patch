@@ -4,6 +4,7 @@ use std::{
     io::{BufWriter, Write, stdout},
     os::unix::ffi::OsStrExt,
     path::{Path, PathBuf},
+    sync::Arc,
 };
 
 use anyhow::{Context, Ok, Result, anyhow, bail};
@@ -36,9 +37,13 @@ struct Args {
     quiet: bool,
 }
 
-// XX: should the entire args really be passed?
-// or create a sub args for what's truly needed here?
-fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> Result<()> {
+/// Returns the list of files created
+fn write_diff(
+    head: &[&str],
+    diff: &str,
+    patch_filepath: &Path,
+    args: &Args,
+) -> Result<Vec<Arc<Path>>> {
     if !diff.starts_with("diff") {
         bail!("missing file in first line of diff: {:?}", diff);
     }
@@ -46,12 +51,6 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
     let patch_filename = patch_filepath
         .file_name()
         .context("Failed to get filename of provided path to patchfile")?;
-
-    // let patch_file_dir = patch_filepath.parent();
-    let patch_file_dir = match patch_filepath.parent() {
-        Some(parent) => parent,
-        None => Path::new(""),
-    };
 
     let re = Regex::new(r"^diff.* (\S+)")?;
 
@@ -67,7 +66,8 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
             .unwrap_or(file)
     };
 
-    let path = add_suffix(patch_filepath, &format!("-{}", prefix.replace("/", "_")))?;
+    let path: Arc<Path> =
+        add_suffix(patch_filepath, &format!("-{}", prefix.replace("/", "_")))?.into();
 
     if *path == *patch_filename {
         bail!("path is the same as origpath: {}", path.display());
@@ -85,6 +85,8 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
                 .flatten()
                 .collect();
         }
+
+        let mut written_paths = Vec::new();
         for (idx, hunk) in parsed_diff.hunks.iter().enumerate() {
             let diff = [
                 Some(parsed_diff.diff_line),
@@ -118,18 +120,10 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
                 file.write_all(b"\n")?;
             }
 
-            // XXX: move this out of if/else block to prevent duplication
-            if !args.quiet {
-                let mut out = BufWriter::new(stdout().lock());
-                out.write_all(patch_file_dir.join(&path2).as_os_str().as_bytes())?;
-                out.write_all(b"\n")?;
-                // file.write_all(buf)
-            }
-
-            file.persist()?;
-            // XXX: will other processes access the file?
-            // file.into_temp_path();
+            let written = file.persist()?;
+            written_paths.push(written);
         }
+        Ok(written_paths)
     } else {
         let new_head = {
             let prefix = format!("{}: ", prefix);
@@ -144,17 +138,8 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
         .with_context(|| anyhow!("writing to {:?}", file.temp_path()))?;
         file.persist()?;
 
-        if !args.quiet {
-            (|| {
-                let mut out = BufWriter::new(stdout().lock());
-                out.write_all(path.as_os_str().as_bytes())?;
-                out.write_all(b"\n")
-            })()
-            .context("writing to stdout")?
-        }
+        Ok(vec![path])
     }
-
-    Ok(())
 }
 
 fn rewrite_head(head: &[&str], prefix: &str, patch_filename: &OsStr) -> Result<String> {
@@ -391,7 +376,8 @@ fn take_while<'a>(
     lines.split_at(count)
 }
 
-fn split_patch(patch_file: &Path, args: &Args) -> Result<()> {
+/// Returns the list of files created
+fn split_patch(patch_file: &Path, args: &Args) -> Result<Vec<Arc<Path>>> {
     // 1. Read the patchfile
     let content = read_to_string(&patch_file)?;
 
@@ -414,11 +400,12 @@ fn split_patch(patch_file: &Path, args: &Args) -> Result<()> {
     };
 
     // 3. Write the diffs to individual (separate) files
+    let mut written = Vec::new();
     for diff in diffs {
-        write_diff(head, diff, &patch_file, &args)?;
+        written.extend(write_diff(head, diff, &patch_file, &args)?);
     }
 
-    Ok(())
+    Ok(written)
 }
 
 fn main() -> Result<()> {
@@ -431,8 +418,20 @@ fn main() -> Result<()> {
     }
 
     for patch_file in &args.patch_file {
-        split_patch(&patch_file, &args)
+        let written = split_patch(&patch_file, &args)
             .with_context(|| anyhow!("splitting the patch file {patch_file:?}"))?;
+
+        if !args.quiet {
+            (|| {
+                let mut out = BufWriter::new(stdout().lock());
+                for path in written {
+                    out.write_all(path.as_os_str().as_bytes())?;
+                    out.write_all(b"\n")?;
+                }
+                Ok(())
+            })()
+            .context("writing to stdout")?
+        }
     }
 
     Ok(())
