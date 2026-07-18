@@ -207,6 +207,7 @@ fn add_suffix(orig_path: &OsStr, addon: &str) -> Result<PathBuf> {
 struct ParsedDiff<'a> {
     diff_line: &'a str,
     newfile_line: Option<&'a str>,
+    #[allow(unused)]
     index_line: Option<&'a str>,
     minus_line: &'a str,
     plus_line: &'a str,
