@@ -2,10 +2,7 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 
-pub fn take_while<'a>(
-    lines: &'a [&'a str],
-    predicate: impl Fn(&str) -> bool,
-) -> (&'a [&'a str], &'a [&'a str]) {
+pub fn take_while<'a, T>(lines: &'a [T], predicate: impl Fn(&T) -> bool) -> (&'a [T], &'a [T]) {
     let count = lines.iter().take_while(|l| predicate(l)).count();
 
     lines.split_at(count)
