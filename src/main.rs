@@ -55,13 +55,9 @@ fn write_diff(
     original_path: &Path,
     split_options: &SplitOptions,
 ) -> Result<Vec<Arc<Path>>> {
-    if !diff.starts_with("diff") {
-        bail!("missing file in first line of diff: {:?}", diff);
-    }
-
     let cap = re!(r"^diff.* (\S+)")
         .captures(diff)
-        .context("missing file in the first line of diff")?;
+        .context("missing 'diff' marker with file in the first line of the diff")?;
     let prefix = {
         let file = &cap[1];
 
