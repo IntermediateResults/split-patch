@@ -289,6 +289,7 @@ dependencies = [
  "cj-path-util",
  "clap",
  "clap-with-warnings",
+ "lazy_static",
  "regex",
 ]
 
