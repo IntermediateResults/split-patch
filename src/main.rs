@@ -12,6 +12,17 @@ use cj_path_util::temp_file::temp_file_for;
 use clap_with_warnings::clap_with_warnings;
 use regex::{Captures, Regex};
 
+#[derive(Debug, clap::Args)]
+struct SplitOptions {
+    /// Split on hunk boundaries, too.
+    #[clap(long)]
+    hunks: bool,
+
+    /// Split on individual change groups, too (implies --hunks)
+    #[clap(short, long)]
+    changes: bool,
+}
+
 /// Split the given patchfile(s) into new files
 ///
 /// So that each new file only contains the part of the patch for
@@ -24,13 +35,8 @@ struct Args {
     #[clap(required = true)]
     patch_file: Vec<PathBuf>,
 
-    /// Split on hunk boundaries, too.
-    #[clap(long)]
-    hunks: bool,
-
-    /// Split on individual change groups, too (implies --hunks)
-    #[clap(short, long)]
-    changes: bool,
+    #[clap(flatten)]
+    split_options: SplitOptions,
 
     /// Do not print the generated files.
     #[clap(short, long)]
@@ -42,7 +48,7 @@ fn write_diff(
     head: &[&str],
     diff: &str,
     patch_filepath: &Path,
-    args: &Args,
+    split_options: &SplitOptions,
 ) -> Result<Vec<Arc<Path>>> {
     if !diff.starts_with("diff") {
         bail!("missing file in first line of diff: {:?}", diff);
@@ -73,9 +79,9 @@ fn write_diff(
         bail!("path is the same as origpath: {}", path.display());
     }
 
-    if args.hunks {
+    if split_options.hunks {
         let mut parsed_diff = parse_diff(diff)?;
-        if args.changes {
+        if split_options.changes {
             parsed_diff.hunks = parsed_diff
                 .hunks
                 .into_iter()
@@ -377,7 +383,7 @@ fn take_while<'a>(
 }
 
 /// Returns the list of files created
-fn split_patch(patch_file: &Path, args: &Args) -> Result<Vec<Arc<Path>>> {
+fn split_patch(patch_file: &Path, split_options: &SplitOptions) -> Result<Vec<Arc<Path>>> {
     // 1. Read the patchfile
     let content = read_to_string(&patch_file)?;
 
@@ -402,7 +408,7 @@ fn split_patch(patch_file: &Path, args: &Args) -> Result<Vec<Arc<Path>>> {
     // 3. Write the diffs to individual (separate) files
     let mut written = Vec::new();
     for diff in diffs {
-        written.extend(write_diff(head, diff, &patch_file, &args)?);
+        written.extend(write_diff(head, diff, &patch_file, split_options)?);
     }
 
     Ok(written)
@@ -413,12 +419,12 @@ fn main() -> Result<()> {
 
     // `--changes` implies `--hunks`
     // XXX: perhaps this can be handled natively by `clap`
-    if args.changes {
-        args.hunks = true;
+    if args.split_options.changes {
+        args.split_options.hunks = true;
     }
 
     for patch_file in &args.patch_file {
-        let written = split_patch(&patch_file, &args)
+        let written = split_patch(&patch_file, &args.split_options)
             .with_context(|| anyhow!("splitting the patch file {patch_file:?}"))?;
 
         if !args.quiet {
