@@ -1,16 +1,15 @@
 use std::{
-    env::temp_dir,
     ffi::OsStr,
-    fs::{self, File, read_to_string},
+    fs::read_to_string,
     io::{BufWriter, Write, stdout},
-    os::unix::{ffi::OsStrExt, fs::PermissionsExt},
+    os::unix::ffi::OsStrExt,
     path::{Path, PathBuf},
 };
 
 use anyhow::{Context, Ok, Result, anyhow, bail};
+use cj_path_util::temp_file::temp_file_for;
 use clap_with_warnings::clap_with_warnings;
 use regex::{Captures, Regex};
-use tempfile::NamedTempFile;
 
 /// Split the given patchfile(s) into new files
 ///
@@ -103,7 +102,7 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
 
             let path2 = add_suffix(&path, &suffix)?;
 
-            let mut file = NamedTempFile::new()?;
+            let mut file = temp_file_for(&*path2, None)?;
 
             let new_head = {
                 let prefix = format!("{prefix} {suffix}: ");
@@ -118,7 +117,6 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
                 println!("doesnt end with newline");
                 file.write_all(b"\n")?;
             }
-            file.path().metadata()?.permissions().set_mode(0o666);
 
             // XXX: move this out of if/else block to prevent duplication
             if !args.quiet {
@@ -128,30 +126,31 @@ fn write_diff(head: &[&str], diff: &str, patch_filepath: &Path, args: &Args) -> 
                 // file.write_all(buf)
             }
 
-            file.persist(patch_file_dir.join(path2))?;
+            file.persist()?;
             // XXX: will other processes access the file?
             // file.into_temp_path();
         }
     } else {
-        let tmp_path_buf = temp_dir().join(&path);
-        let tmp_path = Path::new(&tmp_path_buf);
         let new_head = {
             let prefix = format!("{}: ", prefix);
             rewrite_head(head, &prefix, patch_filename)?
         };
 
-        let mut file = File::create(tmp_path).context("Failed to create temp file")?;
-        file.write_all(new_head.as_bytes())?;
-        file.write_all(diff.as_bytes())?;
-
-        file.metadata()?.permissions().set_mode(0o666);
-        fs::rename(tmp_path, patch_file_dir.join(path))?;
+        let mut file = temp_file_for(&*path, None)?;
+        (|| {
+            file.write_all(new_head.as_bytes())?;
+            file.write_all(diff.as_bytes())
+        })()
+        .with_context(|| anyhow!("writing to {:?}", file.temp_path()))?;
+        file.persist()?;
 
         if !args.quiet {
-            let mut out = BufWriter::new(stdout().lock());
-            out.write_all(tmp_path.as_os_str().as_bytes())?;
-            out.write_all(b"\n")?;
-            // file.write_all(buf)
+            (|| {
+                let mut out = BufWriter::new(stdout().lock());
+                out.write_all(path.as_os_str().as_bytes())?;
+                out.write_all(b"\n")
+            })()
+            .context("writing to stdout")?
         }
     }
 
