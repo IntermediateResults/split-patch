@@ -1,5 +1,4 @@
 use std::{
-    ffi::OsStr,
     fs::read_to_string,
     io::{BufWriter, Write, stdout},
     os::unix::ffi::OsStrExt,
@@ -47,16 +46,12 @@ struct Args {
 fn write_diff(
     head: &[&str],
     diff: &str,
-    patch_filepath: &Path,
+    original_path: &Path,
     split_options: &SplitOptions,
 ) -> Result<Vec<Arc<Path>>> {
     if !diff.starts_with("diff") {
         bail!("missing file in first line of diff: {:?}", diff);
     }
-
-    let patch_filename = patch_filepath
-        .file_name()
-        .context("Failed to get filename of provided path to patchfile")?;
 
     let re = Regex::new(r"^diff.* (\S+)")?;
 
@@ -73,9 +68,9 @@ fn write_diff(
     };
 
     let path: Arc<Path> =
-        add_suffix(patch_filepath, &format!("-{}", prefix.replace("/", "_")))?.into();
+        add_suffix(original_path, &format!("-{}", prefix.replace("/", "_")))?.into();
 
-    if *path == *patch_filename {
+    if *path == *original_path {
         bail!("path is the same as origpath: {}", path.display());
     }
 
@@ -114,7 +109,7 @@ fn write_diff(
 
             let new_head = {
                 let prefix = format!("{prefix} {suffix}: ");
-                rewrite_head(head, &prefix, patch_filename)?
+                rewrite_head(head, &prefix, original_path)?
             };
 
             file.write_all(new_head.as_bytes())?;
@@ -133,7 +128,7 @@ fn write_diff(
     } else {
         let new_head = {
             let prefix = format!("{}: ", prefix);
-            rewrite_head(head, &prefix, patch_filename)?
+            rewrite_head(head, &prefix, original_path)?
         };
 
         let mut file = temp_file_for(&*path, None)?;
@@ -148,7 +143,7 @@ fn write_diff(
     }
 }
 
-fn rewrite_head(head: &[&str], prefix: &str, patch_filename: &OsStr) -> Result<String> {
+fn rewrite_head(head: &[&str], prefix: &str, original_path: &Path) -> Result<String> {
     let re = Regex::new(r"(?i)(\nsubject:\s*(?:\[PATCH]\s*)?)([^'n]*)")?;
     let head = head.join("\n");
     if re.is_match(&head) {
@@ -160,7 +155,7 @@ fn rewrite_head(head: &[&str], prefix: &str, patch_filename: &OsStr) -> Result<S
     } else {
         eprintln!(
             "Warning: could not find subject in head of file: {}",
-            patch_filename.display()
+            original_path.display()
         );
         Ok(head)
     }
