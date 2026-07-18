@@ -19,7 +19,7 @@ use tempfile::NamedTempFile;
 #[derive(Debug, Parser)]
 #[command(version, about, long_about)]
 struct Args {
-    /// Path to patch file
+    /// Path to patch file(s)
     #[arg(required = true)]
     patch_file: Vec<PathBuf>,
 
