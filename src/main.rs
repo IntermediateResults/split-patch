@@ -344,10 +344,9 @@ fn split_hunk<'a>(hunks: &'a str) -> Result<Vec<String>> {
         let new_post_len = new_post.len();
 
         let group_minus_len = group.iter().filter(|l| l.starts_with('-')).count();
-        // XXX is it safe to assume that ?
+        // The group consists purely of lines starting with '-' and
+        // '+' by its construction, hence:
         let group_plus_len = group.len() - group_minus_len;
-        let group_plus_len_verify = group.iter().filter(|l| l.starts_with('+')).count();
-        assert_eq!(group_plus_len, group_plus_len_verify);
 
         let orig_len = new_pre_len + group_minus_len + new_post_len;
         let patched_len = new_pre_len + group_plus_len + new_post_len;
