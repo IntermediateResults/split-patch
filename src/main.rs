@@ -116,7 +116,7 @@ fn write_diff(
 
             // End the diff (file) with a newline
             if !diff.ends_with('\n') {
-                println!("doesnt end with newline");
+                eprintln!("doesnt end with newline");
                 file.write_all(b"\n")?;
             }
 
