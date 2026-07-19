@@ -6,6 +6,7 @@ use crate::{patch::change::Change, re, re::GetStr, utils::take_while};
 
 /// A group of lines starting with a "@@" line and not containing
 /// other such lines; contains any number of changes
+#[derive(Debug, PartialEq, Eq)]
 pub struct Hunk<'a> {
     /// The Vec is never empty, at least the "@@ " line is ensured by
     /// construction via `split_before` which does not create a group
@@ -14,6 +15,14 @@ pub struct Hunk<'a> {
 }
 
 impl<'a> Hunk<'a> {
+    // Just for testing
+    #[allow(unused)]
+    fn from_lines(lines: impl IntoIterator<Item = &'a str>) -> Self {
+        Self {
+            lines: lines.into_iter().enumerate().collect(),
+        }
+    }
+
     pub fn write_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
         for (_, line) in &self.lines {
             writeln!(&mut out, "{line}")?;
@@ -94,4 +103,75 @@ impl<'a> Hunk<'a> {
 
         Ok(result)
     }
+}
+
+#[test]
+fn t_split_hunk_into_changes() {
+    let hunk_str = r#"
+@@ -550,11 +552,11 @@ fn cmp_function(
+ }
+ 
+ fn run_processing_commands<'t: 'u, 'u: 'v, 'v>(
+-    items: &'v mut Vec<Item<'t>>,
++    items: &'v mut Vec<Item<'t, &'t Path>>,
+     cmds: &[ProcessingCommand],
+     now: SystemTime,
+     show_files_from_future: bool,
+-) -> &'v [Item<'t>] {
++) -> &'v [Item<'t, &'t Path>] {
+     probe!("run_processing_commands");
+     let mut selected_items = unsafe { hack_static(&mut **items) };
+     for cmd in cmds {
+"#;
+    let hunk = Hunk::from_lines(hunk_str.trim().split("\n"));
+    let changes = hunk.split_into_changes().unwrap();
+
+    let expected_changes = [
+        Change {
+            orig_start: 550,
+            orig_len: 7,
+            patched_start: 552,
+            patched_len: 7,
+            head_post: "@@ fn cmp_function(",
+            pre: &[
+                (1, " }"),
+                (2, " "),
+                (3, " fn run_processing_commands<'t: 'u, 'u: 'v, 'v>("),
+            ],
+            group: &[
+                (4, "-    items: &'v mut Vec<Item<'t>>,"),
+                (5, "+    items: &'v mut Vec<Item<'t, &'t Path>>,"),
+            ],
+            post: &[
+                (6, "     cmds: &[ProcessingCommand],"),
+                (7, "     now: SystemTime,"),
+                (8, "     show_files_from_future: bool,"),
+            ],
+        },
+        Change {
+            orig_start: 554,
+            orig_len: 7,
+            patched_start: 556,
+            patched_len: 7,
+            head_post: "@@ fn cmp_function(",
+            pre: &[
+                (6, "     cmds: &[ProcessingCommand],"),
+                (7, "     now: SystemTime,"),
+                (8, "     show_files_from_future: bool,"),
+            ],
+            group: &[
+                (9, "-) -> &'v [Item<'t>] {"),
+                (10, "+) -> &'v [Item<'t, &'t Path>] {"),
+            ],
+            post: &[
+                (11, "     probe!(\"run_processing_commands\");"),
+                (
+                    12,
+                    "     let mut selected_items = unsafe { hack_static(&mut **items) };",
+                ),
+                (13, "     for cmd in cmds {"),
+            ],
+        },
+    ];
+    assert_eq!(changes, expected_changes);
 }

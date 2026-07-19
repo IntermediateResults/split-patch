@@ -2,6 +2,7 @@ use std::io::Write;
 
 /// A single group of "-" and "+" lines and context around them; a
 /// number of changes make up a hunk
+#[derive(Debug, PartialEq, Eq)]
 pub struct Change<'a, 'h> {
     pub orig_start: usize,
     pub orig_len: usize,
