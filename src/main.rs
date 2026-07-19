@@ -23,7 +23,7 @@ use crate::{
 
 #[derive(Debug, clap::Args)]
 struct SplitOptions {
-    /// Split on hunk boundaries, too.
+    /// Split on hunk boundaries, not just file boundaries.
     #[clap(long)]
     hunks: bool,
 
@@ -45,14 +45,14 @@ struct SplitOptions {
 #[derive(Debug, clap::Parser)]
 #[command(version, about, long_about)]
 struct Args {
-    /// Path to patch file(s)
+    /// Path(s) to patch file(s)
     #[clap(required = true)]
     patch_file: Vec<PathBuf>,
 
     #[clap(flatten)]
     split_options: SplitOptions,
 
-    /// Do not print the generated files.
+    /// Do not print the list of generated files.
     #[clap(short, long)]
     quiet: bool,
 }
