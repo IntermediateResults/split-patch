@@ -352,8 +352,8 @@ fn split_hunk_into_changes<'a, 'h>(hunk: &'h Hunk<'a>) -> Result<Vec<Change<'a, 
 
     while !remaining.is_empty() {
         let (pre, rest) = take_while(remaining, |(_, l)| l.starts_with(' '));
-        let (group, rest) = take_while(rest, |(_, l)| l.starts_with(['-', '+']));
-        let (post, rest) = take_while(rest, |(_, l)| l.starts_with(' '));
+        let (group, rest_after_group) = take_while(rest, |(_, l)| l.starts_with(['-', '+']));
+        let (post, _rest) = take_while(rest_after_group, |(_, l)| l.starts_with(' '));
 
         let pre_len = pre.len();
 
@@ -388,8 +388,7 @@ fn split_hunk_into_changes<'a, 'h>(hunk: &'h Hunk<'a>) -> Result<Vec<Change<'a, 
 
         orig_start += pre_len + group_minus_len;
         patched_start += pre_len + group_plus_len;
-
-        remaining = rest;
+        remaining = rest_after_group;
     }
 
     Ok(result)
