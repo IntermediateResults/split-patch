@@ -4,6 +4,10 @@ use anyhow::{Context, Result};
 
 use crate::{patch::change::Change, re, re::GetStr, utils::take_while};
 
+pub trait WriteAsHunk {
+    fn write_as_hunk_to(&self, out: impl Write) -> Result<(), std::io::Error>;
+}
+
 /// A group of lines starting with a "@@" line and not containing
 /// other such lines; contains any number of changes
 #[derive(Debug, PartialEq, Eq)]
@@ -14,6 +18,15 @@ pub struct Hunk<'a> {
     pub lines: Vec<(usize, &'a str)>,
 }
 
+impl<'a> WriteAsHunk for Hunk<'a> {
+    fn write_as_hunk_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
+        for (_, line) in &self.lines {
+            writeln!(&mut out, "{line}")?;
+        }
+        Ok(())
+    }
+}
+
 impl<'a> Hunk<'a> {
     // Just for testing
     #[allow(unused)]
@@ -21,13 +34,6 @@ impl<'a> Hunk<'a> {
         Self {
             lines: lines.into_iter().enumerate().collect(),
         }
-    }
-
-    pub fn write_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
-        for (_, line) in &self.lines {
-            writeln!(&mut out, "{line}")?;
-        }
-        Ok(())
     }
 
     pub fn split_into_changes<'h>(&'h self) -> Result<Vec<Change<'a, 'h>>> {

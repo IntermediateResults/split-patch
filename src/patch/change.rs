@@ -1,5 +1,7 @@
 use std::io::Write;
 
+use crate::patch::hunk::WriteAsHunk;
+
 /// A single group of "-" and "+" lines and context around them; a
 /// number of changes make up a hunk
 #[derive(Debug, PartialEq, Eq)]
@@ -14,8 +16,8 @@ pub struct Change<'a, 'h> {
     pub post: &'h [(usize, &'a str)],
 }
 
-impl<'a, 'h> Change<'a, 'h> {
-    pub fn write_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
+impl<'a, 'h> WriteAsHunk for Change<'a, 'h> {
+    fn write_as_hunk_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
         let Self {
             orig_start,
             orig_len,

@@ -16,7 +16,10 @@ use cj_path_util::temp_file::unbuffered_temp_file_for;
 use clap_with_warnings::clap_with_warnings;
 use regex::Captures;
 
-use crate::{patch::diff::Diff, utils::add_suffix};
+use crate::{
+    patch::{diff::Diff, hunk::WriteAsHunk},
+    utils::add_suffix,
+};
 
 #[derive(Debug, clap::Args)]
 struct SplitOptions {
@@ -81,7 +84,7 @@ fn write_diff(
             if split_options.changes {
                 for (change_i, change) in hunk.split_into_changes()?.into_iter().enumerate() {
                     let mut diff_string: Vec<u8> = diff_head.clone().into();
-                    change.write_to(&mut diff_string)?;
+                    change.write_as_hunk_to(&mut diff_string)?;
                     written_paths.push(write_patch_file(
                         head_with_subject_prefix(
                             head,
@@ -94,7 +97,7 @@ fn write_diff(
                 }
             } else {
                 let mut diff_string: Vec<u8> = diff_head.clone().into();
-                hunk.write_to(&mut diff_string)?;
+                hunk.write_as_hunk_to(&mut diff_string)?;
                 written_paths.push(write_patch_file(
                     head_with_subject_prefix(
                         head,
