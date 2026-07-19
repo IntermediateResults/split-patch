@@ -30,6 +30,11 @@ struct SplitOptions {
     /// Split on individual change groups, too (implies --hunks)
     #[clap(short, long)]
     changes: bool,
+
+    /// Omit the addition of a prefix to the subject line of patch
+    /// files that have a git style patch header
+    #[clap(long)]
+    no_subject_change: bool,
 }
 
 /// Split the given patchfile(s) into new files
@@ -87,6 +92,7 @@ fn write_diff(
                     change.write_as_hunk_to(&mut diff_string)?;
                     written_paths.push(write_patch_file(
                         head_with_subject_prefix(
+                            split_options.no_subject_change,
                             head,
                             format!("{prefix} {hunk_i:03}-{change_i:03}: "),
                             original_path,
@@ -100,6 +106,7 @@ fn write_diff(
                 hunk.write_as_hunk_to(&mut diff_string)?;
                 written_paths.push(write_patch_file(
                     head_with_subject_prefix(
+                        split_options.no_subject_change,
                         head,
                         format!("{prefix} {hunk_i:03}: "),
                         original_path,
@@ -112,15 +119,28 @@ fn write_diff(
         Ok(written_paths)
     } else {
         Ok(vec![write_patch_file(
-            head_with_subject_prefix(head, format!("{}: ", prefix), original_path),
+            head_with_subject_prefix(
+                split_options.no_subject_change,
+                head,
+                format!("{}: ", prefix),
+                original_path,
+            ),
             diff_str.as_bytes(),
             path,
         )?])
     }
 }
 
-fn head_with_subject_prefix(head: &[&str], prefix: String, original_path: &Path) -> String {
+fn head_with_subject_prefix(
+    no_subject_change: bool,
+    head: &[&str],
+    prefix: String,
+    original_path: &Path,
+) -> String {
     let head = head.join("\n");
+    if no_subject_change {
+        return head;
+    }
     let new_head = re!(r"(?i)(\nsubject:\s*(?:\[PATCH]\s*)?)([^'n]*)")
         .replace(&head, |c: &Captures| {
             format!("{}{}{}", &c[1], prefix, &c[2])
