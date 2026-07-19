@@ -45,9 +45,9 @@ impl<'a> Hunk<'a> {
         let mut result = Vec::new();
 
         while !remaining.is_empty() {
-            let (pre, rest) = take_while(remaining, |(_, l)| l.starts_with(' '));
-            let (group, rest_after_group) = take_while(rest, |(_, l)| l.starts_with(['-', '+']));
-            let (post, _rest) = take_while(rest_after_group, |(_, l)| l.starts_with(' '));
+            let (pre, after_pre) = take_while(remaining, |(_, l)| l.starts_with(' '));
+            let (group, after_group) = take_while(after_pre, |(_, l)| l.starts_with(['-', '+']));
+            let (post, rest) = take_while(after_group, |(_, l)| l.starts_with(' '));
 
             let pre_len = pre.len();
 
@@ -80,9 +80,16 @@ impl<'a> Hunk<'a> {
                 post: new_post,
             });
 
+            // Note that `rest` is *not* the same value as the next
+            // `remaining` value! We stop when there is no more groups
+            // coming, not when there are no more context lines.
+            if rest.is_empty() {
+                break;
+            }
+
             orig_start += pre_len + group_minus_len;
             patched_start += pre_len + group_plus_len;
-            remaining = rest_after_group;
+            remaining = after_group;
         }
 
         Ok(result)
