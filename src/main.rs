@@ -27,7 +27,7 @@ struct SplitOptions {
     #[clap(long)]
     hunks: bool,
 
-    /// Split on individual change groups, too (implies --hunks)
+    /// Split on individual change groups, too (implies `--hunks`)
     #[clap(short, long)]
     changes: bool,
 
@@ -35,6 +35,12 @@ struct SplitOptions {
     /// files that have a git style patch header
     #[clap(long)]
     no_subject_change: bool,
+
+    /// When using `--changes`, use a single number counter for
+    /// generating the ids for the generated output file names and
+    /// subject prefixes instead of `{hunk_id}-{change_id}`.
+    #[clap(long)]
+    monotonous_numbers: bool,
 }
 
 /// Split the given patchfile(s) into new files
@@ -84,6 +90,11 @@ fn write_diff(
 
         let diff_head = diff.head();
 
+        // Old style sequence numbers, increasing monotonically for
+        // all files, for when --changes is used with
+        // --monotonous-numbers
+        let mut file_i: usize = 0;
+
         let mut written_paths = Vec::new();
         for (hunk_i, hunk) in diff.hunks.iter().enumerate() {
             if split_options.changes {
@@ -94,12 +105,26 @@ fn write_diff(
                         head_with_subject_prefix(
                             split_options.no_subject_change,
                             head,
-                            format!("{prefix} {hunk_i:03}-{change_i:03}: "),
+                            if split_options.monotonous_numbers {
+                                format!("{prefix} {file_i:03}: ")
+                            } else {
+                                format!("{prefix} {hunk_i:03}-{change_i:03}: ")
+                            },
                             original_path,
                         ),
                         &diff_string,
-                        add_suffix(&path, &format!("-{hunk_i:03}-{change_i:03}"))?.into(),
+                        add_suffix(
+                            &path,
+                            &if split_options.monotonous_numbers {
+                                format!("-{file_i:03}")
+                            } else {
+                                format!("-{hunk_i:03}-{change_i:03}")
+                            },
+                        )?
+                        .into(),
                     )?);
+
+                    file_i += 1;
                 }
             } else {
                 let mut diff_string: Vec<u8> = diff_head.clone().into();
