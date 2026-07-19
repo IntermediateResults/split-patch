@@ -1,4 +1,4 @@
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use itertools::Itertools;
 
 use crate::{patch::hunk::Hunk, utils::split_before};

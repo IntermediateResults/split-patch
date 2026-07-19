@@ -5,13 +5,13 @@ pub mod utils;
 use std::{
     borrow::Cow,
     fs::read_to_string,
-    io::{BufWriter, IoSlice, Write, stdout},
+    io::{stdout, BufWriter, IoSlice, Write},
     os::unix::ffi::OsStrExt,
     path::{Path, PathBuf},
     sync::Arc,
 };
 
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{anyhow, bail, Context, Result};
 use cj_path_util::temp_file::unbuffered_temp_file_for;
 use clap_with_warnings::clap_with_warnings;
 use regex::Captures;
