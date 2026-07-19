@@ -386,10 +386,6 @@ fn split_hunk_into_changes<'a, 'h>(hunk: &'h Hunk<'a>) -> Result<Vec<Change<'a, 
             post: new_post,
         });
 
-        if rest.is_empty() {
-            break;
-        }
-
         orig_start += pre_len + group_minus_len;
         patched_start += pre_len + group_plus_len;
 
