@@ -22,7 +22,7 @@ macro_rules! re {
 pub trait GetStr<'t> {
     fn get_str(&self, i: usize) -> &'t str;
 
-    fn get_str_and_parse<T: FromStr>(&self, i: usize, line0: usize) -> Result<T>
+    fn get_str_then_parse<T: FromStr>(&self, i: usize, line0: usize) -> Result<T>
     where
         <T as FromStr>::Err: Send + Sync + Error + 'static;
 }
@@ -38,7 +38,7 @@ impl<'t> GetStr<'t> for Captures<'t> {
     /// Panics if i is outside the range of available captures. Parses
     /// the capture to the result type, showing the line number in the
     /// error message if failing to parse.
-    fn get_str_and_parse<T: FromStr>(&self, i: usize, line0: usize) -> Result<T>
+    fn get_str_then_parse<T: FromStr>(&self, i: usize, line0: usize) -> Result<T>
     where
         <T as FromStr>::Err: Send + Sync + Error + 'static,
     {
