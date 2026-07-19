@@ -2,6 +2,7 @@ pub mod re;
 pub mod utils;
 
 use std::{
+    borrow::Cow,
     fs::read_to_string,
     io::{BufWriter, Write, stdout},
     os::unix::ffi::OsStrExt,
@@ -107,10 +108,8 @@ fn write_diff(
 
             let mut file = temp_file_for(&*path2, None)?;
 
-            let new_head = {
-                let prefix = format!("{prefix} {suffix}: ");
-                rewrite_head(head, &prefix, original_path)?
-            };
+            let new_head =
+                prefix_subject_in_head(head, format!("{prefix} {suffix}: "), original_path);
 
             file.write_all(new_head.as_bytes())?;
             file.write_all(diff.as_bytes())?;
@@ -126,10 +125,7 @@ fn write_diff(
         }
         Ok(written_paths)
     } else {
-        let new_head = {
-            let prefix = format!("{}: ", prefix);
-            rewrite_head(head, &prefix, original_path)?
-        };
+        let new_head = prefix_subject_in_head(head, format!("{}: ", prefix), original_path);
 
         let mut file = temp_file_for(&*path, None)?;
         (|| {
@@ -143,21 +139,21 @@ fn write_diff(
     }
 }
 
-fn rewrite_head(head: &[&str], prefix: &str, original_path: &Path) -> Result<String> {
-    let re = re!(r"(?i)(\nsubject:\s*(?:\[PATCH]\s*)?)([^'n]*)");
+fn prefix_subject_in_head(head: &[&str], prefix: String, original_path: &Path) -> String {
     let head = head.join("\n");
-    if re.is_match(&head) {
-        Ok(re
-            .replace(&head, |caps: &Captures| {
-                format!("{}{}{}", &caps[1], prefix, &caps[2])
-            })
-            .into_owned())
-    } else {
-        eprintln!(
-            "Warning: could not find subject in head of file: {}",
-            original_path.display()
-        );
-        Ok(head)
+    let new_head = re!(r"(?i)(\nsubject:\s*(?:\[PATCH]\s*)?)([^'n]*)")
+        .replace(&head, |c: &Captures| {
+            format!("{}{}{}", &c[1], prefix, &c[2])
+        });
+    match &new_head {
+        Cow::Borrowed(_) => {
+            eprintln!(
+                "Warning: could not find subject line in file: {}",
+                original_path.display()
+            );
+            head
+        }
+        Cow::Owned(_) => new_head.into_owned(),
     }
 }
 
