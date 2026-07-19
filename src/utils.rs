@@ -42,3 +42,64 @@ fn t_add_suffix() {
     assert_eq!(t("foo.png", "-123"), "foo-123.png");
     assert_eq!(t("bar/baz/foo.png", "-123"), "bar/baz/foo-123.png");
 }
+
+// Can't find anything in itertools; coalesce doesn't allow to build
+// groups of different type than the item type. Don't need it to be
+// lazy, avoids the need for generators.
+pub fn split_before<T, G>(
+    items: impl Iterator<Item = T>,
+    is_boundary: impl Fn(&T) -> bool,
+    group_constructor: impl Fn(Vec<T>) -> G,
+) -> Vec<G> {
+    let finish_group = |groups: &mut Vec<G>, current_group: Vec<T>| {
+        if !current_group.is_empty() {
+            groups.push(group_constructor(current_group));
+        }
+    };
+
+    let mut groups = Vec::new();
+    let mut current_group = Vec::new();
+    for item in items {
+        if is_boundary(&item) {
+            finish_group(&mut groups, current_group);
+            current_group = Vec::new();
+        }
+        current_group.push(item);
+    }
+    finish_group(&mut groups, current_group);
+
+    groups
+}
+
+#[test]
+fn t_split_before() {
+    fn typed<T>(val: T) -> T {
+        val
+    }
+
+    fn t<'s, const N: usize>(items: [&'s str; N]) -> Vec<Vec<&'s str>> {
+        split_before(items.into_iter(), |s| s.starts_with("@"), |v| v)
+    }
+
+    assert_eq!(t(["@c"]), [vec!["@c"]],);
+    // With no lines, no group should be created
+    assert_eq!(t([]), typed::<[Vec<&str>; 0]>([]),);
+    // Not sure how it should behave for this one
+    assert_eq!(
+        t(["a", "b", "@c", "d", "@e", "f", "g"]),
+        [vec!["a", "b"], vec!["@c", "d"], vec!["@e", "f", "g"],]
+    );
+    // The normal cases, right?
+    assert_eq!(
+        t(["@a", "b", "@c", "d", "@e", "f", "g"]),
+        [vec!["@a", "b"], vec!["@c", "d"], vec!["@e", "f", "g"],]
+    );
+    assert_eq!(
+        t(["@a", "b", "@c", "d", "@e"]),
+        [vec!["@a", "b"], vec!["@c", "d"], vec!["@e"],]
+    );
+    assert_eq!(
+        t(["@a", "@b", "@c", "d", "@e"]),
+        [vec!["@a"], vec!["@b"], vec!["@c", "d"], vec!["@e"],]
+    );
+}
