@@ -213,9 +213,10 @@ fn split_patch(patch_file: &Path, split_options: &SplitOptions) -> Result<Vec<Ar
 
     chunks.push(&content[start..]);
 
-    let Some((head, diffs)) = chunks.split_at_checked(1) else {
+    let (head, diffs) = chunks.split_at(1);
+    if diffs.is_empty() {
         bail!("file does not appear to contain diffs");
-    };
+    }
 
     // 3. Write the diffs to individual (separate) files
     let mut written = Vec::new();
