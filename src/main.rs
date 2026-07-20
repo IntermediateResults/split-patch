@@ -228,7 +228,7 @@ fn split_patch(patch_file: &Path, split_options: &SplitOptions) -> Result<Vec<Ar
 
     let is_diff_line = |line: &Line| line.starts_with("diff ");
 
-    let chunks = split_before(lines.iter().copied(), &is_diff_line, |vec| vec);
+    let chunks = split_before(lines.iter().copied(), is_diff_line, |vec| vec);
 
     let (head, diffs): (&[Line], &[Vec<Line>]) =
         if chunks[0].first().map(is_diff_line).unwrap_or(false) {
