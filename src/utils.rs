@@ -1,7 +1,4 @@
-use std::{
-    io::Write,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 
@@ -105,16 +102,4 @@ fn t_split_before() {
         t(["@a", "@b", "@c", "d", "@e"]),
         [vec!["@a"], vec!["@b"], vec!["@c", "d"], vec!["@e"],]
     );
-}
-
-/// Receives lines without line endings, writes them out including line endings
-pub fn write_lines_to<'a>(
-    lines: impl Iterator<Item = &'a str>,
-    mut out: impl Write,
-) -> Result<(), std::io::Error> {
-    for line in lines {
-        out.write_all(line.as_bytes())?;
-        out.write_all(b"\n")?;
-    }
-    Ok(())
 }

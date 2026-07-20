@@ -3,10 +3,11 @@ use std::io::Write;
 use anyhow::{Context, Result};
 
 use crate::{
+    line::{write_lines_to, Line},
     patch::change::Change,
     re,
     re::GetStr,
-    utils::{take_while, write_lines_to},
+    utils::take_while,
 };
 
 pub trait WriteAsHunk {
@@ -15,31 +16,29 @@ pub trait WriteAsHunk {
 
 /// A group of lines starting with a "@@" line and not containing
 /// other such lines; contains any number of changes
-#[derive(Debug, PartialEq, Eq)]
+#[derive(PartialEq, Eq)]
 pub struct Hunk<'a> {
     /// The Vec is never empty, at least the "@@ " line is ensured by
     /// construction via `split_before` which does not create a group
     /// out of no lines.
-    pub lines: Vec<(usize, &'a str)>,
+    pub lines: Vec<Line<'a>>,
 }
 
 impl<'a> WriteAsHunk for Hunk<'a> {
     fn write_as_hunk_to(&self, out: impl Write) -> Result<(), std::io::Error> {
-        write_lines_to(self.lines.iter().map(|(_, s)| *s), out)
+        write_lines_to(&self.lines, out)
     }
 }
 
 impl<'a> Hunk<'a> {
     // Just for testing
     #[allow(unused)]
-    fn from_lines(lines: impl IntoIterator<Item = &'a str>) -> Self {
-        Self {
-            lines: lines.into_iter().enumerate().collect(),
-        }
+    fn from_lines(lines: Vec<Line<'a>>) -> Self {
+        Self { lines }
     }
 
     pub fn split_into_changes<'h>(&'h self) -> Result<Vec<Change<'a, 'h>>> {
-        let (head_line_line0, head_line) = self
+        let head_line = self
             .lines
             .first()
             .expect("hunks are expected to never be empty by construction");
@@ -54,17 +53,17 @@ impl<'a> Hunk<'a> {
             .captures(head_line)
             .with_context(|| format!("invalid hunk head: {head_line}"))?;
 
-        let mut orig_start: usize = caps.get_str_then_parse(1, *head_line_line0)?;
-        let mut patched_start: usize = caps.get_str_then_parse(3, *head_line_line0)?;
+        let mut orig_start: usize = caps.get_str_then_parse(1, head_line.line_no0())?;
+        let mut patched_start: usize = caps.get_str_then_parse(3, head_line.line_no0())?;
         let head_post = caps.get_str(5);
 
-        let mut remaining: &[(usize, &str)] = &self.lines[1..];
+        let mut remaining: &[Line] = &self.lines[1..];
         let mut result = Vec::new();
 
         while !remaining.is_empty() {
-            let (pre, after_pre) = take_while(remaining, |(_, l)| l.starts_with(' '));
-            let (group, after_group) = take_while(after_pre, |(_, l)| l.starts_with(['-', '+']));
-            let (post, rest) = take_while(after_group, |(_, l)| l.starts_with(' '));
+            let (pre, after_pre) = take_while(remaining, |l| l.starts_with(' '));
+            let (group, after_group) = take_while(after_pre, |l| l.starts_with(['-', '+']));
+            let (post, rest) = take_while(after_group, |l| l.starts_with(' '));
 
             let pre_len = pre.len();
 
@@ -78,7 +77,7 @@ impl<'a> Hunk<'a> {
             let new_post = if post.len() > 3 { &post[..3] } else { post };
             let new_post_len = new_post.len();
 
-            let group_minus_len = group.iter().filter(|(_, l)| l.starts_with('-')).count();
+            let group_minus_len = group.iter().filter(|l| l.starts_with('-')).count();
             // The group consists purely of lines starting with '-' and
             // '+' by its construction, hence:
             let group_plus_len = group.len() - group_minus_len;
@@ -115,6 +114,10 @@ impl<'a> Hunk<'a> {
 
 #[test]
 fn t_split_hunk_into_changes() {
+    fn l<'a>(line0: usize, s: &'a str) -> Line<'a> {
+        Line::from_tuple((line0, s))
+    }
+
     let hunk_str = r#"
 @@ -550,11 +552,11 @@ fn cmp_function(
  }
@@ -131,7 +134,14 @@ fn t_split_hunk_into_changes() {
      let mut selected_items = unsafe { hack_static(&mut **items) };
      for cmd in cmds {
 "#;
-    let hunk = Hunk::from_lines(hunk_str.trim().split("\n"));
+    let hunk = Hunk::from_lines(
+        hunk_str
+            .trim()
+            .split("\n")
+            .enumerate()
+            .map(Line::from_tuple)
+            .collect(),
+    );
     let changes = hunk.split_into_changes().unwrap();
 
     let expected_changes = [
@@ -142,18 +152,18 @@ fn t_split_hunk_into_changes() {
             patched_len: 7,
             head_post: "@@ fn cmp_function(",
             pre: &[
-                (1, " }"),
-                (2, " "),
-                (3, " fn run_processing_commands<'t: 'u, 'u: 'v, 'v>("),
+                l(1, " }"),
+                l(2, " "),
+                l(3, " fn run_processing_commands<'t: 'u, 'u: 'v, 'v>("),
             ],
             group: &[
-                (4, "-    items: &'v mut Vec<Item<'t>>,"),
-                (5, "+    items: &'v mut Vec<Item<'t, &'t Path>>,"),
+                l(4, "-    items: &'v mut Vec<Item<'t>>,"),
+                l(5, "+    items: &'v mut Vec<Item<'t, &'t Path>>,"),
             ],
             post: &[
-                (6, "     cmds: &[ProcessingCommand],"),
-                (7, "     now: SystemTime,"),
-                (8, "     show_files_from_future: bool,"),
+                l(6, "     cmds: &[ProcessingCommand],"),
+                l(7, "     now: SystemTime,"),
+                l(8, "     show_files_from_future: bool,"),
             ],
         },
         Change {
@@ -163,21 +173,21 @@ fn t_split_hunk_into_changes() {
             patched_len: 7,
             head_post: "@@ fn cmp_function(",
             pre: &[
-                (6, "     cmds: &[ProcessingCommand],"),
-                (7, "     now: SystemTime,"),
-                (8, "     show_files_from_future: bool,"),
+                l(6, "     cmds: &[ProcessingCommand],"),
+                l(7, "     now: SystemTime,"),
+                l(8, "     show_files_from_future: bool,"),
             ],
             group: &[
-                (9, "-) -> &'v [Item<'t>] {"),
-                (10, "+) -> &'v [Item<'t, &'t Path>] {"),
+                l(9, "-) -> &'v [Item<'t>] {"),
+                l(10, "+) -> &'v [Item<'t, &'t Path>] {"),
             ],
             post: &[
-                (11, "     probe!(\"run_processing_commands\");"),
-                (
+                l(11, "     probe!(\"run_processing_commands\");"),
+                l(
                     12,
                     "     let mut selected_items = unsafe { hack_static(&mut **items) };",
                 ),
-                (13, "     for cmd in cmds {"),
+                l(13, "     for cmd in cmds {"),
             ],
         },
     ];

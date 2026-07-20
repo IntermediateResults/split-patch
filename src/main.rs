@@ -1,3 +1,4 @@
+pub mod line;
 pub mod patch;
 pub mod re;
 pub mod utils;
@@ -18,8 +19,9 @@ use itertools::Itertools;
 use regex::Captures;
 
 use crate::{
+    line::{write_lines_to, Line},
     patch::{diff::Diff, hunk::WriteAsHunk},
-    utils::{add_suffix, split_before, write_lines_to},
+    utils::{add_suffix, split_before},
 };
 
 #[derive(Debug, clap::Args)]
@@ -66,19 +68,18 @@ struct Args {
 
 /// Receives the lines for a single diff. Returns the list of files created
 fn write_diff(
-    head_lines: &[(usize, &str)],
+    head_lines: &[Line],
     // Guaranteed to be at least the "diff " line
-    diff_lines: &[(usize, &str)],
+    diff_lines: &[Line],
     original_path: &Path,
     split_options: &SplitOptions,
 ) -> Result<Vec<Arc<Path>>> {
-    let (line0, first_line) = diff_lines[0];
+    let first_line = diff_lines[0];
     let cap = re!(r"^diff.* (\S+)")
-        .captures(first_line)
+        .captures(*first_line)
         .with_context(|| {
             format!(
-                "missing 'diff' marker with file in the first line of the diff on line {}",
-                line0 + 1
+                "missing 'diff' marker with file in the first line of the diff on line {first_line}",
             )
         })?;
     let prefix = {
@@ -152,7 +153,7 @@ fn write_diff(
         Ok(written_paths)
     } else {
         let mut diff_string: Vec<u8> = Vec::new();
-        write_lines_to(head_lines.iter().map(|(_, line)| *line), &mut diff_string)?;
+        write_lines_to(head_lines, &mut diff_string)?;
 
         Ok(vec![write_patch_file(
             head_with_subject_prefix(
@@ -169,11 +170,11 @@ fn write_diff(
 
 fn head_with_subject_prefix(
     no_subject_change: bool,
-    head: &[(usize, &str)],
+    head: &[Line],
     prefix: String,
     original_path: &Path,
 ) -> String {
-    let mut head = head.iter().map(|(_, line)| *line).join("\n");
+    let mut head = head.iter().map(|line| line.s()).join("\n");
     // (Or add the newline unconditionally?)
     if !head.is_empty() {
         head.push_str("\n");
@@ -217,7 +218,7 @@ fn split_patch(patch_file: &Path, split_options: &SplitOptions) -> Result<Vec<Ar
 
     let content = re!(r"\n(?:-- \n(?:[^\n]*\n){0,3})?$").replace(&content, "\n");
 
-    let lines: Vec<(usize, &str)> = content.lines().enumerate().collect();
+    let lines: Vec<Line> = content.lines().enumerate().map(Line::from_tuple).collect();
 
     if lines.is_empty() {
         bail!("file has no lines"); // ?
@@ -225,11 +226,11 @@ fn split_patch(patch_file: &Path, split_options: &SplitOptions) -> Result<Vec<Ar
 
     // 2. Split the patches in the file to obtain the diffs
 
-    let is_diff_line = |(_, line): &(usize, &str)| line.starts_with("diff ");
+    let is_diff_line = |line: &Line| line.starts_with("diff ");
 
     let chunks = split_before(lines.iter().copied(), &is_diff_line, |vec| vec);
 
-    let (head, diffs): (&[(usize, &str)], &[Vec<(usize, &str)>]) =
+    let (head, diffs): (&[Line], &[Vec<Line>]) =
         if chunks[0].first().map(is_diff_line).unwrap_or(false) {
             (&[], &chunks)
         } else {

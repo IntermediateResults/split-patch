@@ -1,6 +1,9 @@
 use std::io::Write;
 
-use crate::{patch::hunk::WriteAsHunk, utils::write_lines_to};
+use crate::{
+    line::{write_lines_to, Line},
+    patch::hunk::WriteAsHunk,
+};
 
 /// A single group of "-" and "+" lines and context around them; a
 /// number of changes make up a hunk
@@ -11,9 +14,9 @@ pub struct Change<'a, 'h> {
     pub patched_start: usize,
     pub patched_len: usize,
     pub head_post: &'a str,
-    pub pre: &'h [(usize, &'a str)],
-    pub group: &'h [(usize, &'a str)],
-    pub post: &'h [(usize, &'a str)],
+    pub pre: &'h [Line<'a>],
+    pub group: &'h [Line<'a>],
+    pub post: &'h [Line<'a>],
 }
 
 impl<'a, 'h> WriteAsHunk for Change<'a, 'h> {
@@ -39,9 +42,9 @@ impl<'a, 'h> WriteAsHunk for Change<'a, 'h> {
             "@@ -{},{} +{},{} {}",
             orig_start, orig_len, patched_start, patched_len, head_post
         )?;
-        write_lines_to(pre.iter().map(|(_, s)| *s), &mut out)?;
-        write_lines_to(group.iter().map(|(_, s)| *s), &mut out)?;
-        write_lines_to(post.iter().map(|(_, s)| *s), &mut out)?;
+        write_lines_to(*pre, &mut out)?;
+        write_lines_to(*group, &mut out)?;
+        write_lines_to(*post, &mut out)?;
         Ok(())
     }
 }
