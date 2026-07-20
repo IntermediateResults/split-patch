@@ -2,7 +2,12 @@ use std::io::Write;
 
 use anyhow::{Context, Result};
 
-use crate::{patch::change::Change, re, re::GetStr, utils::take_while};
+use crate::{
+    patch::change::Change,
+    re,
+    re::GetStr,
+    utils::{take_while, write_lines_to},
+};
 
 pub trait WriteAsHunk {
     fn write_as_hunk_to(&self, out: impl Write) -> Result<(), std::io::Error>;
@@ -19,11 +24,8 @@ pub struct Hunk<'a> {
 }
 
 impl<'a> WriteAsHunk for Hunk<'a> {
-    fn write_as_hunk_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
-        for (_, line) in &self.lines {
-            writeln!(&mut out, "{line}")?;
-        }
-        Ok(())
+    fn write_as_hunk_to(&self, out: impl Write) -> Result<(), std::io::Error> {
+        write_lines_to(self.lines.iter().map(|(_, s)| *s), out)
     }
 }
 

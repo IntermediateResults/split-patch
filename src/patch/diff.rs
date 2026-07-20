@@ -6,6 +6,7 @@ use crate::{patch::hunk::Hunk, utils::split_before};
 /// A bare diff for a single file. (A Patch file represents any number
 /// of Diff instances.)
 pub struct Diff<'a> {
+    // The line that starts with "diff "
     pub diff_line: &'a str,
     pub newfile_line: Option<&'a str>,
     // unused
@@ -42,22 +43,30 @@ impl<'a> Diff<'a> {
     // Can't impl FromStr since we want to carry over the argument
     // life time
     pub fn from_str(diff: &'a str) -> Result<Diff<'a>> {
-        let mut lines = diff.lines().enumerate();
+        Diff::from_lines(diff.lines().enumerate())
+    }
 
-        let (_, diff_line) = lines
+    pub fn from_lines(mut lines: impl Iterator<Item = (usize, &'a str)>) -> Result<Diff<'a>> {
+        let (line0, diff_line) = lines
             .next()
             .filter(|(_, l)| l.starts_with("diff "))
             .with_context(|| format!("invalid patch file format: missing 'diff ' line"))?;
 
         let (line0, line) = lines.next().with_context(|| {
-            format!("invalid patch file format: unexpected EOF after 'diff ' line")
+            format!(
+                "invalid patch file format: unexpected EOF after 'diff ' line on line {}",
+                line0 + 1
+            )
         })?;
 
         let (newfile_line, (line0, line)) = if line.starts_with("new file mode ") {
             (
                 Some(line),
                 lines.next().with_context(|| {
-                    format!("invalid patch file format: [missing `index` or `---` line]")
+                    format!(
+                        "invalid patch file format: [missing `index` or `---` line] after line {}",
+                        line0 + 1
+                    )
                 })?,
             )
         } else {
@@ -68,7 +77,10 @@ impl<'a> Diff<'a> {
             (
                 Some(line),
                 lines.next().with_context(|| {
-                    format!("invalid patch file format [missing `---` line]: {diff}")
+                    format!(
+                        "invalid patch file format [missing `---` line] after line {}",
+                        line0 + 1
+                    )
                 })?,
             )
         } else {
@@ -83,9 +95,12 @@ impl<'a> Diff<'a> {
         }
         let minus_line = line;
 
-        let (line0, line) = lines
-            .next()
-            .with_context(|| format!("invalid patch file format [missing `+++` line]: {diff}"))?;
+        let (line0, line) = lines.next().with_context(|| {
+            format!(
+                "invalid patch file format [missing `+++` line] on line {}",
+                line0 + 1
+            )
+        })?;
         if !line.starts_with("+++ ") {
             bail!(
                 "invalid patch file format: expected `+++` on line {}",
