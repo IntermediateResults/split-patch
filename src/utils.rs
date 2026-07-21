@@ -41,6 +41,7 @@ fn t_add_suffix() {
     };
     assert_eq!(t("foo.png", "-123"), "foo-123.png");
     assert_eq!(t("bar/baz/foo.png", "-123"), "bar/baz/foo-123.png");
+    assert_eq!(t("foo", "-123"), "foo-123");
 }
 
 // Can't find anything in itertools; coalesce doesn't allow to build
