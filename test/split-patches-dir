@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -meuo pipefail
+IFS=
+
+usage() {
+    echo "Usage: $0 split-patch input-dir output-base"
+    echo "  For all files in input-dir, split them with 'split-patch' into"
+    echo "  a subdir in output-base with the basename of the input file and"
+    echo "  option appended."
+    exit 1
+}
+
+if [ $# -ne 3 ]; then
+    usage
+fi
+
+split_patch=$1
+input_dir=$2
+output_base=$3
+
+run() {
+    echo "+" "$@" >&2
+    "$@"
+}
+
+mkdir -p "$output_base"
+
+split_patch_abs=$(readlink -f "$split_patch")
+
+for opt in hunks changes; do
+    echo "Working on option: $opt"
+    for input_file in "$input_dir"/*; do
+        bn=$(basename "$input_file" .patch)
+        input_file_abs=$(readlink -f "$input_file")
+        # Go into the base dir so that the list of output files is the
+        # same for either program version
+        (
+            run cd "$output_base"
+            output_dir="$opt/$bn"
+            # rm -rf "$output_dir"
+            mkdir -p "$output_dir"
+            run "$split_patch_abs" --monotonous-numbers --output-dir "$output_dir" --"$opt" \
+                "$input_file_abs" > "$output_dir"/_list
+        )
+    done
+done
