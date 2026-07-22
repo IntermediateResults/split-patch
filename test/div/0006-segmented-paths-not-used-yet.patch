@@ -1,0 +1,604 @@
+From 0deb12a14d7a336245f011135ebd9fe4d45b5a1c Mon Sep 17 00:00:00 2001
+Message-ID: <0deb12a14d7a336245f011135ebd9fe4d45b5a1c.1777272302.git.ch@christianjaeger.ch>
+In-Reply-To: <f3a55cd3c356fdfe5104c5e0596631752bce2c34.1777272302.git.ch@christianjaeger.ch>
+References: <f3a55cd3c356fdfe5104c5e0596631752bce2c34.1777272302.git.ch@christianjaeger.ch>
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 24 Apr 2026 17:40:17 +0200
+Subject: [PATCH 6/8] -segmented paths, not used yet
+
+----------------------------- src/leaked_region.rs -----------------------------
+
+- add unsafe fn return_unused  XXX unfinished
+
+-------------------------- src/lst/segmented_path.rs --------------------------
+create
+
+struct SegmentedPath
+
+---------------------- src/lst/possibly_segmented_path.rs ----------------------
+create
+
+trait PossiblySegmentedPath
+
+----------------------------- src/lst/get_items.rs -----------------------------
+
+- type-parameterize path in Item (P)
+- pass &Path in addition to P
+
+-------------------------------- src/bin/lst.rs --------------------------------
+
+- add type parameter in addition to the lifetime to `Item`
+---
+ src/bin/lst.rs                     |  20 +--
+ src/leaked_region.rs               |   9 ++
+ src/lst/get_items.rs               |  68 +++++----
+ src/lst/mod.rs                     |   2 +
+ src/lst/possibly_segmented_path.rs |  36 +++++
+ src/lst/segmented_path.rs          | 215 +++++++++++++++++++++++++++++
+ 6 files changed, 314 insertions(+), 36 deletions(-)
+ create mode 100644 src/lst/possibly_segmented_path.rs
+ create mode 100644 src/lst/segmented_path.rs
+
+diff --git a/src/bin/lst.rs b/src/bin/lst.rs
+index 48089f8..f6930bc 100644
+--- a/src/bin/lst.rs
++++ b/src/bin/lst.rs
+@@ -374,7 +374,7 @@ mod tests {
+ 
+         // Make items from it
+         let now = SystemTime::now();
+-        let mut items: Vec<Item> = backing
++        let mut items: Vec<Item<_>> = backing
+             .split(|c| *c == 0)
+             .map(|path| {
+                 let path: &OsStr = OsStr::from_bytes(path);
+@@ -400,6 +400,7 @@ mod tests {
+                         file_kind: None,
+                     },
+                     link_target: None,
++                    _phantom: std::marker::PhantomData,
+                 }
+             })
+             .collect();
+@@ -502,9 +503,10 @@ fn cmp_function(
+     time: bool,
+     time_reversed: bool,
+ ) -> for<'region> fn(
+-    a: &'region Item<'region>,
+-    b: &'region Item<'region>,
+-) -> Ordering {
++    a: &'region Item<&'region Path>,
++    b: &'region Item<&'region Path>,
++) -> Ordering
++{
+     struct InlineLst;
+     #[allow(non_upper_case_globals)]
+     const ci_cmp: fn(a: &Path, b: &Path) -> Ordering =
+@@ -550,11 +552,11 @@ fn cmp_function(
+ }
+ 
+ fn run_processing_commands<'t: 'u, 'u: 'v, 'v>(
+-    items: &'v mut Vec<Item<'t>>,
++    items: &'v mut Vec<Item<'t, &'t Path>>,
+     cmds: &[ProcessingCommand],
+     now: SystemTime,
+     show_files_from_future: bool,
+-) -> &'v [Item<'t>] {
++) -> &'v [Item<'t, &'t Path>] {
+     probe!("run_processing_commands");
+     let mut selected_items = unsafe { hack_static(&mut **items) };
+     for cmd in cmds {
+@@ -577,7 +579,7 @@ fn run_processing_commands<'t: 'u, 'u: 'v, 'v>(
+             }
+             ProcessingCommand::Reverse => selected_items.reverse(),
+             ProcessingCommand::FilterDays(range) => {
+-                let new_items: Vec<Item<'t>> = selected_items
++                let new_items: Vec<Item<_>> = selected_items
+                     .into_iter()
+                     .filter(|item| {
+                         let f = |age_days| match range {
+@@ -620,7 +622,7 @@ struct TableFromItems {
+ }
+ 
+ impl TableFromItems {
+-    fn run<'t>(&self, items: &[Item<'t>]) -> YatTable<7> {
++    fn run<'t>(&self, items: &[Item<'t, &'t Path>]) -> YatTable<7> {
+         let Self {
+             use_color,
+             pw_info_cache,
+@@ -789,7 +791,7 @@ fn main() -> Result<()> {
+ 
+     // Read the paths as blocks (as `Vec<u8>`) of some number of
+     // null-terminated paths each, in either mode
+-    let (mut items, errors): (Vec<Item>, Vec<anyhow::Error>) = {
++    let (mut items, errors): (Vec<Item<_>>, Vec<anyhow::Error>) = {
+         probe!("get items");
+         if let Some(basepath) = opt.ls_dir {
+             set_current_dir(&basepath).with_context(|| {
+diff --git a/src/leaked_region.rs b/src/leaked_region.rs
+index 45b328c..0ef58c3 100644
+--- a/src/leaked_region.rs
++++ b/src/leaked_region.rs
+@@ -243,6 +243,15 @@ impl<'g> LeakedRegion<'g> {
+         }
+     }
+ 
++    /// Return num_bytes from the end of the last allocation. Safety:
++    /// an allocation on the same `self` must have occurred
++    /// previously; `num_bytes` must be <= `num_bytes` of that last
++    /// allocation; and the last `num_bytes` of that last allocation
++    /// must be unused.
++    pub unsafe fn return_unused(&mut self, num_bytes: usize) {
++        // XXX todo
++    }
++
+     pub fn allocate_path<'s, P: AsRef<Path>>(&'s mut self, path: P) -> &'g Path
+     where
+         'g: 's,
+diff --git a/src/lst/get_items.rs b/src/lst/get_items.rs
+index 5611bee..e16fc50 100644
+--- a/src/lst/get_items.rs
++++ b/src/lst/get_items.rs
+@@ -1,6 +1,6 @@
+ use std::{
+     ffi::OsStr,
+-    fmt::Display,
++    fmt::{Debug, Display},
+     fs::Metadata,
+     marker::PhantomData,
+     os::unix::{ffi::OsStrExt, fs::MetadataExt},
+@@ -19,6 +19,7 @@ use crate::{
+     io::{unix_gr::Gid, unix_pw::Uid},
+     io_utils::read_buf::ReadBufStreamError,
+     leaked_region::GlobalLeakedRegions,
++    lst::possibly_segmented_path::PossiblySegmentedPath,
+     path_file_kind::{FileKind, ToFileKind},
+     probe,
+     time::age_at::AgeAt,
+@@ -378,12 +379,16 @@ impl EssentialMetadata {
+     }
+ }
+ 
+-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+-pub struct Item<'t> {
+-    pub path: &'t Path,
++// Need PartialEq, Eq for tests
++#[derive(Debug, Clone, PartialEq, Eq)]
++pub struct Item<'p, P: PossiblySegmentedPath<'p>> {
++    pub path: P,
+     pub metadata: EssentialMetadata,
+     /// Metadata for the path if there was no error getting it
+     pub link_target: Option<(Box<Path>, Option<Box<EssentialMetadata>>)>,
++    // XX wanted to keep this field private to make it impossible to
++    // create?
++    pub _phantom: PhantomData<&'p ()>,
+ }
+ 
+ #[test]
+@@ -400,25 +405,26 @@ fn t_sizes() {
+     assert_eq!(size_of::<EssentialMetadata>(), 64);
+     // 16+64+8+64=152, actually 160 when flat; 104 when boxing
+     // link_target metadata
+-    assert_eq!(size_of::<Item>(), 104);
++    assert_eq!(size_of::<Item<&Path>>(), 104);
+ }
+ 
+-impl<'t> Item<'t> {
+-    pub fn from_path_and_metadata(
+-        path: &'t Path,
++impl<'p, P: PossiblySegmentedPath<'p>> Item<'p, P> {
++    fn from_path_and_metadata(
++        path: P,
++        _path: &Path,
+         read_link: bool,
+         stat_link_target: bool,
+         metadata: Metadata,
+     ) -> Result<Option<Self>> {
+         let metadata = EssentialMetadata::from_symlink_metadata(
+             &metadata,
+-            path.to_file_kind(),
++            _path.to_file_kind(),
+         )?;
+         let link_target = if read_link && metadata.mode.filetype().is_link() {
+-            match path.read_link() {
++            match _path.read_link() {
+                 Ok(t) => {
+                     let metadata2 = if stat_link_target {
+-                        path.metadata().ok().and_then(|m| {
++                        _path.metadata().ok().and_then(|m| {
+                             EssentialMetadata::from_symlink_metadata(
+                                 &m,
+                                 t.to_file_kind(),
+@@ -439,6 +445,7 @@ impl<'t> Item<'t> {
+             path,
+             metadata,
+             link_target,
++            _phantom: PhantomData,
+         }))
+     }
+ 
+@@ -446,13 +453,15 @@ impl<'t> Item<'t> {
+     /// retrieve the link target path; if `stat_link_target` is
+     /// additionally true, try to get the metadata for the target, too
+     pub fn from_path(
+-        path: &'t Path,
++        path: P,
++        _path: &Path,
+         read_link: bool,
+         stat_link_target: bool,
+     ) -> Result<Option<Self>> {
+-        match path.symlink_metadata() {
++        match _path.symlink_metadata() {
+             Ok(metadata) => Self::from_path_and_metadata(
+                 path,
++                _path,
+                 read_link,
+                 stat_link_target,
+                 metadata,
+@@ -497,15 +506,15 @@ impl GetItems {
+         &self,
+         input: impl ParallelIterator<Item = Result<Vec<u8>, ReadBufStreamError>>,
+         input_record_separator: u8,
+-    ) -> (Vec<Item<'static>>, Vec<anyhow::Error>) {
++    ) -> (Vec<Item<'static, &'static Path>>, Vec<anyhow::Error>) {
+         // To avoid appending individual items multiple times (in
+         // multiple reduce layers), collect the original vectors then
+         // flatten them in one go at the end. Also, collect errors
+         // from all chunks together, too, don't stop early except per
+         // chunk.
+-        let (itemss, errors): (Vec<Vec<Item>>, Vec<anyhow::Error>) = input
+-            .map(|chunk| -> (Vec<Vec<Item>>, Vec<anyhow::Error>) {
+-                match (|| -> Result<Vec<Item>> {
++        let (itemss, errors): (Vec<Vec<Item<_>>>, Vec<anyhow::Error>) = input
++            .map(|chunk| -> (Vec<Vec<Item<_>>>, Vec<anyhow::Error>) {
++                match (|| -> Result<Vec<Item<_>>> {
+                     let mut chunk = chunk?;
+                     chomp(&mut chunk, input_record_separator);
+                     // XX hack for now, OK for single-shot program
+@@ -521,10 +530,15 @@ impl GetItems {
+                         .filter(|path: &&Path| -> bool {
+                             !self.ignore_path(path)
+                         })
+-                        .map(|path| -> Result<Option<Item>> {
++                        .map(|path| -> Result<Option<Item<_>>> {
+                             // Only stat linked files if used for
+                             // coloring, and only in long format anyway.
+-                            Item::from_path(path, self.long, self.use_color)
++                            Item::from_path(
++                                path,
++                                path,
++                                self.long,
++                                self.use_color,
++                            )
+                         })
+                         .filter_map(|r| r.transpose())
+                         .collect::<Result<Vec<_>>>()
+@@ -547,13 +561,13 @@ impl GetItems {
+ 
+     /// `(Vec<Item<'static>>, Vec<anyhow::Error>)` is what one dir
+     /// level yields. Vec of that since subdirs, too.
+-    fn _find<'p>(
+-        &self,
++    fn _find<'s, 'p>(
++        &'s self,
+         dir: &'p Path,
+         include_dir: bool,
+         metadata: Metadata,
+         global_leaked_regions: &'p GlobalLeakedRegions,
+-    ) -> (Bag<Item<'p>>, Bag<anyhow::Error>) {
++    ) -> (Bag<Item<'p, &'p Path>>, Bag<anyhow::Error>) {
+         match (|| -> Result<_> {
+             let Self {
+                 ignore: _,
+@@ -561,10 +575,10 @@ impl GetItems {
+                 use_color,
+             } = self;
+ 
+-            let mut items: Vec<Item<'p>> = Vec::new();
++            let mut items: Vec<Item<_>> = Vec::new();
+             if include_dir {
+                 if let Some(item) = Item::from_path_and_metadata(
+-                    dir, *long, *use_color, metadata,
++                    dir, dir, *long, *use_color, metadata,
+                 )? {
+                     items.push(item);
+                 }
+@@ -574,7 +588,7 @@ impl GetItems {
+ 
+             let input = std::fs::read_dir(dir)
+                 .with_context(|| anyhow!("directory {dir:?}"))?;
+-            let subdir_items: Mutex<(Bag<Item<'p>>, Bag<anyhow::Error>)> =
++            let subdir_items: Mutex<(Bag<Item<_>>, Bag<anyhow::Error>)> =
+                 Mutex::new((Bag::new(), Bag::new()));
+             let subdir_items_rf = &subdir_items;
+             rayon::scope(|scope| -> Result<()> {
+@@ -602,7 +616,7 @@ impl GetItems {
+                         });
+                     } else {
+                         if let Some(item) = Item::from_path_and_metadata(
+-                            path, *long, *use_color, metadata,
++                            path, path, *long, *use_color, metadata,
+                         )? {
+                             items.push(item);
+                         }
+@@ -628,7 +642,7 @@ impl GetItems {
+         dir: &Path,
+         include_top: bool,
+         global_leaked_regions: &'p GlobalLeakedRegions,
+-    ) -> Result<(Vec<Item<'p>>, Vec<anyhow::Error>)> {
++    ) -> Result<(Vec<Item<'p, &'p Path>>, Vec<anyhow::Error>)> {
+         // XX .metadata() ?
+         let metadata = dir
+             .symlink_metadata()
+diff --git a/src/lst/mod.rs b/src/lst/mod.rs
+index 9c89efa..d4e8e98 100644
+--- a/src/lst/mod.rs
++++ b/src/lst/mod.rs
+@@ -1,2 +1,4 @@
+ pub mod get_items;
+ pub mod path_cmp;
++pub mod possibly_segmented_path;
++pub mod segmented_path;
+diff --git a/src/lst/possibly_segmented_path.rs b/src/lst/possibly_segmented_path.rs
+new file mode 100644
+index 0000000..80cbab2
+--- /dev/null
++++ b/src/lst/possibly_segmented_path.rs
+@@ -0,0 +1,36 @@
++use std::{cmp::Ordering, fmt::Debug, path::Path};
++
++use crate::lst::{path_cmp, segmented_path::SegmentedPath};
++
++pub trait PossiblySegmentedPath<'s>: Debug {
++    fn ci_cmp(&self, other: &Self) -> Ordering;
++    fn to_path<'tmp>(&self, tmp: &'tmp mut [u8]) -> &'tmp Path
++    where
++        's: 'tmp;
++}
++
++impl<'s> PossiblySegmentedPath<'s> for &'s Path {
++    fn ci_cmp(&self, other: &Self) -> Ordering {
++        path_cmp::ci_cmp(self, other)
++    }
++
++    fn to_path<'tmp>(&self, _tmp: &'tmp mut [u8]) -> &'tmp Path
++    where
++        's: 'tmp,
++    {
++        *self
++    }
++}
++
++impl<'s> PossiblySegmentedPath<'s> for &SegmentedPath<'s> {
++    fn ci_cmp(&self, other: &Self) -> Ordering {
++        self.cmp(other)
++    }
++
++    fn to_path<'tmp>(&self, tmp: &'tmp mut [u8]) -> &'tmp Path
++    where
++        's: 'tmp,
++    {
++        SegmentedPath::to_path(self, tmp)
++    }
++}
+diff --git a/src/lst/segmented_path.rs b/src/lst/segmented_path.rs
+new file mode 100644
+index 0000000..badf025
+--- /dev/null
++++ b/src/lst/segmented_path.rs
+@@ -0,0 +1,215 @@
++use std::{cmp::Ordering, ffi::OsStr, path::Path, slice::from_raw_parts};
++
++use crate::leaked_region::LeakedRegion;
++
++#[derive(Debug, Clone)]
++pub struct SegmentedPath<'t> {
++    parent: Option<&'t SegmentedPath<'t>>,
++    depth: u16,
++    /// Length in bytes of the OsStr as bytes (no \0 at the end)
++    orig_name_len: u16,
++    /// Length in bytes after decoding lossily as string, and
++    /// unicode-lower-cased (no \0 at the end)
++    lc_name_str_len: u32,
++}
++
++impl<'t> PartialEq for SegmentedPath<'t> {
++    fn eq(&self, other: &Self) -> bool {
++        self.depth == other.depth
++            && self.orig_name_len == other.orig_name_len
++            && self.lc_name_str_len == other.lc_name_str_len
++            // XXX check parent pointers first!!
++            && self.orig_name() == other.orig_name()
++            && self.parent == other.parent
++    }
++}
++
++impl<'t> Eq for SegmentedPath<'t> {}
++
++impl<'t> PartialOrd for SegmentedPath<'t> {
++    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
++        Some(self.cmp(other))
++    }
++}
++
++// Both must be of the same depth !
++fn segmented_path_ord<'t1, 't2>(
++    p1: &'t1 SegmentedPath<'t1>,
++    p2: &'t2 SegmentedPath<'t2>,
++) -> Ordering {
++    if let Some(p1p) = p1.parent {
++        let p2p = p2
++            .parent
++            .expect("expect that both segmented paths are of the same length");
++        p1p.cmp(p2p)
++            .then_with(|| p1.lc_name_str().cmp(p2.lc_name_str()))
++    } else {
++        p1.lc_name_str().cmp(p2.lc_name_str())
++    }
++}
++
++impl<'t> Ord for SegmentedPath<'t> {
++    fn cmp(&self, other: &Self) -> Ordering {
++        let shared_len = self.depth.min(other.depth);
++        let p1 = self.take_segments(shared_len).expect("have shared_len");
++        let p2 = other.take_segments(shared_len).expect("have shared_len");
++        segmented_path_ord(p1, p2).then_with(|| {
++            // Which path ran out?
++            if p1.depth < p2.depth {
++                Ordering::Less
++            } else {
++                Ordering::Greater
++            }
++        })
++    }
++}
++
++impl<'t> SegmentedPath<'t> {
++    fn new(
++        parent: Option<&'t SegmentedPath<'t>>,
++        orig_name: &OsStr,
++        leaked_region: &mut LeakedRegion<'t>,
++    ) -> &'t Self {
++        let head_size = size_of::<Self>();
++        let orig_name_bytes = orig_name.as_encoded_bytes();
++        let orig_name_len = orig_name_bytes.len();
++        let alloc_len = head_size + orig_name_len * 5;
++        let alloc = leaked_region.allocate(alloc_len);
++        let (alloc_head, rest) = alloc.split_at_mut(head_size);
++        let (alloc_orig, rest) = rest.split_at_mut(orig_name_len);
++        alloc_orig.copy_from_slice(orig_name_bytes);
++        let lc_name = orig_name.to_string_lossy();
++
++        let mut i = 0;
++        for c in lc_name.chars() {
++            if c.is_ascii() {
++                let cl = c.to_ascii_lowercase() as u8;
++                rest[i] = cl;
++                i += 1;
++            } else {
++                for c in c.to_lowercase() {
++                    let encoded = c.encode_utf8(&mut rest[i..]);
++                    i += encoded.len();
++                }
++            }
++        }
++
++        let remainder = rest.len() - i;
++        unsafe {
++            // Safety: we return bytes from the last allocation, it
++            // was on the same `leaked_region`, `remainder` is unused
++            // and smaller than the original allocation.
++            leaked_region.return_unused(remainder);
++        }
++
++        let depth = match parent {
++            Some(d) => d.depth + 1,
++            None => 0,
++        };
++        let slf = Self {
++            parent,
++            depth,
++            orig_name_len: orig_name_len
++                .try_into()
++                .expect("no path segment can be longer than u16::MAX"),
++            lc_name_str_len: i.try_into().expect(
++                "no lowercased path segment can be longer than u32::MAX",
++            ),
++        };
++
++        let self_ptr = alloc_head.as_mut_ptr() as *mut Self;
++        unsafe {
++            // Safety: we reserved the head for it
++            std::ptr::write(self_ptr, slf);
++        }
++
++        unsafe {
++            // Safety: we just wrote the value; and the lifetime is
++            // that of the allocator
++            &*self_ptr
++        }
++    }
++
++    pub fn orig_name(&self) -> &'t OsStr {
++        let head_size = size_of::<Self>();
++        let self_ptr: *const Self = self;
++        let self_addr = self_ptr as *const u8;
++        let bytes_addr = unsafe {
++            // Safety: `new` allocates the whole thing in one go, and
++            // we don't go past it
++            self_addr.add(head_size)
++        };
++        let bytes: &[u8] =
++            unsafe { from_raw_parts(bytes_addr, self.orig_name_len as usize) };
++        unsafe {
++            // Safety: we created the bytes via `as_encoded_bytes()`
++            // in `new`
++            OsStr::from_encoded_bytes_unchecked(bytes)
++        }
++    }
++
++    pub fn lc_name_str(&self) -> &str {
++        let head_size = size_of::<Self>();
++        let self_ptr: *const Self = self;
++        let self_addr = self_ptr as *const u8;
++        let bytes_addr = unsafe {
++            // Safety: `new` allocates the whole thing in one go, and
++            // we don't go past it
++            self_addr.add(head_size + self.orig_name_len as usize)
++        };
++        let bytes: &[u8] = unsafe {
++            from_raw_parts(bytes_addr, self.lc_name_str_len as usize)
++        };
++        unsafe {
++            // Safety: we created the bytes from a &str
++            str::from_utf8_unchecked(bytes)
++        }
++    }
++
++    /// Take the n+1 left-most path segments (n == 0 returns
++    /// `Some(self)`). Returns `None` if n > self.depth.
++    pub fn take_segments(&self, n: u16) -> Option<&Self> {
++        if n > self.depth {
++            None
++        } else {
++            let dropn = self.depth - n;
++            let mut p = self;
++            for _ in 0..dropn {
++                p = p.parent.expect("checked");
++            }
++            Some(p)
++        }
++    }
++
++    /// Appends a '/', always (drop it afterwards). Returns the
++    /// remainder of tmp.
++    fn _to_path<'tmp>(&self, tmp: &'tmp mut [u8]) -> &'tmp mut [u8] {
++        let tmp = if let Some(parent) = self.parent {
++            parent._to_path(tmp)
++        } else {
++            tmp
++        };
++        // Hmm, is encoded bytes the right for Path ???
++        let bytes = self.orig_name().as_encoded_bytes();
++        let (p, rest) = tmp.split_at_mut(bytes.len());
++        p.copy_from_slice(bytes);
++        rest[0] = b'/';
++        &mut rest[1..]
++    }
++
++    /// Panics if tmp is not large enough.
++    pub fn to_path<'tmp>(&self, tmp: &'tmp mut [u8]) -> &'tmp Path {
++        let tmplen = tmp.len();
++        let rest = self._to_path(tmp);
++        let len_used = tmplen - rest.len();
++        let used = &tmp[0..len_used - 1];
++        let osstr = unsafe { OsStr::from_encoded_bytes_unchecked(used) };
++        osstr.as_ref()
++    }
++}
++
++#[test]
++fn t_size() {
++    // Should be true even on 32-bit architectures?
++    assert_eq!(size_of::<SegmentedPath>(), 16);
++}
