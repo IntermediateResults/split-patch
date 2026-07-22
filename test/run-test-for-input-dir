@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -meuo pipefail
+IFS=
+
+usage() {
+    echo "Usage: $0 input-dir"
+    echo "  Runs split-patches-dir for the Rust version, with input-dir-current,"
+    echo "  then check for differences with input-dir-expected."
+    exit 1
+}
+
+if [ $# -ne 1 ]; then
+    usage
+fi
+
+if [ "$1" = "-h" -o "$1" = "--help" ]; then
+    usage
+fi
+
+input_dir=$1
+
+input_dir_clean=$(dirname "$input_dir/.")
+
+current_dir="$input_dir_clean"-current
+expected_dir="$input_dir_clean"-expected
+
+if [ ! -d "$expected_dir" ]; then
+    echo "$0: missing dir '$expected_dir'" >&2
+    exit 1
+fi
+
+
+rm -rf "$current_dir"
+
+test/split-patches-dir target/debug/split-patch "$input_dir" "$current_dir"
+
+diff -ruN "$expected_dir" "$current_dir"
+
