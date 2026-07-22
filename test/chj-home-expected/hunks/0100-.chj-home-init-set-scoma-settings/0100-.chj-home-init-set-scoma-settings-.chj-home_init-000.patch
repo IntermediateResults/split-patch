@@ -1,0 +1,24 @@
+From 19d40a69e2cada844da14614dd8632c4cda5eaff Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 14 Mar 2021 22:50:27 +0000
+Subject: .chj-home/init 000: [PATCH 100/191] .chj-home/init: set `scoma` settings
+
+---
+ .chj-home/init | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/.chj-home/init b/.chj-home/init
+--- a/.chj-home/init
++++ b/.chj-home/init
+@@ -109,7 +109,10 @@ fi
+ (
+     set -eu
+     cd scratch
+-    /opt/chj/bin/cj-git-init || true
++    if /opt/chj/bin/cj-git-init; then
++	touch .git/scoma-no-user-group
++	touch .git/scoma-no-push
++    fi
+ )
+ 
+ chmod a+wxt,g+s DROP

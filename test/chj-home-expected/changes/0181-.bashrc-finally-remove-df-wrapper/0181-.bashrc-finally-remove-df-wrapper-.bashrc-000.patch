@@ -1,0 +1,23 @@
+From 7f965ac32f55696eada2c7283554dce125062f85 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Mon, 25 Nov 2024 23:30:00 +0100
+Subject: .bashrc 000: [PATCH 181/191] .bashrc: finally remove 'df' wrapper
+
+It breaks on every single release or distro. Just stop it. It actually
+even messes up the display when it *does* work. And it was just for
+chroots. Just stop.
+---
+ .bashrc | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -326,7 +326,6 @@ ct () {
+ 
+ 
+ find () { my.find "$@"; }
+-df () { my.df "$@"; }
+ mt () { /opt/chj/bin/mt "$@"; }
+ 
+ mv () { command mv -i "$@"; }

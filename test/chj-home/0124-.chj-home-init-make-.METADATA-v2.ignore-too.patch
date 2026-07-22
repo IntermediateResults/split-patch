@@ -1,0 +1,24 @@
+From 8cda6e82d093a3d7472d7293a235414c68ab884c Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Tue, 21 Sep 2021 02:29:24 +0200
+Subject: [PATCH 124/191] .chj-home/init: make .METADATA-v2.ignore, too
+
+---
+ .chj-home/init | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/.chj-home/init b/.chj-home/init
+index d3527ed..03d19b4 100755
+--- a/.chj-home/init
++++ b/.chj-home/init
+@@ -118,6 +118,7 @@ fi
+     cd scratch
+     if /opt/chj/bin/cj-git-init; then
+ 	echo no-user-group >> .METADATA-v2.options
++	echo HEUTE >> .METADATA-v2.ignore
+ 	touch .git/scoma-no-push
+     fi
+ )
+-- 
+2.47.3
+

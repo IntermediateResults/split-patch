@@ -1,0 +1,18 @@
+From 9ebcc27c2076f91587d761d742a81777f80a74b1 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 30 Apr 2023 19:20:37 +0200
+Subject: .gitignore_global 000: [PATCH 159/191] .gitignore_global: C development
+
+---
+ .gitignore_global | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/.gitignore_global b/.gitignore_global
+--- a/.gitignore_global
++++ b/.gitignore_global
+@@ -3,3 +3,5 @@
+ *.xhtml
+ nohup.out
+ .markdownmake.lck
++.gdb_history
++a.out

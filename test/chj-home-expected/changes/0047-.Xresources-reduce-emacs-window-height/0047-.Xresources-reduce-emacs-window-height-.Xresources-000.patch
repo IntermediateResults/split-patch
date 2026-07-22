@@ -1,0 +1,21 @@
+From 7c22ad6fe353f9fd490205eb2d0b611e64a0e46b Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Thu, 30 Nov 2017 19:31:18 +0000
+Subject: .Xresources 000: [PATCH 047/191] .Xresources: reduce emacs window height
+
+---
+ .Xresources | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.Xresources b/.Xresources
+--- a/.Xresources
++++ b/.Xresources
+@@ -14,7 +14,7 @@ xpdf.initialZoom: width
+ 
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ 
+-emacs*geometry: 80x65
++emacs*geometry: 80x39
+ 
+ 
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -1,0 +1,51 @@
+From 35bfcc88c9c6e8b55b464714750f87cf4ac2a67f Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Tue, 18 Nov 2025 10:43:40 +0100
+Subject: [PATCH 188/191] .bashrc: add cdnnnn and cdnnnnn
+
+---
+ .bashrc | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+diff --git a/.bashrc b/.bashrc
+index a26c2a0..e7f6249 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -215,6 +215,34 @@ cdnnn () {
+         cdnewdir "$@"
+     fi
+ }
++cdnnnn () {
++    local opts
++    opts=""
++    if [ "${1-}" = "-a" ]; then
++        opts="-a"
++        shift
++    fi
++    if [ $# -eq 0 ]; then
++	cd_newest 3 "$opts"
++    else
++	cd_newest 2 "$opts"
++        cdnewdir "$@"
++    fi
++}
++cdnnnnn () {
++    local opts
++    opts=""
++    if [ "${1-}" = "-a" ]; then
++        opts="-a"
++        shift
++    fi
++    if [ $# -eq 0 ]; then
++	cd_newest 4 "$opts"
++    else
++	cd_newest 3 "$opts"
++        cdnewdir "$@"
++    fi
++}
+ 
+ _cgd_ () {
+     local gd_="$1"
+-- 
+2.47.3
+

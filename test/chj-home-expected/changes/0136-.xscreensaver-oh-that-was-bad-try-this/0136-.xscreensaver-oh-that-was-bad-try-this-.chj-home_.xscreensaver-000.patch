@@ -1,0 +1,21 @@
+From d8760c367dd1ab97728d917bfe8791050e9e011e Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (dull)" <ch@christianjaeger.ch>
+Date: Sat, 20 Nov 2021 02:39:58 +0000
+Subject: .chj-home/.xscreensaver 000: [PATCH 136/191] .xscreensaver: oh, that was bad, try this
+
+Also reduced cycle time so there will be a 3rd saver more
+consistently.
+---
+ .chj-home/.xscreensaver | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/.chj-home/.xscreensaver b/.chj-home/.xscreensaver
+--- a/.chj-home/.xscreensaver
++++ b/.chj-home/.xscreensaver
+@@ -1,5 +1,5 @@
+ # XScreenSaver Preferences File
+-# Written by xscreensaver-demo 5.45 for chris on Fri Nov 19 17:17:27 2021.
++# Written by xscreensaver-demo 5.45 for chris on Sat Nov 20 02:39:15 2021.
+ # https://www.jwz.org/xscreensaver/
+ 
+ timeout:	0:10:00

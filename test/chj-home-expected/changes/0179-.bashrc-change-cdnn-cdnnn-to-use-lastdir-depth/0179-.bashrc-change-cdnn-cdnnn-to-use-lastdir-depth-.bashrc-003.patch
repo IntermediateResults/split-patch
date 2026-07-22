@@ -1,0 +1,22 @@
+From d22fea0e520e351f4bd680b42f5ae744c949bd4a Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 1 Sep 2024 05:29:55 +0200
+Subject: .bashrc 003: [PATCH 179/191] .bashrc: change cdnn, cdnnn to use lastdir --depth
+
+Also fixes a typo in cd_newest_sisterfolder?!
+---
+ .bashrc | 27 +++++++++++++++------------
+ 1 file changed, 15 insertions(+), 12 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -149,7 +156,7 @@ mvcd () {
+ }
+ cdn () {
+     if [ $# -eq 0 ]; then
+-	cd_newest
++	cd_newest 0
+     else
+ 	cdnewdir "$@"
+     fi

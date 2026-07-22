@@ -1,0 +1,20 @@
+From f34b40f5805a588b851a4af442f8dda1af71f0b9 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 25 Nov 2017 22:43:20 +0000
+Subject: home-init 001: [PATCH 034/191] home-init: allow to run from different working
+ directories than home
+
+---
+ home-init | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/home-init b/home-init
+--- a/home-init
++++ b/home-init
+@@ -7,5 +12,5 @@
+ 
+-cd
++set -x
+ 
+ ln -s /opt/chj/emacs/.emacs
+ 

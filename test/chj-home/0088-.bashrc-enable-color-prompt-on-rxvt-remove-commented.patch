@@ -1,0 +1,36 @@
+From 1612f9c858ce7cf74ff8448ccf6e829db3a5d587 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 10 Dec 2020 04:12:45 +0000
+Subject: [PATCH 088/191] .bashrc: enable color prompt on rxvt, remove
+ commented duplicate
+
+---
+ .bashrc | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+index 5fe0cf7..36b3db8 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -19,7 +19,7 @@ shopt -s checkwinsize
+ 
+ # set a fancy prompt (non-color, unless we know we "want" color)
+ case "$TERM" in
+-xterm-color)
++xterm-color|xterm)
+     PS1='\[\033[01;32m\]\u@$CHJHOSTNAME\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+     ;;
+ *)
+@@ -27,9 +27,6 @@ xterm-color)
+     ;;
+ esac
+ 
+-# Comment the above and uncomment this below for a color prompt
+-#PS1='\[\033[01;32m\]\u@$CHJHOSTNAME\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+-
+ # If this is an xterm set the window title, via PROMPT_COMMAND
+ case "$TERM" in
+     xterm*|rxvt*)
+-- 
+2.47.3
+

@@ -1,0 +1,25 @@
+From 17b94118244463edddb3abec7278c8567017d5a5 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Tue, 7 Feb 2017 22:07:24 +0000
+Subject: [PATCH 001/191] move lt to chj-bin
+
+---
+ .bashrc | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+index 40fbe10..c39fa24 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -83,8 +83,6 @@ alias les=less
+ alias le=zless
+ #^ zless?  egal ja ebe ?. nun. -- nope nid egal. cat file.gz|less doesn't work, zless does.
+ alias c=cd
+-function lt { l "$@" |tail -20 ; }
+-#well farbefehlt. und  argumente fürs lt natürlich dumm.  warum isch das kein skirpt ??
+ alias cdsp="cd ~/Projekte/spielzeug"
+ cdnewdir() {
+     if [ "$#" -eq 1 ]; then
+-- 
+2.47.3
+

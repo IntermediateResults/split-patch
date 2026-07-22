@@ -1,0 +1,22 @@
+From 04d8049d277c9e70e20d4d53f8b2e3b2fdf2c041 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Tue, 15 Jun 2021 13:37:42 +0100
+Subject: .bashrc 000: [PATCH 115/191] .bashrc: document the fix
+
+---
+ .bashrc | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -19,6 +19,9 @@ shopt -s checkwinsize
+ 
+ __ps1_show_exitcode () {
+     local exitcode=$?
++    # Have to make shell aware of non-printing character sequences,
++    # and for this have to use \001 \002 over \[ \] .
++    # (Also see https://mywiki.wooledge.org/BashFAQ/053 .)
+     if [ "$exitcode" -ne 0 ]; then
+ 	echo -ne '\001\033[01;41m\002'
+ 	echo -n "$exitcode"

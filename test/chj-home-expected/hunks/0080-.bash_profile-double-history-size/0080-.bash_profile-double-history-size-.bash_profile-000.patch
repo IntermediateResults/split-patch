@@ -1,0 +1,21 @@
+From 74fa5483e9c947c5f44223290745f4d72aff00ed Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 18 Jul 2020 00:43:14 +0100
+Subject: .bash_profile 000: [PATCH 080/191] .bash_profile: double history size
+
+---
+ .bash_profile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.bash_profile b/.bash_profile
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -37,7 +37,7 @@ export LESS="-i -M -R"
+ # no idea, XX.
+ unset GNOME_KEYRING_CONTROL
+ export COLUMNS
+-export HISTSIZE=1500
++export HISTSIZE=3000
+ 
+ ulimit -S -v 3200000  # note: can override in .bash_profile_local
+ 

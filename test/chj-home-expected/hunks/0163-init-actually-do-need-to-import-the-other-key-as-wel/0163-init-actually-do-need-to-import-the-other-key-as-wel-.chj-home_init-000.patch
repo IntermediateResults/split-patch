@@ -1,0 +1,22 @@
+From fed8e81930fb270c96960cd4f1a43aabb40146ed Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Mon, 12 Jun 2023 16:31:33 +0200
+Subject: .chj-home/init 000: [PATCH 163/191] init: actually *do* need to import the other key as
+ well here
+
+Confusing, too many parts, etc.
+---
+ .chj-home/init | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/.chj-home/init b/.chj-home/init
+--- a/.chj-home/init
++++ b/.chj-home/init
+@@ -146,6 +146,7 @@ chmod go-w .ssh/authorized_keys
+ touch .chj-home/init-done
+ 
+ gpg --import /opt/chj/chjize/cj-key.asc || true
++gpg --import /opt/chj/chjize/cj-key-2.asc || true
+ 
+ set +x
+ 

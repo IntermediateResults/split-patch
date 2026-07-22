@@ -1,0 +1,22 @@
+From d6a23eb0d212e62f9827262b08e4e74ffad24ce9 Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Thu, 28 May 2020 13:50:03 +0100
+Subject: .bashrc 002: [PATCH 075/191] .bashrc: pick up /etc/hostname's value in chroots
+
+Removing debian_chroot hack in the process (that I totally forgot
+about).
+---
+ .bashrc | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -28,6 +28,6 @@ shopt -s checkwinsize
+     ;;
+ *)
+-    PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
++    PS1='\u@$CHJHOSTNAME:\w\$ '
+     ;;
+ esac
+ 

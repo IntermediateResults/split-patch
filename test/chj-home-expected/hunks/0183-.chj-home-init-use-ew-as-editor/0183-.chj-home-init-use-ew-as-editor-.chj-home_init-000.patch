@@ -1,0 +1,23 @@
+From 9bdaf07400e90416cd816f6cee95006dbbecac16 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Wed, 5 Feb 2025 22:51:54 +0100
+Subject: .chj-home/init 000: [PATCH 183/191] .chj-home/init: use `ew` as editor
+
+`ew` is a new alias for `e` that explicitly waits (and ignores the
+`E_IS` env var).
+---
+ .chj-home/init | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.chj-home/init b/.chj-home/init
+--- a/.chj-home/init
++++ b/.chj-home/init
+@@ -74,7 +74,7 @@ if [ -e .bash_profile_local ]; then
+     /opt/chj/bin/mvnumber .bash_profile_local
+ fi
+ cat <<'EOF' > .bash_profile_local
+-export EDITOR=e
++export EDITOR=ew
+ export BROWSER="firefox--new-window"
+ export EMAIL=$(cat ~/.chj-home_email)
+ export LANG=en_GB.UTF-8

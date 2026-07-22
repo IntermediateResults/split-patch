@@ -1,0 +1,29 @@
+From 1100a538cbdcdbf5079d43d63599341aba4ce51a Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Tue, 15 Jun 2021 12:58:50 +0100
+Subject: .bashrc 001: [PATCH 108/191] .bashrc: set PS1 differently on each iteration
+
+---
+ .bashrc | 30 ++++++++++++++++--------------
+ 1 file changed, 16 insertions(+), 14 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -39,16 +51,6 @@ __prompt_command () {
+ 
+ PROMPT_COMMAND=__prompt_command
+ 
+-# set a fancy prompt (non-color, unless we know we "want" color)
+-case "$TERM" in
+-xterm-color|xterm)
+-    PS1='$(__ps1_show_exitcode)\u@$CHJHOSTNAME\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+-    ;;
+-*)
+-    PS1='\u@$CHJHOSTNAME:\w\$ '
+-    ;;
+-esac
+-
+ 
+ # enable color support of ls
+ if [ "$TERM" != "dumb" ]; then

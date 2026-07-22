@@ -1,0 +1,24 @@
+From e6bcbe2be255cd6eb3bb51b394df4f23f15f32b4 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 23 Sep 2021 17:16:27 +0100
+Subject: .chj-home/dot.xscreensaver-dull 005: [PATCH 126/191] Move .xscreensaver to .chj-home again
+
+I forgot that I had this idea before already.
+---
+ .chj-home/dot.xscreensaver-dull | 183 ++++++++++---------
+ .xscreensaver                   | 302 --------------------------------
+ 2 files changed, 101 insertions(+), 384 deletions(-)
+ delete mode 100644 .xscreensaver
+
+diff --git a/.chj-home/dot.xscreensaver-dull b/.chj-home/dot.xscreensaver-dull
+--- a/.chj-home/dot.xscreensaver-dull
++++ b/.chj-home/dot.xscreensaver-dull
+@@ -36,7 +36,7 @@ fadeTicks:	20
+ mode:		random
+ selected:	-1
+ 
+-textMode:	url
++textMode:	program
+ textLiteral:	XScreenSaver
+ textFile:	
+ textProgram:	fortune

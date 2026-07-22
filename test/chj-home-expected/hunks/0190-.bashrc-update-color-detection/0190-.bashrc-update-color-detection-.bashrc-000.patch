@@ -1,0 +1,21 @@
+From c8e7655738f3f70c99e5ed84b09acb8581501249 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 5 Jun 2026 16:23:16 +0200
+Subject: .bashrc 000: [PATCH 190/191] .bashrc: update color detection
+
+---
+ .bashrc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -39,7 +39,7 @@ __ps1_show_exitcode () {
+ 
+ # set a fancy prompt (non-color, unless we know we "want" color)
+ case "$TERM" in
+-xterm-color|xterm)
++xterm-256color|xterm-color|xterm)
+     PS1='$(__ps1_show_exitcode)\u@$CHJHOSTNAME\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+     ;;
+ *)

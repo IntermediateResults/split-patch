@@ -1,0 +1,29 @@
+From 2c27145f1f3792a9f6f218fbb636d0d576847fe9 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 7 Jan 2021 01:40:20 +0000
+Subject: [PATCH 091/191] .bashrc: add `cj`
+
+---
+ .bashrc | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/.bashrc b/.bashrc
+index bccbe38..7be4a36 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -160,6 +160,12 @@ cb () {
+ 	cd "$1"
+     fi
+ }
++cj () {
++    cd ~/bookmarks/j
++    if [ $# -ge 1 ]; then
++	cd "$1"
++    fi
++}
+ 
+ find () { my.find "$@"; }
+ df () { my.df "$@"; }
+-- 
+2.47.3
+

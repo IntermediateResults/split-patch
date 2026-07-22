@@ -1,0 +1,39 @@
+From dbd35c7bbe7765b048b9cdd90b8dc14e0e63f383 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 24 Sep 2021 22:19:44 +0100
+Subject: [PATCH 129/191] init: more fix perms
+
+---
+ .chj-home/init | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/.chj-home/init b/.chj-home/init
+index eb7fc05..18d8f75 100755
+--- a/.chj-home/init
++++ b/.chj-home/init
+@@ -14,13 +14,21 @@ if [ -e .chj-home/init-done ]; then
+     exit 0
+ fi
+ 
+-# fix perms (make private):
++# Fix perms (make private):
+ for d in  .links2 .vnc; do
+     if [ -e "$d" ]; then
+ 	chmod go-rwx "$d"
+     fi
+ done
+ 
++# More fix perms (make group private):
++for d in . Pictures/ Documents/ Downloads/ Desktop/ Music/ Templates/ Videos/; do
++    if [ -e "$d" ]; then
++	chmod o-rwx "$d"
++    fi
++done
++
++
+ if [ -e .xscreensaver ]; then
+     echo "File .xscreensaver already exists, not touching it."
+ else
+-- 
+2.47.3
+

@@ -1,0 +1,41 @@
+From 3ad8739bd8a4f3b58fe591c89a5f209bf2eb60b1 Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (dull)" <ch@christianjaeger.ch>
+Date: Fri, 19 Nov 2021 17:18:14 +0000
+Subject: [PATCH 134/191] .xscreensaver: blank and off fast
+
+Because with the old settings it would, crazily, run screensavers
+(concluded from CPU load) even after 35-45' of inactivity.
+
+This was/is ever unclear, are those times *after* each other? Not all
+from the start of inactivity?
+---
+ .chj-home/.xscreensaver | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/.chj-home/.xscreensaver b/.chj-home/.xscreensaver
+index 7d8daee..3b49f89 100644
+--- a/.chj-home/.xscreensaver
++++ b/.chj-home/.xscreensaver
+@@ -1,5 +1,5 @@
+ # XScreenSaver Preferences File
+-# Written by xscreensaver-demo 5.45 for chris on Thu Sep 23 17:10:59 2021.
++# Written by xscreensaver-demo 5.45 for chris on Fri Nov 19 17:17:27 2021.
+ # https://www.jwz.org/xscreensaver/
+ 
+ timeout:	0:10:00
+@@ -26,9 +26,9 @@ ignoreUninstalledPrograms:False
+ font:		*-medium-r-*-140-*-m-*
+ dpmsEnabled:	True
+ dpmsQuickOff:	False
+-dpmsStandby:	0:20:00
+-dpmsSuspend:	0:25:00
+-dpmsOff:	0:30:00
++dpmsStandby:	0:01:00
++dpmsSuspend:	0:01:00
++dpmsOff:	0:01:00
+ grabDesktopImages:  False
+ grabVideoFrames:    False
+ chooseRandomImages: False
+-- 
+2.47.3
+

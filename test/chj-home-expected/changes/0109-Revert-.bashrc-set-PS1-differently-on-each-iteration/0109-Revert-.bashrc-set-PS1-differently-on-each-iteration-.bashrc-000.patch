@@ -1,0 +1,27 @@
+From 64e1dec6bda4d3601594356d03ab0832ea3620f5 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Tue, 15 Jun 2021 13:23:40 +0100
+Subject: .bashrc 000: [PATCH 109/191] Revert ".bashrc: set PS1 differently on each
+ iteration"
+
+This reverts commit 1100a538cbdcdbf5079d43d63599341aba4ce51a.
+---
+ .bashrc | 30 ++++++++++++++----------------
+ 1 file changed, 14 insertions(+), 16 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -18,9 +18,9 @@ shopt -s checkwinsize
+ [ -x /usr/bin/lesspipe ] && eval "$(lesspipe)"
+ 
+ __ps1_show_exitcode () {
+-    #local exitcode=$?
+-    if [ "$exitcode" -ne 0 ]; then
+-	echo -ne '\033[01;41m'"$exitcode"'\033[00m \033[01;32m';
++    local v=$?
++    if [ "$v" -ne 0 ]; then
++	echo -ne '\033[01;41m'"$v"'\033[00m \033[01;32m';
+     else
+ 	echo -ne '\033[01;32m';
+     fi

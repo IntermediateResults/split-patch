@@ -1,0 +1,94 @@
+From 5d1ebc04448350b46eec0486fc017caac13cbcf5 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 1 Sep 2024 13:08:47 +0200
+Subject: [PATCH 180/191] .bashrc: cdn, cdnn, cdnnn: pass -a option to lastdir
+
+Removing the -a by default.
+---
+ .bashrc | 43 ++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 34 insertions(+), 9 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+index 27e1dd8..61fe4ae 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -141,42 +141,67 @@ mvcd () {
+ _ls_newest () {
+     local n
+     n="$1"
++    local opts
++    opts="$2"
+     shift
+-    lastdir --depth "$n" --fullpath -a -- "$@"
++    shift
++    lastdir --depth "$n" --fullpath $opts -- "$@"
+ }
+ cd_newest_sisterfolder () {
+     local n
+     n="${1-0}"
+-    cd "$(_ls_newest "$n" ..)"
++    local opts
++    opts="${2-}"
++    cd "$(_ls_newest "$n" "$opts" ..)"
+ }
+ cd_newest () {
+     local n
+     n="${1-0}"
+-    cd "$(_ls_newest "$n" .)"
++    local opts
++    opts="${2-}"
++    cd "$(_ls_newest "$n" "$opts" .)"
+ }
+ cdat() {
+     cdnewdir "$(dat --day --week "$@")"
+ }
+ cdn () {
++    local opts
++    opts=""
++    if [ "${1-}" = "-a" ]; then
++        opts="-a"
++        shift
++    fi
+     if [ $# -eq 0 ]; then
+-	cd_newest 0
++	cd_newest 0 "$opts"
+     else
+-	cdnewdir "$@"
++        cdnewdir "$@"
+     fi
+ }
+ cdnn () {
++    local opts
++    opts=""
++    if [ "${1-}" = "-a" ]; then
++        opts="-a"
++        shift
++    fi
+     if [ $# -eq 0 ]; then
+-	cd_newest 1
++	cd_newest 1 "$opts"
+     else
+-	cd_newest 0
++	cd_newest 0 "$opts"
+         cdnewdir "$@"
+     fi
+ }
+ cdnnn () {
++    local opts
++    opts=""
++    if [ "${1-}" = "-a" ]; then
++        opts="-a"
++        shift
++    fi
+     if [ $# -eq 0 ]; then
+-	cd_newest 2
++	cd_newest 2 "$opts"
+     else
+-	cd_newest 1
++	cd_newest 1 "$opts"
+         cdnewdir "$@"
+     fi
+ }
+-- 
+2.47.3
+

@@ -1,0 +1,24 @@
+From e29a67997b3e7953e306a5c770d2632fded8d9c9 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 25 Nov 2017 18:09:58 +0000
+Subject: .bashrc 000: [PATCH 024/191] move to .bash_profile
+
+---
+ .bash_profile | 4 ++++
+ .bashrc       | 4 ----
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -146,10 +146,6 @@ rens () {
+     ren -- "`lastfile .`"
+ }
+ 
+-# hm hack for novo, not running Gnome anymore, for some reason this
+-# env var is set, why no idea, foo.
+-unset GNOME_KEYRING_CONTROL
+-
+ settitle () {
+     unset PROMPT_COMMAND
+     /opt/chj/bin/settitle "$@"

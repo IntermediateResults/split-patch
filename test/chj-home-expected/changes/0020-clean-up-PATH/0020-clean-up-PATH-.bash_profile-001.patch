@@ -1,0 +1,21 @@
+From c7d942e546df485c4d8d7b9bddd9484d951ca17e Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 25 Nov 2017 18:03:12 +0000
+Subject: .bash_profile 001: [PATCH 020/191] clean up PATH
+
+---
+ .bash_profile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/.bash_profile b/.bash_profile
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -21,7 +21,7 @@ if [ -f ~/.bashrc ]; then
+     PATH=~/bin:"${PATH}"
+ fi
+ 
+-# software installed under the user's home, 'locally'
++# third party software (binaries) installed under the user's home, 'locally'
+ if [ -d ~/local/bin ] ; then
+     PATH=~/local/bin:"${PATH}"
+ fi

@@ -1,0 +1,18 @@
+From 94771b9257f5d4c20bcc676ba6a769de4b13c6ac Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 3 Sep 2021 00:06:55 +0100
+Subject: .bashrc 001: [PATCH 121/191] Abstraction
+
+---
+ .bashrc | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -140,4 +146,4 @@ mvcd () {
+ cd_newest_sisterfolder () {
+-    cd "$(find .. -maxdepth 1 -type d -print0 | grep -zZ -v '^\.*$' | xargs -0 -s 129023 -n 129023 --exit --no-run-if-empty ls -dt | head -1)$"
++    cd "$(_ls_newest ..)$"
+ }
+ cd_newest () {

@@ -1,0 +1,41 @@
+From e6bcbe2be255cd6eb3bb51b394df4f23f15f32b4 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 23 Sep 2021 17:16:27 +0100
+Subject: .chj-home/dot.xscreensaver-dull 054: [PATCH 126/191] Move .xscreensaver to .chj-home again
+
+I forgot that I had this idea before already.
+---
+ .chj-home/dot.xscreensaver-dull | 183 ++++++++++---------
+ .xscreensaver                   | 302 --------------------------------
+ 2 files changed, 101 insertions(+), 384 deletions(-)
+ delete mode 100644 .xscreensaver
+
+diff --git a/.chj-home/dot.xscreensaver-dull b/.chj-home/dot.xscreensaver-dull
+--- a/.chj-home/dot.xscreensaver-dull
++++ b/.chj-home/dot.xscreensaver-dull
+@@ -269,6 +269,25 @@ programs:								      \
+ - GL: 				raverhoop -root				    \n\
+ - GL: 				splodesic -root				    \n\
+ - GL: 				unicrud -root				    \n\
++- GL: 				esper -root				    \n\
++  GL: 				vigilance -root				    \n\
++- GL: 				crumbler -root				    \n\
++				filmleader -root			    \n\
++-				glitchpeg -root				    \n\
++  GL: 				handsy -root				    \n\
++- GL: 				maze3d -root				    \n\
++- GL: 				peepers -root				    \n\
++  GL: 				razzledazzle -root			    \n\
++-				vfeedback -root				    \n\
++  GL: 				deepstars -root -delay 11504 -speed 0.2221  \n\
++- GL: 				gravitywell -root			    \n\
++- GL: 				beats -root				    \n\
++  GL: 				covid19 -root -delay 0 -speed 0.169	      \
++				  -count 36 -fps			    \n\
++- GL: 				etruscanvenus -root			    \n\
++- GL: 				gibson -root				    \n\
++- GL: 				headroom -root				    \n\
++- GL: 				sphereeversion -root			    \n\
+ 
+ 
+ pointerPollTime:    0:00:05

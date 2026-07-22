@@ -1,0 +1,28 @@
+From 604364c1f24d572b6f8fa71d959296ecf5064f69 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Tue, 29 Aug 2023 21:11:01 +0200
+Subject: [PATCH 166/191] remove emacs geometry
+
+---
+ .Xresources | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/.Xresources b/.Xresources
+index f7e47f4..cceec8c 100644
+--- a/.Xresources
++++ b/.Xresources
+@@ -12,11 +12,6 @@
+ 
+ xpdf.initialZoom: width
+ 
+-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-
+-emacs*geometry: 80x39
+-
+-
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ 
+ xemacs*Background: #d3d3dd
+-- 
+2.47.3
+

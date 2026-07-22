@@ -1,0 +1,17 @@
+From 7bcdd9c86598bdff680a4620811e721273c4dd71 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 9 Mar 2017 12:30:16 +0000
+Subject: .gitignore_global 000: [PATCH 005/191] ignore .markdownmake.lck
+
+---
+ .gitignore_global | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/.gitignore_global b/.gitignore_global
+--- a/.gitignore_global
++++ b/.gitignore_global
+@@ -2,3 +2,4 @@
+ *~
+ *.xhtml
+ nohup.out
++.markdownmake.lck

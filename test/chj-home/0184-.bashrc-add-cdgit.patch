@@ -1,0 +1,33 @@
+From 7dc6dde4211faa102e070d5906d21942adb84874 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Mon, 18 Aug 2025 14:49:53 +0200
+Subject: [PATCH 184/191] .bashrc: add `cdgit`
+
+---
+ .bashrc | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/.bashrc b/.bashrc
+index e37a26f..a26c2a0 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -138,6 +138,16 @@ mvcd () {
+ 	false
+     fi
+ }
++
++cdgit() {
++    local d
++    if d=$(git rev-parse --git-dir); then
++        cd "$d/.."
++    else
++        false
++    fi
++}
++
+ _ls_newest () {
+     local n
+     n="$1"
+-- 
+2.47.3
+

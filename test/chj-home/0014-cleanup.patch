@@ -1,0 +1,20 @@
+From f23039d5640682d9f146cf1dbad2cd215f3771b0 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 24 Nov 2017 16:05:44 +0000
+Subject: [PATCH 014/191] cleanup
+
+---
+ .xmodmaprc_off | 1 -
+ 1 file changed, 1 deletion(-)
+ delete mode 100644 .xmodmaprc_off
+
+diff --git a/.xmodmaprc_off b/.xmodmaprc_off
+deleted file mode 100644
+index 32e7049..0000000
+--- a/.xmodmaprc_off
++++ /dev/null
+@@ -1 +0,0 @@
+-keycode  133 = Alt_L Meta_L Alt_L Meta_L Alt_L Meta_L
+-- 
+2.47.3
+

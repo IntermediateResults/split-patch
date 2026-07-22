@@ -1,0 +1,40 @@
+From 1504b6ee31a9dbe427bdac5d7b41d1e18acbda7e Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Mon, 22 Jul 2019 04:22:38 +0100
+Subject: .bashrc 004: [PATCH 067/191] .bashrc: consistently format function definitions
+
+---
+ .bashrc | 44 ++++++++++++++++++++++----------------------
+ 1 file changed, 22 insertions(+), 22 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -105,22 +105,22 @@ mvcd() {
+ 	false
+     fi
+ }
+-cd_newest_sisterfolder() {
++cd_newest_sisterfolder () {
+     cd "$(find .. -maxdepth 1 -type d -print0 |grep -zZ -v '^\.*$'|xargs -0 -s 129023 -n 129023 --exit --no-run-if-empty ls -dt|head -1)$"
+ }
+-cd_newest() {
++cd_newest () {
+     cd "$(find . -maxdepth 1 -type d -print0|grep -zZ -v '^\.*$'|xargs -0 -s 129023 -n 129023 --exit --no-run-if-empty ls -dt|head -1)"
+ }
+-cdt() {
++cdt () {
+     if checkcreate-tmp-owner-dir; then
+ 	cd "/tmp/$USER"
+     fi
+ }
+-cdpwd() {
++cdpwd () {
+     cd "$(pwd -P)"
+ }
+ 
+-unlimit() {
++unlimit () {
+     if [ $# -eq 0 ]; then
+ 	ulimit -S -v unlimited
+     else

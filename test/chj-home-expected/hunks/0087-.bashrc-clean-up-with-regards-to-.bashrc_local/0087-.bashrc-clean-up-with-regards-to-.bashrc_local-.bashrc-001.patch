@@ -1,0 +1,26 @@
+From 5d1e3b88b0dd50afe387b90459bd9fef5e2b1c84 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 10 Dec 2020 04:08:34 +0000
+Subject: .bashrc 001: [PATCH 087/191] .bashrc: clean up with regards to ~/.bashrc_local
+
+---
+ .bashrc | 22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -42,13 +46,6 @@ if [ "$TERM" != "dumb" ]; then
+     ls () { command ls --color=auto "$@"; }
+ fi
+ 
+-# enable programmable completion features (you don't need to enable
+-# this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+-# sources /etc/bash.bashrc).
+-#if [ -f /etc/bash_completion ]; then
+-#    . /etc/bash_completion
+-#fi
+-
+ possibly_cd () {
+     if [ $# = 1 ]; then
+         cd "$1"

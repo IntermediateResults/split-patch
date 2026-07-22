@@ -1,0 +1,22 @@
+From e710aad91c30b966e8f4ec19027d3414b8ee5b0f Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 31 May 2024 11:31:56 +0200
+Subject: .holidays.tsv 002: [PATCH 175/191] holidays: put not-in-Basel dates in square brackets,
+ in all years
+
+---
+ .holidays.tsv | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/.holidays.tsv b/.holidays.tsv
+--- a/.holidays.tsv
++++ b/.holidays.tsv
+@@ -49,7 +49,7 @@ Ostermontag 2026 	Montag 6 April 2026 	15
+ Tag der Arbeit 2026 	Freitag 1 Mai 2026 	18
+ Auffahrt 2026 	Donnerstag 14 Mai 2026 	20
+ Pfingstmontag 2026 	Montag 25 Mai 2026 	22
+-Fronleichnam 2026 	Donnerstag 4 Juni 2026 	23
++[Fronleichnam] 2026 	Donnerstag 4 Juni 2026 	23
+ Bundesfeiertag 2026 	Samstag 1 August 2026 	31
+ Mariä Himmelfahrt 2026 	Samstag 15 August 2026 	33
+ Allerheiligen 2026 	Sonntag 1 November 2026 	44

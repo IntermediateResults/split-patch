@@ -1,0 +1,37 @@
+From 6dacb84d68eb908deec70860e8d7c8be31073c38 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Wed, 17 Feb 2021 20:45:32 +0000
+Subject: [PATCH 093/191] .chj-home/init: move gpg import to the end
+
+To avoid it cluttering the screen before asking the questions. And
+there's no usage of the key in that file yet, add such after this
+place when it comes up.
+---
+ .chj-home/init | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/.chj-home/init b/.chj-home/init
+index 41084ac..3a41328 100755
+--- a/.chj-home/init
++++ b/.chj-home/init
+@@ -20,8 +20,6 @@ cancel() {
+     exit 1
+ }
+ 
+-gpg --import /opt/chj/chjize/cj-key.asc || true
+-
+ if read -e -p "Please enter your full name: " fullname; then
+     if read -e -p "Please enter your (bare) email address: " email; then
+ 	echo "$fullname" > .chj-home_fullname
+@@ -98,6 +96,8 @@ touch .chj-home/init-done
+ 
+ ln -s /opt/chj/emacs/bin/* bin || true
+ 
++gpg --import /opt/chj/chjize/cj-key.asc || true
++
+ set +x
+ 
+ echo "NOTE: Your answers have been written to .chj-home_fullname, .chj-home_email, and the files .bash_profile_local and .gitconfig have been generated."
+-- 
+2.47.3
+

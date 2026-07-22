@@ -1,0 +1,26 @@
+From f59a65eedfcd6d31285a09243b301fdc9d4f0d8e Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 9 Feb 2023 19:00:43 +0100
+Subject: [PATCH 158/191] .chj-home/init: Git: rebase = false
+
+---
+ .chj-home/init | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/.chj-home/init b/.chj-home/init
+index 062517e..dc61617 100755
+--- a/.chj-home/init
++++ b/.chj-home/init
+@@ -107,6 +107,9 @@ cat <<EOF > .gitconfig
+ #[push]
+ #	default = simple
+ # old git can*not* deal with this
++
++[pull]
++        rebase = false
+ EOF
+ 
+ set +eu
+-- 
+2.47.3
+

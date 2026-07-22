@@ -1,0 +1,56 @@
+From 66f78b3c564603e7a008a5d515ee89cb13c5d445 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 4 Dec 2021 02:47:00 +0000
+Subject: [PATCH 140/191] Add a default .gdbinit
+
+---
+ .chj-home/.gdbinit | 12 ++++++++++++
+ .chj-home/init     | 13 +++++++------
+ 2 files changed, 19 insertions(+), 6 deletions(-)
+ create mode 100644 .chj-home/.gdbinit
+
+diff --git a/.chj-home/.gdbinit b/.chj-home/.gdbinit
+new file mode 100644
+index 0000000..f5f37dd
+--- /dev/null
++++ b/.chj-home/.gdbinit
+@@ -0,0 +1,12 @@
++
++# History saving:
++#  enable:
++set history save on
++#  check the last n entries for duplicates:
++set remove-duplicates 6
++#  to always save it in the home dir:
++#set history filename ~/.gdb_history
++#  to set the history size:
++#  Note, gdb also checks the HISTSIZE env var!
++set history size 5000
++
+diff --git a/.chj-home/init b/.chj-home/init
+index 18d8f75..ae1eaec 100755
+--- a/.chj-home/init
++++ b/.chj-home/init
+@@ -28,12 +28,13 @@ for d in . Pictures/ Documents/ Downloads/ Desktop/ Music/ Templates/ Videos/; d
+     fi
+ done
+ 
+-
+-if [ -e .xscreensaver ]; then
+-    echo "File .xscreensaver already exists, not touching it."
+-else
+-    cp .chj-home/.xscreensaver .
+-fi
++for file in .xscreensaver .gdbinit; do
++    if [ -e "$file" ]; then
++        echo "File $file already exists, not touching it."
++    else
++        cp ".chj-home/$file" .
++    fi
++done
+ 
+ cancel() {
+     echo "$0: cancelled due to missing answer."
+-- 
+2.47.3
+

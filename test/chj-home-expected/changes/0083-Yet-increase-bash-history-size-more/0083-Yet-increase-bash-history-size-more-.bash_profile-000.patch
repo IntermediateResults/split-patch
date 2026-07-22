@@ -1,0 +1,24 @@
+From c92216ba2ba32d40d5d06b148553c2f31606047a Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Wed, 26 Aug 2020 23:07:37 +0100
+Subject: .bash_profile 000: [PATCH 083/191] Yet increase bash history size more
+
+And move variable setting to 'right' place.
+---
+ .bash_profile | 3 ++-
+ .bashrc       | 3 ---
+ 2 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/.bash_profile b/.bash_profile
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -37,7 +37,8 @@ export LESS="-i -M -R"
+ # no idea, XX.
+ unset GNOME_KEYRING_CONTROL
+ export COLUMNS
+-export HISTSIZE=3000
++export HISTCONTROL=ignoredups
++export HISTSIZE=5000
+ 
+ ulimit -S -v 3200000  # note: can override in .bash_profile_local
+ 

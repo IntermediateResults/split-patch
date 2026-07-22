@@ -1,0 +1,32 @@
+From 47f896faa205419bee6e91c7d8d539199d825afa Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 26 Nov 2017 01:04:27 +0000
+Subject: home-init 002: [PATCH 039/191] ask user-specific info from home-init, generate files
+
+---
+ .bash_profile |  7 +++---
+ .gitconfig    | 20 -----------------
+ home-init     | 61 +++++++++++++++++++++++++++++++++++++++++++++++----
+ 3 files changed, 60 insertions(+), 28 deletions(-)
+ delete mode 100644 .gitconfig
+
+diff --git a/home-init b/home-init
+--- a/home-init
++++ b/home-init
+@@ -11,2 +40,16 @@ set -euo pipefail
+ fi
++cat <<EOF > .gitconfig
++[user]
++	email = $email
++	name = $fullname
++
++[diff "cj"]
++	command = _cj-git-tkdiff
++
++[merge]
++	conflictstyle = diff3
++	#renameLimit = 2000
++
++[core]
++	excludesfile = ~/.gitignore_global
+ 

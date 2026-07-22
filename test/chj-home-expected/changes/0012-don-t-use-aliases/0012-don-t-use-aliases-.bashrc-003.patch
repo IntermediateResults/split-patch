@@ -1,0 +1,38 @@
+From 552df4e787e2a89c22cb84dcc6d9013d67d896ef Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 24 Nov 2017 16:04:15 +0000
+Subject: .bashrc 003: [PATCH 012/191] don't use aliases
+
+---
+ .bashrc | 44 ++++++++++++++------------------------------
+ 1 file changed, 14 insertions(+), 30 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -72,17 +59,14 @@ fi
+ #    . /etc/bash_completion
+ #fi
+ 
+-
+-alias u="cd .."
+-alias uu="cd ../.."
+-alias uuu="cd ../../.."
+-alias uuuu="cd ../../../.."
+-alias uuuuu="cd ../../../../.."
+-#alias cdnewdir="
+-alias les=less
+-alias le=zless
+-#^ zless?  egal ja ebe ?. nun. -- nope nid egal. cat file.gz|less doesn't work, zless does.
+-alias c=cd
++u() { cd ..; }
++uu() { cd ../..; }
++uuu() { cd ../../..; }
++uuuu() { cd ../../../..; }
++uuuuu() { cd ../../../../..; }
++les() { less; }
++le() { zless; }
++c() { cd; }
+ cdnewdir() {
+     if [ "$#" -eq 1 ]; then
+         mkdir "$1" && cd "$1"

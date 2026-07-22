@@ -1,0 +1,17 @@
+From d06e5bb990a3f9c314aee4b1e23fd4ffbec11c3f Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 25 Nov 2017 18:09:23 +0000
+Subject: .bashrc 000: [PATCH 023/191] remove duplicate
+
+---
+ .bashrc | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -176,4 +176,3 @@ EOF
+     E users/Christian_Jaeger.md
+ }
+ 
+-export LANG=en_GB.UTF-8

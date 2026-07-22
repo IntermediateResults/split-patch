@@ -1,0 +1,21 @@
+From 84f4114115de3bee3990c35515b1b64f30de896f Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 22 Mar 2024 16:28:11 +0000
+Subject: [PATCH 173/191] .gitignore_global: ignore .cache/
+
+---
+ .gitignore_global | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/.gitignore_global b/.gitignore_global
+index 6b3c6fe..0113b48 100644
+--- a/.gitignore_global
++++ b/.gitignore_global
+@@ -5,3 +5,4 @@ nohup.out
+ .markdownmake.lck
+ .gdb_history
+ a.out
++.cache/
+-- 
+2.47.3
+

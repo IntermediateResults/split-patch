@@ -1,0 +1,22 @@
+From e710aad91c30b966e8f4ec19027d3414b8ee5b0f Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 31 May 2024 11:31:56 +0200
+Subject: .holidays.tsv 000: [PATCH 175/191] holidays: put not-in-Basel dates in square brackets,
+ in all years
+
+---
+ .holidays.tsv | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/.holidays.tsv b/.holidays.tsv
+--- a/.holidays.tsv
++++ b/.holidays.tsv
+@@ -11,7 +11,7 @@ Ostermontag 2024 	Montag 1 April 2024 	14
+ Tag der Arbeit (Labour Day) 2024 	Mittwoch 1 Mai 2024 	18
+ Auffahrt (Ascension) 2024 	Donnerstag 9 Mai 2024 	19
+ Pfingstmontag (Whitsun) 2024 	Montag 20 Mai 2024 	21
+-Fronleichnam (nicht in Basel!) 2024 	Donnerstag 30 Mai 2024 	22
++[Fronleichnam] (nicht in Basel!) 2024 	Donnerstag 30 Mai 2024 	22
+ Bundesfeiertag (Swiss National Day) 2024 	Donnerstag 1 August 2024 	31
+ Mariä Himmelfahrt 2024 	Donnerstag 15 August 2024 	33
+ Allerheiligen 2024 	Freitag 1 November 2024 	44

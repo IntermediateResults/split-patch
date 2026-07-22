@@ -1,0 +1,21 @@
+From b8d1166073bda75a57a074eb1c589953e2641110 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Wed, 22 Nov 2023 01:54:45 +0100
+Subject: .bashrc 000: [PATCH 167/191] .bashrc: add `ul`
+
+Not sure I'll ever use this, though.
+---
+ .bashrc | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -96,6 +96,7 @@ uu () { _cd_then ../.. "$@"; }
+ uuu () { _cd_then ../../.. "$@"; }
+ uuuu () { _cd_then ../../../.. "$@"; }
+ uuuuu () { _cd_then ../../../../.. "$@"; }
++ul () { cd ..;  l "$@"; }
+ les () { less "$@"; }
+ c () { cd "$@"; }
+ cdnewdir () {

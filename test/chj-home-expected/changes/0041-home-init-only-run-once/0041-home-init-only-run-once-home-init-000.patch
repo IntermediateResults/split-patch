@@ -1,0 +1,25 @@
+From 6ef5c25d64273c41d5ee5cf3775f2a3ecad7d9ad Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Mon, 27 Nov 2017 17:38:22 +0000
+Subject: home-init 000: [PATCH 041/191] home-init: only run once
+
+---
+ home-init | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/home-init b/home-init
+--- a/home-init
++++ b/home-init
+@@ -9,6 +9,12 @@ if [ "$(readlink -f .)" != "$(readlink -f ~)" ]; then
+ fi
+ 
+ 
++if [ -e .home-init-done ]; then
++    echo "$0 was already run before; if you want to force re-running it, please run 'rm .home-init-done' first."
++    exit 0
++fi
++
++
+ cancel() {
+     echo "$0: cancelled due to missing answer."
+     exit 1

@@ -1,0 +1,22 @@
+From 7d5d2d5eb285c76de1d529c25837587cc40731e5 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 4 Nov 2021 13:08:25 +0000
+Subject: .bashrc 000: [PATCH 132/191] .bashrc: cgdi: fix, proper error handling
+
+---
+ .bashrc | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -163,7 +163,8 @@ cgdi () {
+         if [ "$(printf '%s' "$res" | wc -l)" -eq 0 ]; then
+             cd "$res"
+         else
+-            printf 'Need exactly one result, found:\n%s' "$res"
++            printf '*** Need exactly one result, found:\n%s\n' "$res"
++            false
+         fi
+     else
+         echo "Nothing found."

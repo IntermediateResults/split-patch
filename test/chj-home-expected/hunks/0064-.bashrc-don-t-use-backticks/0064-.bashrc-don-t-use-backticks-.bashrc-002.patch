@@ -1,0 +1,21 @@
+From d58ef763406fd04df785a6fa8612b88122c077de Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Mon, 22 Jul 2019 04:15:26 +0100
+Subject: .bashrc 002: [PATCH 064/191] .bashrc: don't use backticks
+
+---
+ .bashrc | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -117,7 +117,7 @@ cdt() {
+     fi
+ }
+ cdpwd() {
+-    cd "`pwd -P`"
++    cd "$(pwd -P)"
+ }
+ 
+ unlimit() {

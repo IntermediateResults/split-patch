@@ -1,0 +1,29 @@
+From 362e03085459ccbbaed3e1e4b2c0baa1c7af4d42 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 7 Jun 2020 22:17:39 +0100
+Subject: .bashrc 000: [PATCH 078/191] .bashrc: u*: more "transaction safety": properly
+ handle OLDPWD
+
+Oh my.
+---
+ .bashrc | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -72,7 +72,13 @@ _cd_then () {
+     local to="$1"; shift
+     if [ $# = 1 ]; then
+         local old=$(pwd)
+-        cd "$to" && cd "$1" || cd "$old"
++	local oldOLDPWD=$OLDPWD
++        if cd "$to" && cd "$1"; then
++	    OLDPWD=$old
++	else
++	    cd "$old"
++	    OLDPWD=$oldOLDPWD
++	fi
+     elif [ $# -gt 1 ]; then
+         echo "too many arguments"
+ 	false

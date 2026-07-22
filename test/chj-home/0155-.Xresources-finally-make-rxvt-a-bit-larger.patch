@@ -1,0 +1,26 @@
+From 8fda00869422b4af68a8b5fcb8d07026c46c722b Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 30 Oct 2022 22:29:40 +0100
+Subject: [PATCH 155/191] .Xresources: *finally* make rxvt a bit larger
+
+So that I can see a reasonable part of file names in scratch folder.
+---
+ .Xresources | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.Xresources b/.Xresources
+index 43976cd..f7e47f4 100644
+--- a/.Xresources
++++ b/.Xresources
+@@ -45,7 +45,7 @@ XEmacs*menubar*FontSet: -adobe-helvetica-bold-r-normal-*-12-*-*-*-*-*-*-*
+ 
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ 
+-URxvt.geometry: 80x25
++URxvt.geometry: 110x30
+ 
+ URxvt.scrollTtyOutput: False
+ URxvt.scrollTtyKeypress: True
+-- 
+2.47.3
+

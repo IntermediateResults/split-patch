@@ -1,0 +1,27 @@
+From f5805967952c373878d944d1beff5d46d6976f52 Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Thu, 25 Jul 2019 12:18:10 +0100
+Subject: [PATCH 070/191] .bashrc: add 'cb'
+
+---
+ .bashrc | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/.bashrc b/.bashrc
+index bb18c79..760d4f0 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -135,6 +135,10 @@ cs () {
+     cd ~/scratch
+ }
+ 
++cb () {
++    cd ~/bookmarks
++}
++
+ find () { my.find "$@"; }
+ df () { my.df "$@"; }
+ 
+-- 
+2.47.3
+

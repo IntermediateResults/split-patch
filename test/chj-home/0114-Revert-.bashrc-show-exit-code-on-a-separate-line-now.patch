@@ -1,0 +1,27 @@
+From 43e86f54d1dd1454c98290c3639a83be9145839f Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Tue, 15 Jun 2021 13:31:42 +0100
+Subject: [PATCH 114/191] Revert ".bashrc: show exit code on a separate line
+ (now fixed)"
+
+Maybe I don't want this, after all.
+---
+ .bashrc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.bashrc b/.bashrc
+index 44cd67d..b98d40f 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -23,7 +23,7 @@ __ps1_show_exitcode () {
+ 	echo -ne '\001\033[01;41m\002'
+ 	echo -n "$exitcode"
+ 	echo -ne '\001\033[00m\002'
+-	echo -ne '\n'
++	echo -n ' '
+ 	echo -ne '\001\033[01;32m\002'
+     else
+ 	echo -ne '\001\033[01;32m\002'
+-- 
+2.47.3
+

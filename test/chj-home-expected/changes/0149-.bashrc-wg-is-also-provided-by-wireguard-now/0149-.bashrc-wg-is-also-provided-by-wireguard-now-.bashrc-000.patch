@@ -1,0 +1,20 @@
+From 018d238a20b9d4f22c4223750e608d1c9546fb5d Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 26 Jun 2022 22:27:21 +0100
+Subject: .bashrc 000: [PATCH 149/191] .bashrc: wg is also provided by wireguard, now
+
+---
+ .bashrc | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -313,6 +313,7 @@ open () { /opt/chj/bin/open "$@"; }
+ suxterm () { /opt/chj/bin/suxterm "$@"; }
+ pdftotext () { /opt/chj/bin/pdftotext "$@"; }
+ gv () { /opt/chj/bin/gv "$@"; }
++wg () { /opt/chj/bin/wg "$@"; }
+ 
+ 
+ # --- End -------------------------------------

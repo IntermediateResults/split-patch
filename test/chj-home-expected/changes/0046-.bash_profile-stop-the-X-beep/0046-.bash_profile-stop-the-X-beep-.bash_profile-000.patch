@@ -1,0 +1,23 @@
+From 8e105c31dc4c6a1db14c0d560f2b7b96dd5355e4 Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Thu, 30 Nov 2017 19:30:42 +0000
+Subject: .bash_profile 000: [PATCH 046/191] .bash_profile: stop the X beep
+
+---
+ .bash_profile | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/.bash_profile b/.bash_profile
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -39,6 +39,10 @@ export HISTSIZE=1500
+ 
+ ulimit -S -v 1200000  # note: can override in .bash_profile_local
+ 
++if [ -n "${DISPLAY-}" ]; then
++    xset -b
++fi
++
+ 
+ # --- Personal env setup: -------
+ # see ~/.bash_profile_local

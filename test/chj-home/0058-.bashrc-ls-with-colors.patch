@@ -1,0 +1,25 @@
+From 52382355c936ae0c857dac0a378549906a27cb2a Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Sun, 22 Apr 2018 23:59:59 +0100
+Subject: [PATCH 058/191] .bashrc: ls with colors
+
+---
+ .bashrc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.bashrc b/.bashrc
+index 44629b2..c8ba8a9 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -166,7 +166,7 @@ lsof () {
+ 
+ # Utils which might be later in PATH than system ones:
+ 
+-ls () { /opt/chj/bin/ls "$@"; } # XX is this still useful?
++ls () { /opt/chj/bin/ls --color=auto "$@"; } # XX is this still useful?
+ sort () { /opt/chj/bin/sort "$@"; }
+ smplayer () { /opt/chj/bin/smplayer "$@"; }
+ zless () { /opt/chj/bin/zless "$@"; }
+-- 
+2.47.3
+

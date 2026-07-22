@@ -1,0 +1,29 @@
+From 6bb303a867bd8d0dd9c38a808b71f11cc6d82646 Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Sat, 21 Apr 2018 17:10:22 +0100
+Subject: .xscreensaver 003: [PATCH 057/191] .xscreensaver: ok *hav* to let it put monitor to
+ sleep
+
+Not getting done otherwise ech
+
+Also, use desktop background pic, enable more savers with those.
+---
+ .xscreensaver | 24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
+
+diff --git a/.xscreensaver b/.xscreensaver
+--- a/.xscreensaver
++++ b/.xscreensaver
+@@ -160,9 +160,10 @@ programs:								      \
+ 				euler2d -root				    \n\
+ -				fluidballs -root			    \n\
+   GL: 				flurry -root				    \n\
+-- GL: 				glblur -root				    \n\
++  GL: 				glblur -root -delay 8547 -blursize 30	    \n\
+ - GL: 				glsnake -root				    \n\
+--				halftone -root				    \n\
++				halftone -root -delay 14530 -maxspeed	      \
++				  0.0124				    \n\
+   GL: 				juggler3d -root				    \n\
+ - GL: 				lavalite -root				    \n\
+ -				polyominoes -root			    \n\

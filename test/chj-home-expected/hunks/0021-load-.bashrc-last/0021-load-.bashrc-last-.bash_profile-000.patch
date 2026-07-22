@@ -1,0 +1,24 @@
+From 820eed1d431ae02c46acf826ff3da09927d05f58 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 25 Nov 2017 18:06:41 +0000
+Subject: .bash_profile 000: [PATCH 021/191] load .bashrc last
+
+---
+ .bash_profile | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/.bash_profile b/.bash_profile
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -12,11 +12,6 @@ fi
+ # the default umask is set in /etc/login.defs
+ # umask 002
+ 
+-# include .bashrc if it exists
+-if [ -f ~/.bashrc ]; then
+-    . ~/.bashrc
+-fi
+-
+ PATH=/opt/chj/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games
+ 
+ # set PATH so it includes user's private bin if it exists

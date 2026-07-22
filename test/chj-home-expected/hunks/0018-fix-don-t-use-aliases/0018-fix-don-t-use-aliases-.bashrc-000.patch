@@ -1,0 +1,25 @@
+From 68702b2bd3e76c14e1033628e571d1460234ec34 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 25 Nov 2017 17:41:33 +0000
+Subject: .bashrc 000: [PATCH 018/191] fix "don't use aliases"
+
+---
+ .bashrc | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -64,9 +64,9 @@ uu() { cd ../..; }
+ uuu() { cd ../../..; }
+ uuuu() { cd ../../../..; }
+ uuuuu() { cd ../../../../..; }
+-les() { less; }
+-le() { zless; }
+-c() { cd; }
++les() { less "$@"; }
++le() { zless "$@"; }
++c() { cd "$@"; }
+ cdnewdir() {
+     if [ "$#" -eq 1 ]; then
+         mkdir "$1" && cd "$1"

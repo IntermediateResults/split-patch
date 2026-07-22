@@ -1,0 +1,44 @@
+From 510fe534d8bec57fb2ebeb76c86b89b6b6336aa0 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 22 May 2022 22:14:07 +0100
+Subject: [PATCH 144/191] .bashrc: add cdnn, cdnnn
+
+Great?!
+---
+ .bashrc | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/.bashrc b/.bashrc
+index bf16d20..3c24abd 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -156,6 +156,26 @@ cdn () {
+ 	cdnewdir "$@"
+     fi
+ }
++cdnn () {
++    if [ $# -eq 0 ]; then
++	cd_newest
++        cd_newest
++    else
++	cd_newest
++        cdnewdir "$@"
++    fi
++}
++cdnnn () {
++    if [ $# -eq 0 ]; then
++	cd_newest
++	cd_newest
++        cd_newest
++    else
++	cd_newest
++	cd_newest
++        cdnewdir "$@"
++    fi
++}
+ _cgd_ () {
+     local res=$1
+     # I forgot how to do this with builtins:
+-- 
+2.47.3
+

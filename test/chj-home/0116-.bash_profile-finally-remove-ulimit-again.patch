@@ -1,0 +1,26 @@
+From 6ecbcb3aeea5c9d9bf721c0ed0f5c75636384eb0 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Mon, 21 Jun 2021 13:11:37 +0100
+Subject: [PATCH 116/191] .bash_profile: finally remove ulimit again
+
+Install earlyoom instead.
+---
+ .bash_profile | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/.bash_profile b/.bash_profile
+index 0c4cc48..fb1dbf4 100644
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -48,8 +48,6 @@ export COLUMNS
+ export HISTCONTROL=ignoredups
+ export HISTSIZE=5000
+ 
+-ulimit -S -v 3200000  # note: can override in .bash_profile_local
+-
+ if [ -n "${DISPLAY-}" ]; then
+     xset -b
+ fi
+-- 
+2.47.3
+

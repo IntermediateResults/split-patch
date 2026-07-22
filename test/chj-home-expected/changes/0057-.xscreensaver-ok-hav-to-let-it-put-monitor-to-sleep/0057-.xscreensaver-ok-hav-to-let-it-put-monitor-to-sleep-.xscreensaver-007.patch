@@ -1,0 +1,26 @@
+From 6bb303a867bd8d0dd9c38a808b71f11cc6d82646 Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Sat, 21 Apr 2018 17:10:22 +0100
+Subject: .xscreensaver 007: [PATCH 057/191] .xscreensaver: ok *hav* to let it put monitor to
+ sleep
+
+Not getting done otherwise ech
+
+Also, use desktop background pic, enable more savers with those.
+---
+ .xscreensaver | 24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
+
+diff --git a/.xscreensaver b/.xscreensaver
+--- a/.xscreensaver
++++ b/.xscreensaver
+@@ -187,7 +188,8 @@ programs:								      \
+ - GL: 				gleidescope -root			    \n\
+ - GL: 				glknots -root				    \n\
+   GL: 				glmatrix -root				    \n\
+-- GL: 				glslideshow -root			    \n\
++  GL: 				glslideshow -root -duration 10 -zoom 50	      \
++				  -pan 30 -fade 9			    \n\
+   GL: 				hypertorus -root			    \n\
+   GL: 				jigglypuff -root			    \n\
+ -				metaballs -root				    \n\

@@ -1,0 +1,19 @@
+From d6a7f736b21577f4a3164f161884b0af5ab54810 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 24 Jul 2022 13:14:18 +0100
+Subject: .bashrc 007: [PATCH 151/191] .bashrc: cgd*: accept index argument
+
+---
+ .bashrc | 61 +++++++++++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 51 insertions(+), 10 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -196,5 +236,5 @@ cdnnn () {
+ }
+ cgi () {
+-    _cgd_ "$(gi "$@")"
++    _cgd_ gi "$@"
+ }
+ cgii () {

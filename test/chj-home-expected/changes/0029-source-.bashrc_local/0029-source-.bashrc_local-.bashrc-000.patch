@@ -1,0 +1,20 @@
+From 5946358200f29068b3a6a0c7765fc89ff087da19 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 25 Nov 2017 18:16:44 +0000
+Subject: .bashrc 000: [PATCH 029/191] source .bashrc_local
+
+---
+ .bashrc | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -161,3 +161,7 @@ EOF
+ }
+ 
+ 
++# --- End -------------------------------------
++if [ -f ~/.bashrc_local ]; then
++    source ~/.bashrc_local
++fi

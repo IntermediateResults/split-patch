@@ -1,0 +1,22 @@
+From 534bf89796442297ac50369aea24dfcf886b3717 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Tue, 9 Aug 2022 00:17:13 +0100
+Subject: .bashrc 000: [PATCH 152/191] .bashrc: cgd*: fix: do not treat a lone number as
+ index
+
+---
+ .bashrc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -185,7 +185,7 @@ _cgd_ () {
+     local index=""
+     local args
+     declare -a args
+-    if printf '%s' "$last" | egrep -q '^[0-9]+$'; then
++    if [ $# -gt 1 ] && { printf '%s' "$last" | egrep -q '^[0-9]+$'; }; then
+         index="$last"
+         args=("${@:1:$(( $# - 1 ))}")
+     else

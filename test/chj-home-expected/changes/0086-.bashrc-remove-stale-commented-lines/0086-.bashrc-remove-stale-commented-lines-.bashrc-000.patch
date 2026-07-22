@@ -1,0 +1,24 @@
+From 8f62821384c0577aa0f629d73fae5409a486e05b Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 10 Dec 2020 04:04:29 +0000
+Subject: .bashrc 000: [PATCH 086/191] .bashrc: remove stale commented lines
+
+Originally from someone else's config.
+
+This concludes the removal of the use of the `alias` shell builtin.
+---
+ .bashrc | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -36,7 +36,7 @@ case "$TERM" in
+ esac
+ 
+ 
+-# enable color support of ls and also add handy aliases
++# enable color support of ls
+ if [ "$TERM" != "dumb" ]; then
+     eval "$(dircolors -b)"
+     ls () { command ls --color=auto "$@"; }

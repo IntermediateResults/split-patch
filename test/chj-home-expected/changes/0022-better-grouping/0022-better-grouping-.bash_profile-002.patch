@@ -1,0 +1,20 @@
+From 9b703ccc5ea71fb400f475a432ca1bdba323bb95 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 25 Nov 2017 18:07:26 +0000
+Subject: .bash_profile 002: [PATCH 022/191] better grouping
+
+---
+ .bash_profile | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/.bash_profile b/.bash_profile
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -32,7 +34,3 @@ if [ -d ~/local/bin ] ; then
+ export EMAIL='ch@christianjaeger.ch'
+-
+-unset LESSOPEN
+-unset LESSCLOSE
+-
+ export LANG=en_GB.UTF-8
+ 

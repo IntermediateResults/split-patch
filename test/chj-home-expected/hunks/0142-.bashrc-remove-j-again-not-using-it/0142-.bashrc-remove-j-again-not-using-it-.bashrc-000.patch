@@ -1,0 +1,25 @@
+From b1f25f6143340c89973ca253076fa29aa60187ae Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Wed, 6 Apr 2022 17:18:33 +0100
+Subject: .bashrc 000: [PATCH 142/191] .bashrc: remove 'j' again, not using it
+
+---
+ .bashrc | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -219,12 +219,6 @@ cj () {
+ 	cd "$1"
+     fi
+ }
+-j () {
+-    cd ~/bookmarks/j
+-    if [ $# -ge 1 ]; then
+-	cd "$1"
+-    fi
+-}
+ 
+ find () { my.find "$@"; }
+ df () { my.df "$@"; }

@@ -1,0 +1,27 @@
+From 9fad0758ae3152e61319b7c71d1b4421ee0571db Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 20 Mar 2021 23:31:19 +0000
+Subject: .chj-home/init 000: [PATCH 102/191] Fix ".chj-home/init: fix perms on checked-out
+ directories!"
+
+`.vnc` has no files from Git so won't be created, usually.
+---
+ .chj-home/init | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/.chj-home/init b/.chj-home/init
+--- a/.chj-home/init
++++ b/.chj-home/init
+@@ -15,7 +15,11 @@ if [ -e .chj-home/init-done ]; then
+ fi
+ 
+ # fix perms (make private):
+-chmod go-rwx .links2 .vnc
++for d in  .links2 .vnc; do
++    if [ -e "$d" ]; then
++	chmod go-rwx "$d"
++    fi
++done
+ 
+ 
+ cancel() {

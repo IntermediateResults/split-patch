@@ -1,0 +1,34 @@
+From 17d1241b93a3afc13f38fc7e3c8535d30071247e Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Tue, 5 Dec 2017 12:08:32 +0000
+Subject: [PATCH 051/191] symlink the /opt/chj/emacs/bin/* scripts
+
+---
+ .chj-home/init | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/.chj-home/init b/.chj-home/init
+index 3926178..60aaa47 100755
+--- a/.chj-home/init
++++ b/.chj-home/init
+@@ -81,7 +81,7 @@ lesskey
+ 
+ (
+     umask 077
+-    mkdir -p tmp .ssh DROP scratch
++    mkdir -p tmp .ssh DROP scratch bin
+ )
+ 
+ chmod a+wxt,g+s DROP
+@@ -89,6 +89,8 @@ touch .ssh/authorized_keys
+ chmod go-w .ssh/authorized_keys
+ touch .chj-home/init-done
+ 
++ln -s /opt/chj/emacs/bin/* bin || true
++
+ set +x
+ 
+ echo "NOTE: Your answers have been written to .chj-home_fullname, .chj-home_email, and the files .bash_profile_local and .gitconfig have been generated."
+-- 
+2.47.3
+

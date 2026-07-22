@@ -1,0 +1,25 @@
+From 6bb303a867bd8d0dd9c38a808b71f11cc6d82646 Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Sat, 21 Apr 2018 17:10:22 +0100
+Subject: .xscreensaver 004: [PATCH 057/191] .xscreensaver: ok *hav* to let it put monitor to
+ sleep
+
+Not getting done otherwise ech
+
+Also, use desktop background pic, enable more savers with those.
+---
+ .xscreensaver | 24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
+
+diff --git a/.xscreensaver b/.xscreensaver
+--- a/.xscreensaver
++++ b/.xscreensaver
+@@ -134,7 +134,7 @@ programs:								      \
+ -				webcollage -root			    \n\
+ -				xflame -root				    \n\
+ 				xmatrix -root				    \n\
+-- GL: 				gflux -root				    \n\
++  GL: 				gflux -root -speed 0.05 -squares 40	    \n\
+ -				nerverot -root				    \n\
+ -				xrayswarm -root				    \n\
+ -				xspirograph -root			    \n\

@@ -1,0 +1,36 @@
+From 7598f75f9bd6ba80055b4f95beb139ad86ee4079 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 25 Nov 2021 11:20:10 +0000
+Subject: [PATCH 137/191] .xscreensaver: more trying to get it to turn off
+
+Why did that work in the past (did it?) and now it doesn't, and this
+thing is buggy as .
+---
+ .chj-home/.xscreensaver | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/.chj-home/.xscreensaver b/.chj-home/.xscreensaver
+index 2495a72..1e0c9c8 100644
+--- a/.chj-home/.xscreensaver
++++ b/.chj-home/.xscreensaver
+@@ -1,5 +1,5 @@
+ # XScreenSaver Preferences File
+-# Written by xscreensaver-demo 5.45 for chris on Sat Nov 20 02:39:15 2021.
++# Written by xscreensaver-demo 5.45 for chris on Thu Nov 25 11:19:54 2021.
+ # https://www.jwz.org/xscreensaver/
+ 
+ timeout:	0:10:00
+@@ -27,8 +27,8 @@ font:		*-medium-r-*-140-*-m-*
+ dpmsEnabled:	True
+ dpmsQuickOff:	False
+ dpmsStandby:	0:20:00
+-dpmsSuspend:	0:20:00
+-dpmsOff:	0:20:00
++dpmsSuspend:	0:21:00
++dpmsOff:	0:22:00
+ grabDesktopImages:  False
+ grabVideoFrames:    False
+ chooseRandomImages: False
+-- 
+2.47.3
+

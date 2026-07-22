@@ -1,0 +1,21 @@
+From 17d1241b93a3afc13f38fc7e3c8535d30071247e Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Tue, 5 Dec 2017 12:08:32 +0000
+Subject: .chj-home/init 000: [PATCH 051/191] symlink the /opt/chj/emacs/bin/* scripts
+
+---
+ .chj-home/init | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/.chj-home/init b/.chj-home/init
+--- a/.chj-home/init
++++ b/.chj-home/init
+@@ -81,7 +81,7 @@ lesskey
+ 
+ (
+     umask 077
+-    mkdir -p tmp .ssh DROP scratch
++    mkdir -p tmp .ssh DROP scratch bin
+ )
+ 
+ chmod a+wxt,g+s DROP

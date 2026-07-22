@@ -1,0 +1,20 @@
+From c27dce6611f3d3621d9d3ec96d4e6b098791b0ce Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 19 Feb 2017 22:21:48 +0000
+Subject: [PATCH 002/191] ignore .xhtml
+
+---
+ .gitignore_global | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/.gitignore_global b/.gitignore_global
+index 27fa0d9..6199607 100644
+--- a/.gitignore_global
++++ b/.gitignore_global
+@@ -1,2 +1,3 @@
+ /PATCHES/
+ *~
++*.xhtml
+-- 
+2.47.3
+

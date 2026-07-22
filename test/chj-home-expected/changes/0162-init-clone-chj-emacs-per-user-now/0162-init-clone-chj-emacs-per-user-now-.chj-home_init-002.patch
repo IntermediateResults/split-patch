@@ -1,0 +1,23 @@
+From 5f3e5d12d5c8574ef23f747b799a02a83014e397 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Mon, 12 Jun 2023 15:51:01 +0200
+Subject: .chj-home/init 002: [PATCH 162/191] init: clone chj-emacs per user now
+
+Not running make in chj-emacs automatically because it retrieves quite
+a large amount of things that not every user may need.
+---
+ .chj-home/init | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/.chj-home/init b/.chj-home/init
+--- a/.chj-home/init
++++ b/.chj-home/init
+@@ -142,8 +145,6 @@ touch .ssh/authorized_keys
+ chmod go-w .ssh/authorized_keys
+ touch .chj-home/init-done
+ 
+-ln -s /opt/chj/emacs/bin/* bin || true
+-
+ gpg --import /opt/chj/chjize/cj-key.asc || true
+ 
+ set +x

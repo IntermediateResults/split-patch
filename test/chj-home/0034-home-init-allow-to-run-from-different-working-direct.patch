@@ -1,0 +1,34 @@
+From f34b40f5805a588b851a4af442f8dda1af71f0b9 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 25 Nov 2017 22:43:20 +0000
+Subject: [PATCH 034/191] home-init: allow to run from different working
+ directories than home
+
+---
+ home-init | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/home-init b/home-init
+index 9bdaf64..b68729c 100755
+--- a/home-init
++++ b/home-init
+@@ -3,9 +3,14 @@
+ set -euo pipefail
+ IFS=
+ 
+-set -x
++if [ "$(readlink -f .)" != "$(readlink -f ~)" ]; then
++    if [ "$(readlink -f .)" != "$(readlink -f "$(dirname "$0")")" ]; then
++	echo "$0: must be run from home dir or from $(dirname "$0"). Terminating."
++	exit 1
++    fi
++fi
+ 
+-cd
++set -x
+ 
+ ln -s /opt/chj/emacs/.emacs
+ 
+-- 
+2.47.3
+

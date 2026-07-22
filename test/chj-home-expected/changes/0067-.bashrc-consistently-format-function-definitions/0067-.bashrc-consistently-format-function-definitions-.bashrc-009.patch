@@ -1,0 +1,21 @@
+From 1504b6ee31a9dbe427bdac5d7b41d1e18acbda7e Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Mon, 22 Jul 2019 04:22:38 +0100
+Subject: .bashrc 009: [PATCH 067/191] .bashrc: consistently format function definitions
+
+---
+ .bashrc | 44 ++++++++++++++++++++++----------------------
+ 1 file changed, 22 insertions(+), 22 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -131,7 +131,7 @@ unlimit() {
+     fi
+ }
+ 
+-cs() {
++cs () {
+     cd ~/scratch
+ }
+ 

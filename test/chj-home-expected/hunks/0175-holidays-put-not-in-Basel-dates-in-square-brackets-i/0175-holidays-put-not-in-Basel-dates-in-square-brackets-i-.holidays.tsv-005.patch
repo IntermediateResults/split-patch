@@ -1,0 +1,22 @@
+From e710aad91c30b966e8f4ec19027d3414b8ee5b0f Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 31 May 2024 11:31:56 +0200
+Subject: .holidays.tsv 005: [PATCH 175/191] holidays: put not-in-Basel dates in square brackets,
+ in all years
+
+---
+ .holidays.tsv | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/.holidays.tsv b/.holidays.tsv
+--- a/.holidays.tsv
++++ b/.holidays.tsv
+@@ -100,7 +100,7 @@ Ostermontag 2029 	Montag 2 April 2029 	14
+ Tag der Arbeit 2029 	Dienstag 1 Mai 2029 	18
+ Auffahrt 2029 	Donnerstag 10 Mai 2029 	19
+ Pfingstmontag 2029 	Montag 21 Mai 2029 	21
+-Fronleichnam 2029 	Donnerstag 31 Mai 2029 	22
++[Fronleichnam] 2029 	Donnerstag 31 Mai 2029 	22
+ Bundesfeiertag 2029 	Mittwoch 1 August 2029 	31
+ Mariä Himmelfahrt 2029 	Mittwoch 15 August 2029 	33
+ Allerheiligen 2029 	Donnerstag 1 November 2029 	44

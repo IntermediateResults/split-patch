@@ -1,0 +1,27 @@
+From a4367a3823f98763f43dc49d6fed8686476dd7e8 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 30 Nov 2017 16:29:15 +0000
+Subject: [PATCH 044/191] .bash_profile: put paths to my tools last in PATH
+
+To make sure no matter what tools other users install, they will be
+able to see them.
+---
+ .bash_profile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.bash_profile b/.bash_profile
+index 38c19f5..94cf529 100644
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -12,7 +12,7 @@ fi
+ # the default umask is set in /etc/login.defs
+ # umask 002
+ 
+-PATH=/opt/chj/cj-git-patchtool:/opt/chj/git-sign/bin:/opt/chj/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games
++PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/opt/chj/bin:/opt/chj/cj-git-patchtool:/opt/chj/git-sign/bin
+ 
+ # set PATH so it includes user's private bin if it exists
+ if [ -d ~/bin ] ; then
+-- 
+2.47.3
+

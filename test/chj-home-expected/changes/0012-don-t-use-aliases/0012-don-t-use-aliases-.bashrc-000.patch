@@ -1,0 +1,27 @@
+From 552df4e787e2a89c22cb84dcc6d9013d67d896ef Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 24 Nov 2017 16:04:15 +0000
+Subject: .bashrc 000: [PATCH 012/191] don't use aliases
+
+---
+ .bashrc | 44 ++++++++++++++------------------------------
+ 1 file changed, 14 insertions(+), 30 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -43,14 +43,6 @@ xterm*|rxvt*)
+     ;;
+ esac
+ 
+-# Alias definitions.
+-# You may want to put all your additions into a separate file like
+-# ~/.bash_aliases, instead of adding them here directly.
+-# See /usr/share/doc/bash-doc/examples in the bash-doc package.
+-
+-#if [ -f ~/.bash_aliases ]; then
+-#    . ~/.bash_aliases
+-#fi
+ 
+ # enable color support of ls and also add handy aliases
+ if [ "$TERM" != "dumb" ]; then

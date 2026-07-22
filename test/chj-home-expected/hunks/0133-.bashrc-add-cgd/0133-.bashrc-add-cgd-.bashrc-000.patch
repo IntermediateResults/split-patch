@@ -1,0 +1,23 @@
+From d8c68e2ce9c3673cf4ba59a6b3cba8bee245046d Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (dull)" <ch@christianjaeger.ch>
+Date: Thu, 4 Nov 2021 15:35:34 +0000
+Subject: .bashrc 000: [PATCH 133/191] .bashrc: add `cgd`
+
+---
+ .bashrc | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -156,8 +156,8 @@ cdn () {
+ 	cdnewdir "$@"
+     fi
+ }
+-cgdi () {
+-    local res=$(gdi "$@")
++_cgd_ () {
++    local res=$1
+     # I forgot how to do this with builtins:
+     if [ -n "$res" ]; then
+         if [ "$(printf '%s' "$res" | wc -l)" -eq 0 ]; then

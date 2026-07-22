@@ -1,0 +1,21 @@
+From 1504b6ee31a9dbe427bdac5d7b41d1e18acbda7e Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Mon, 22 Jul 2019 04:22:38 +0100
+Subject: .bashrc 000: [PATCH 067/191] .bashrc: consistently format function definitions
+
+---
+ .bashrc | 44 ++++++++++++++++++++++----------------------
+ 1 file changed, 22 insertions(+), 22 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -47,7 +47,7 @@ esac
+ # enable color support of ls and also add handy aliases
+ if [ "$TERM" != "dumb" ]; then
+     eval "$(dircolors -b)"
+-    ls() { command ls --color=auto "$@"; }
++    ls () { command ls --color=auto "$@"; }
+     #alias dir='ls --color=auto --format=vertical'
+     #alias vdir='ls --color=auto --format=long'
+ fi

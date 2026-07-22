@@ -1,0 +1,25 @@
+From efd9fe6f1c138f3cac1dc5e886ae82edd5656052 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Wed, 8 Feb 2023 07:08:20 +0100
+Subject: .bash_profile 000: [PATCH 157/191] .bash_profile: add my new key fingerprint
+
+---
+ .bash_profile | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/.bash_profile b/.bash_profile
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -52,9 +52,9 @@ if [ -n "${DISPLAY-}" ]; then
+     xset -b
+ fi
+ 
+-# cj's key (since you're trusting his repo already, why not also trust
+-# his key?)
+-export VERIFY_SIG_ACCEPT_KEYS=A54A1D7CA1F94C866AC81A1F0FA5B21104EDB072
++# cj's keys (since you're trusting his repo already, why not also trust
++# his keys?)
++export VERIFY_SIG_ACCEPT_KEYS="A54A1D7CA1F94C866AC81A1F0FA5B21104EDB072, 7312F47D9436FBF8C3F80CF2748247966F366AE9"
+ 
+ 
+ # --- Personal env setup: -------

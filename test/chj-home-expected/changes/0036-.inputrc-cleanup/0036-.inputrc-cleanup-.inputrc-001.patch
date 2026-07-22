@@ -1,0 +1,15 @@
+From 75092ece56f261a2af485f97aa12910333fa5095 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 26 Nov 2017 00:14:13 +0000
+Subject: .inputrc 001: [PATCH 036/191] .inputrc: cleanup
+
+---
+ .inputrc | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/.inputrc b/.inputrc
+--- a/.inputrc
++++ b/.inputrc
+@@ -3,2 +1,1 @@
+ M-/: dynamic-complete-history
+-#kool geht.

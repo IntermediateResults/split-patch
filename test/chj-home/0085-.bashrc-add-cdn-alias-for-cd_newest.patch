@@ -1,0 +1,26 @@
+From ca158955d21197aa8e11406f2ec6b114f36ee4c4 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 10 Dec 2020 04:03:51 +0000
+Subject: [PATCH 085/191] .bashrc: add `cdn` alias for cd_newest
+
+---
+ .bashrc | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/.bashrc b/.bashrc
+index 1f6b90b..00267b7 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -131,6 +131,9 @@ cd_newest_sisterfolder () {
+ cd_newest () {
+     cd "$(find . -maxdepth 1 -type d -print0|grep -zZ -v '^\.*$'|xargs -0 -s 129023 -n 129023 --exit --no-run-if-empty ls -dt|head -1)"
+ }
++cdn () {
++    cd_newest
++}
+ cdt () {
+     if checkcreate-tmp-owner-dir; then
+ 	cd "/tmp/$USER"
+-- 
+2.47.3
+

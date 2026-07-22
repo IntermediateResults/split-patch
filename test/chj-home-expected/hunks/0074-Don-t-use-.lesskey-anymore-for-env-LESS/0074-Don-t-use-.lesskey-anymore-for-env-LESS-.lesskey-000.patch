@@ -1,0 +1,23 @@
+From 4a8fe3bac17d3e9446e0bd702f45b116a1004129 Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Thu, 29 Aug 2019 12:48:26 +0100
+Subject: .lesskey 000: [PATCH 074/191] Don't use .lesskey anymore for #env LESS
+
+As less is broken and priorizes .less over the actual LESS env
+var. Which means nothing can be passed via dynamic variable anymore.
+
+Instead set LESS from .bash_profile
+---
+ .bash_profile  | 2 ++
+ .chj-home/init | 4 +++-
+ .lesskey       | 2 --
+ 3 files changed, 5 insertions(+), 3 deletions(-)
+ delete mode 100644 .lesskey
+
+diff --git a/.lesskey b/.lesskey
+deleted file mode 100644
+--- a/.lesskey
++++ /dev/null
+@@ -1,2 +0,0 @@
+-#env
+-LESS = -i -M -R

@@ -1,0 +1,31 @@
+From 95fd88e62239ad4d4a84a9b48011c1b8dce395c2 Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (dull)" <ch@christianjaeger.ch>
+Date: Fri, 19 Nov 2021 23:30:09 +0000
+Subject: [PATCH 135/191] Add `cgi`, `cgii`
+
+Since when I'm searching with cgi, find 1 folder, I still want to be
+able to ctl-a c enter.
+---
+ .bashrc | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/.bashrc b/.bashrc
+index c1ce403..8665ae5 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -177,6 +177,12 @@ cgd () {
+ cgdi () {
+     _cgd_ "$(gdi "$@")"
+ }
++cgi () {
++    _cgd_ "$(gi "$@")"
++}
++cgii () {
++    _cgd_ "$(gii "$@")"
++}
+ cdt () {
+     if checkcreate-tmp-owner-dir; then
+ 	cd "/tmp/$USER"
+-- 
+2.47.3
+

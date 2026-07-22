@@ -1,0 +1,20 @@
+From 739546a7ecb65801b45253ac3ada9877f022f108 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Tue, 26 Sep 2017 12:17:58 +0100
+Subject: .Xresources 002: [PATCH 009/191] update emacs geometry, remove ancient entries
+
+---
+ .Xresources | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
+
+diff --git a/.Xresources b/.Xresources
+--- a/.Xresources
++++ b/.Xresources
+@@ -28,6 +21,6 @@ xpdf.initialZoom: width
+ emacs23*toolbarlines: 0
+ 
+-emacs*geometry: 83x45
++emacs*geometry: 80x65
+ 
+ ! emacs23*font: -Adobe-Courier-Medium-R-Normal--17-120-100-100-M-100-ISO8859-1
+ emacs23.font: -Adobe-Courier-Medium-R-Normal--17-120-100-100-M-100-ISO8859-1

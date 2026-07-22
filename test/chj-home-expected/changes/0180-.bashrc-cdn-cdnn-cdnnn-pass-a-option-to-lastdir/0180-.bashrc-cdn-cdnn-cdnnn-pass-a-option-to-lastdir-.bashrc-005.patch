@@ -1,0 +1,18 @@
+From 5d1ebc04448350b46eec0486fc017caac13cbcf5 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 1 Sep 2024 13:08:47 +0200
+Subject: .bashrc 005: [PATCH 180/191] .bashrc: cdn, cdnn, cdnnn: pass -a option to lastdir
+
+Removing the -a by default.
+---
+ .bashrc | 43 ++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 34 insertions(+), 9 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -161,3 +174,3 @@ mvcd () {
+     if [ $# -eq 0 ]; then
+-	cd_newest 0
++	cd_newest 0 "$opts"
+     else

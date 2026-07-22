@@ -1,0 +1,30 @@
+From d05820f23f1541a72a59f0cb573d60b2f1637182 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 12 Aug 2022 15:13:22 +0100
+Subject: [PATCH 153/191] .bashrc: add `ct`
+
+---
+ .bashrc | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/.bashrc b/.bashrc
+index dd2ae2d..5edf97b 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -285,6 +285,13 @@ ce () {
+     fi
+ }
+ 
++ct () {
++    cd ~/todo
++    if [ $# -ge 1 ]; then
++	cd "$1"
++    fi
++}
++
+ 
+ find () { my.find "$@"; }
+ df () { my.df "$@"; }
+-- 
+2.47.3
+

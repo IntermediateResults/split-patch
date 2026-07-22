@@ -1,0 +1,22 @@
+From e710aad91c30b966e8f4ec19027d3414b8ee5b0f Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 31 May 2024 11:31:56 +0200
+Subject: .holidays.tsv 004: [PATCH 175/191] holidays: put not-in-Basel dates in square brackets,
+ in all years
+
+---
+ .holidays.tsv | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/.holidays.tsv b/.holidays.tsv
+--- a/.holidays.tsv
++++ b/.holidays.tsv
+@@ -83,7 +83,7 @@ Ostermontag 2028 	Montag 17 April 2028 	16
+ Tag der Arbeit 2028 	Montag 1 Mai 2028 	18
+ Auffahrt 2028 	Donnerstag 25 Mai 2028 	21
+ Pfingstmontag 2028 	Montag 5 Juni 2028 	23
+-Fronleichnam 2028 	Donnerstag 15 Juni 2028 	24
++[Fronleichnam] 2028 	Donnerstag 15 Juni 2028 	24
+ Bundesfeiertag 2028 	Dienstag 1 August 2028 	31
+ Mariä Himmelfahrt 2028 	Dienstag 15 August 2028 	33
+ Allerheiligen 2028 	Mittwoch 1 November 2028 	44

@@ -1,0 +1,28 @@
+From 5f0d07cc49eae92adc261692fd92cb5efcb7cf9b Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Mon, 22 Jul 2019 04:17:57 +0100
+Subject: [PATCH 065/191] .bashrc: add `rensn`
+
+---
+ .bashrc | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/.bashrc b/.bashrc
+index 3483ee3..1e03400 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -149,6 +149,11 @@ rens () {
+     ren -- "$(lastfile .)"
+ }
+ 
++rensn () {
++    cd scratch/
++    ren -- "$(nonrenamed | tail -1 | ls2list)"
++}
++
+ settitle () {
+     unset PROMPT_COMMAND
+     /opt/chj/bin/settitle "$@"
+-- 
+2.47.3
+

@@ -1,0 +1,42 @@
+From 552df4e787e2a89c22cb84dcc6d9013d67d896ef Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 24 Nov 2017 16:04:15 +0000
+Subject: .bashrc 000: [PATCH 012/191] don't use aliases
+
+---
+ .bashrc | 44 ++++++++++++++------------------------------
+ 1 file changed, 14 insertions(+), 30 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -43,28 +43,15 @@ xterm*|rxvt*)
+     ;;
+ esac
+ 
+-# Alias definitions.
+-# You may want to put all your additions into a separate file like
+-# ~/.bash_aliases, instead of adding them here directly.
+-# See /usr/share/doc/bash-doc/examples in the bash-doc package.
+-
+-#if [ -f ~/.bash_aliases ]; then
+-#    . ~/.bash_aliases
+-#fi
+ 
+ # enable color support of ls and also add handy aliases
+ if [ "$TERM" != "dumb" ]; then
+     eval "`dircolors -b`"
+-    alias ls='ls --color=auto'
++    ls() { ls --color=auto "$@"; }
+     #alias dir='ls --color=auto --format=vertical'
+     #alias vdir='ls --color=auto --format=long'
+ fi
+ 
+-# some more ls aliases
+-#alias ll='ls -l'
+-#alias la='ls -A'
+-#alias l='ls -CF'
+-
+ # enable programmable completion features (you don't need to enable
+ # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
+ # sources /etc/bash.bashrc).

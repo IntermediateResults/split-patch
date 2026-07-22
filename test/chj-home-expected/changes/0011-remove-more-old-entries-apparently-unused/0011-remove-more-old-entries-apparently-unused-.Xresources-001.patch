@@ -1,0 +1,20 @@
+From e1fe6d2bf14b40567a693cbe03ce34f99226ee1f Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Tue, 26 Sep 2017 12:20:21 +0100
+Subject: .Xresources 001: [PATCH 011/191] remove more old entries (apparently unused??)
+
+Only 1 GNU Emacs directive left (which *does* have an effect)
+---
+ .Xresources | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/.Xresources b/.Xresources
+--- a/.Xresources
++++ b/.Xresources
+@@ -23,6 +17,5 @@ xpdf.initialZoom: width
+ emacs*geometry: 80x65
+ 
+-emacs23.font: -Adobe-Courier-Medium-R-Normal--17-120-100-100-M-100-ISO8859-1
+ 
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ 

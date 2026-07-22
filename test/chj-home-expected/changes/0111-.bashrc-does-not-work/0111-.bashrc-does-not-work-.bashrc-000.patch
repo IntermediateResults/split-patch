@@ -1,0 +1,25 @@
+From 91394c04339e86d92d03b20ee8165f2b85bcd1ab Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Tue, 15 Jun 2021 13:26:24 +0100
+Subject: .bashrc 000: [PATCH 111/191] .bashrc: does not work
+
+Apparently PS1 is not being generated (eval) then interpreted, but in
+one go.
+---
+ .bashrc | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -18,7 +18,7 @@ shopt -s checkwinsize
+ [ -x /usr/bin/lesspipe ] && eval "$(lesspipe)"
+ 
+ __ps1_show_exitcode () {
+-    local v=$?
+-    if [ "$v" -ne 0 ]; then
+-	echo -ne '\033[01;41m'"$v"'\033[00m \033[01;32m';
++    local exitcode=$?
++    if [ "$exitcode" -ne 0 ]; then
++	echo -n '\[\033[01;41m\]'"$exitcode"'\[\033[00m \033[01;32m\]';
+     else

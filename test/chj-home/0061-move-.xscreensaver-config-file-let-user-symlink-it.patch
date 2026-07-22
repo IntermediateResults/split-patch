@@ -1,0 +1,18 @@
+From 5852017d3ee9623bed391618fd5ad34ed7f97b9e Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Tue, 17 Jul 2018 15:02:08 +0100
+Subject: [PATCH 061/191] move .xscreensaver config file, let user symlink it
+
+OK, do symlinks work?
+---
+ .xscreensaver => .chj-home/dot.xscreensaver-dull | 0
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ rename .xscreensaver => .chj-home/dot.xscreensaver-dull (100%)
+
+diff --git a/.xscreensaver b/.chj-home/dot.xscreensaver-dull
+similarity index 100%
+rename from .xscreensaver
+rename to .chj-home/dot.xscreensaver-dull
+-- 
+2.47.3
+

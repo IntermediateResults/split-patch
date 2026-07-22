@@ -1,0 +1,25 @@
+From ba67a53b657dda072742fa46035f4293495e591c Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 28 Feb 2021 23:55:44 +0000
+Subject: [PATCH 095/191] .bash_profile: put chjize into PATH
+
+---
+ .bash_profile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.bash_profile b/.bash_profile
+index 2af2318..82efcad 100644
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -17,7 +17,7 @@ export CHJHOSTNAME="$(head -1 /etc/hostname)"
+ # the default umask is set in /etc/login.defs
+ # umask 002
+ 
+-PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/opt/chj/bin:/opt/chj/cj-git-patchtool:/opt/chj/git-sign/bin
++PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/opt/chj/bin:/opt/chj/cj-git-patchtool:/opt/chj/git-sign/bin:/opt/chj/chjize/bin
+ 
+ # set PATH so it includes user's private bin if it exists
+ if [ -d ~/bin ] ; then
+-- 
+2.47.3
+

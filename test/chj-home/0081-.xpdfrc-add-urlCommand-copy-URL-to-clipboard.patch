@@ -1,0 +1,19 @@
+From a9b624f4674f51ade5bdea8782c53ae8c7f73601 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Mon, 20 Jul 2020 01:59:36 +0100
+Subject: [PATCH 081/191] .xpdfrc: add urlCommand (copy URL to clipboard)
+
+---
+ .xpdfrc | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/.xpdfrc b/.xpdfrc
+index ab84123..3b83da7 100644
+--- a/.xpdfrc
++++ b/.xpdfrc
+@@ -1 +1,2 @@
+ initialZoom width
++urlCommand "to-clipboard '%s'"
+-- 
+2.47.3
+

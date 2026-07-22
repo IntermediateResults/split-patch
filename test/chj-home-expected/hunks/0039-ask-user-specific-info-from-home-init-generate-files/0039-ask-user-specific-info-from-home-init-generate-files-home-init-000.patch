@@ -1,0 +1,83 @@
+From 47f896faa205419bee6e91c7d8d539199d825afa Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 26 Nov 2017 01:04:27 +0000
+Subject: home-init 000: [PATCH 039/191] ask user-specific info from home-init, generate files
+
+---
+ .bash_profile |  7 +++---
+ .gitconfig    | 20 -----------------
+ home-init     | 61 +++++++++++++++++++++++++++++++++++++++++++++++----
+ 3 files changed, 60 insertions(+), 28 deletions(-)
+ delete mode 100644 .gitconfig
+
+diff --git a/home-init b/home-init
+--- a/home-init
++++ b/home-init
+@@ -4,12 +4,64 @@ set -euo pipefail
+ IFS=
+ 
+ if [ "$(readlink -f .)" != "$(readlink -f ~)" ]; then
+-    if [ "$(readlink -f .)" != "$(readlink -f "$(dirname "$0")")" ]; then
+-	echo "$0: must be run from home dir or from $(dirname "$0"). Terminating."
+-	exit 1
++    echo "$0: must be run from home dir. Terminating."
++    exit 1
++fi
++
++
++cancel() {
++    echo "$0: cancelled due to missing answer."
++    exit 1
++}
++
++if read -e -p "Please enter your full name: " fullname; then
++    if read -e -p "Please enter your (bare) email address: " email; then
++	echo "$fullname" > .chj-home_fullname
++	echo "$email" > .chj-home_email
++    else
++	cancel
+     fi
++else
++    cancel
++fi
++
++if [ -e .bash_profile_local ]; then
++    /opt/chj/bin/mvnumber .bash_profile_local
++fi
++cat <<'EOF' > .bash_profile_local
++export EDITOR=e
++export BROWSER="chromium-chrissbx -- --new-window"
++export EMAIL=$(cat ~/.chj-home_email)
++export LANG=en_GB.UTF-8
++EOF
++
++if [ -e .gitconfig ]; then
++    /opt/chj/bin/mvnumber .gitconfig
+ fi
++cat <<EOF > .gitconfig
++[user]
++	email = $email
++	name = $fullname
++
++[diff "cj"]
++	command = _cj-git-tkdiff
++
++[merge]
++	conflictstyle = diff3
++	#renameLimit = 2000
++
++[core]
++	excludesfile = ~/.gitignore_global
+ 
++#[gpg]
++#	program = gpg+scrypt
++
++#[push]
++#	default = simple
++# old git can*not* deal with this
++EOF
++
++set +eu
+ set -x
+ 
+ ln -s /opt/chj/emacs/.emacs

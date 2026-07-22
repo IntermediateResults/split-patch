@@ -1,0 +1,48 @@
+From a30b2de3b14944ea15b39aac36467994b4466ecf Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 12 Mar 2021 17:08:14 +0000
+Subject: .chj-home/init 000: [PATCH 099/191] .chj-home/init: accept email addresses with full name
+
+---
+ .chj-home/init | 28 +++++++++++++++++++++++-----
+ 1 file changed, 23 insertions(+), 5 deletions(-)
+
+diff --git a/.chj-home/init b/.chj-home/init
+--- a/.chj-home/init
++++ b/.chj-home/init
+@@ -20,12 +20,30 @@ cancel() {
+     exit 1
+ }
+ 
+-if read -e -p "Please enter your full name: " fullname; then
+-    if read -e -p "Please enter your (bare) email address: " email; then
+-	echo "$fullname" > .chj-home_fullname
+-	echo "$email" > .chj-home_email
++set_fn_email() {
++    local fullname
++    local email
++    fullname=$1
++    email=$2
++    echo "$fullname" > .chj-home_fullname
++    echo "$email" > .chj-home_email
++}
++
++if read -e -p "Please enter your email address (either bare or with full name): " email; then
++    if bareemail=$(printf '%s' "$email" | perl -wne 'm{<([^<>]+)>} or exit 1; print $1'); then
++        if fullname=$(printf '%s' "$email" | perl -wne 'm{^(.*?)\s*<[^<>]+>\s*\z} or exit 1; print $1'); then
++            set_fn_email "$fullname" "$bareemail"
++            # and forever ugly imperative code:
++            email=$bareemail
++        else
++            echo "invalid mail address with full name"
++        fi
+     else
+-	cancel
++        if read -e -p "Please enter your full name: " fullname; then
++            set_fn_email "$fullname" "$email"
++        else
++            cancel
++        fi
+     fi
+ else
+     cancel

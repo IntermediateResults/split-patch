@@ -1,0 +1,45 @@
+From 114eb72c07538a5a86044ec6306827a7b476fad8 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 25 Nov 2017 18:11:00 +0000
+Subject: [PATCH 025/191] more move to .bash_profile, incl. HISTSIZE
+
+---
+ .bash_profile | 2 ++
+ .bashrc       | 4 +---
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/.bash_profile b/.bash_profile
+index 565c942..058ab03 100644
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -29,6 +29,8 @@ unset LESSCLOSE
+ # not running Gnome anymore, for some reason this env var is set, why
+ # no idea, XX.
+ unset GNOME_KEYRING_CONTROL
++export COLUMNS
++export HISTSIZE=1500
+ 
+ 
+ ulimit -S -v 1200000
+diff --git a/.bashrc b/.bashrc
+index 72a5111..2b1c696 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -119,9 +119,6 @@ cdpwd() {
+ cdp() {
+     cd "`pwd -P`"
+ }
+-export COLUMNS
+-
+-HISTSIZE=1500
+ 
+ unlimit() {
+     ulimit -S -v unlimited
+@@ -172,3 +169,4 @@ EOF
+     E users/Christian_Jaeger.md
+ }
+ 
++
+-- 
+2.47.3
+

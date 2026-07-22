@@ -1,0 +1,27 @@
+From c70ca1739e4f72111e32304ce8526ce25695f2c3 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 25 Nov 2017 22:33:49 +0000
+Subject: home-init 000: [PATCH 033/191] home-init: do the remaining tasks that chrisclone did
+
+---
+ home-init | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/home-init b/home-init
+--- a/home-init
++++ b/home-init
+@@ -16,5 +16,14 @@ ln -s /opt/chj/emacs/.emacs.d
+ 
+ lesskey
+ 
++(
++    umask 077
++    mkdir -p tmp .ssh DROP
++)
++
++chmod a+wxt,g+s DROP
++touch .ssh/authorized_keys
++chmod go-w .ssh/authorized_keys
++
+ set +x
+ echo done.

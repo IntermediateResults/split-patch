@@ -1,0 +1,22 @@
+From dd29f571331b98ef9b8df7b638945e2d3a634e43 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 30 Nov 2017 16:28:13 +0000
+Subject: .bash_profile 000: [PATCH 043/191] .bash_profile: (re-)add cj-git-patchtool and git-sign
+ to PATH
+
+---
+ .bash_profile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.bash_profile b/.bash_profile
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -12,7 +12,7 @@ fi
+ # the default umask is set in /etc/login.defs
+ # umask 002
+ 
+-PATH=/opt/chj/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games
++PATH=/opt/chj/cj-git-patchtool:/opt/chj/git-sign/bin:/opt/chj/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games
+ 
+ # set PATH so it includes user's private bin if it exists
+ if [ -d ~/bin ] ; then

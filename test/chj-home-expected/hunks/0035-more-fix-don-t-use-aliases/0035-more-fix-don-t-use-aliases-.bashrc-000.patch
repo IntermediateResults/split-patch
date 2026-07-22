@@ -1,0 +1,21 @@
+From 532932636c1a56ba1554ceeb3e736f463fe78a75 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 25 Nov 2017 22:59:50 +0000
+Subject: .bashrc 000: [PATCH 035/191] more fix "don't use aliases"
+
+---
+ .bashrc | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -47,7 +47,7 @@ esac
+ # enable color support of ls and also add handy aliases
+ if [ "$TERM" != "dumb" ]; then
+     eval "`dircolors -b`"
+-    ls() { ls --color=auto "$@"; }
++    ls() { command ls --color=auto "$@"; }
+     #alias dir='ls --color=auto --format=vertical'
+     #alias vdir='ls --color=auto --format=long'
+ fi

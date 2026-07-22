@@ -1,0 +1,21 @@
+From a5a5db84e814ebcdd612521e810d09eb5d24175e Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 25 Nov 2017 18:20:03 +0000
+Subject: .bash_profile 000: [PATCH 031/191] remove ALSARECDEV
+
+---
+ .bash_profile | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/.bash_profile b/.bash_profile
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -36,8 +36,6 @@ export HISTSIZE=1500
+ 
+ 
+ # --- Machine specific env setup: -------
+-export ALSARECDEV='sysdefault:CARD=C1100'
+-
+ ulimit -S -v 1200000
+ 
+ 

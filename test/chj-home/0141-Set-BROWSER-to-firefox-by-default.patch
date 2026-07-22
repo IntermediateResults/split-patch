@@ -1,0 +1,25 @@
+From 931581e9968457880b398f8b53acffc610c7b323 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Wed, 15 Dec 2021 05:17:24 +0000
+Subject: [PATCH 141/191] Set BROWSER to firefox by default
+
+---
+ .chj-home/init | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.chj-home/init b/.chj-home/init
+index ae1eaec..062517e 100755
+--- a/.chj-home/init
++++ b/.chj-home/init
+@@ -75,7 +75,7 @@ if [ -e .bash_profile_local ]; then
+ fi
+ cat <<'EOF' > .bash_profile_local
+ export EDITOR=e
+-export BROWSER="chromium-chrissbx -- --new-window"
++export BROWSER="firefox --new-window"
+ export EMAIL=$(cat ~/.chj-home_email)
+ export LANG=en_GB.UTF-8
+ EOF
+-- 
+2.47.3
+

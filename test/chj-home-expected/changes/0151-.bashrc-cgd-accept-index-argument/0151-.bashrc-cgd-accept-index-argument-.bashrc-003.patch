@@ -1,0 +1,39 @@
+From d6a7f736b21577f4a3164f161884b0af5ab54810 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 24 Jul 2022 13:14:18 +0100
+Subject: .bashrc 003: [PATCH 151/191] .bashrc: cgd*: accept index argument
+
+---
+ .bashrc | 61 +++++++++++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 51 insertions(+), 10 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -181,6 +203,24 @@ cdnnn () {
+             cd "$res"
+         else
+-            printf '*** Need exactly one result, found:\n%s\n' "$res"
+-            false
++            if [ -n "$index" ]; then
++                if [ "$index" -le "$len0" ]; then
++                    local item
++                    if ! item="$(printf "%s" "$res" | skiplines "$index")"; then
++                        return 1
++                    fi
++                    if ! item="$(printf "%s" "$item" | head -1)"; then
++                        return 1
++                    fi
++                    cd "$item"
++                else
++                    echo "Index is pointing behind last item" >&2
++                    false
++                fi
++            else
++                local numbered
++                numbered=$(printf '%s' "$res" | linenumbers)
++                printf '*** More than one result, please give index:\n%s\n' "$numbered" >&2
++                false
++            fi
+         fi
+     else

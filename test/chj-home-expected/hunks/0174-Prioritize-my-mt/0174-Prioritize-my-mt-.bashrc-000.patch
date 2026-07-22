@@ -1,0 +1,20 @@
+From 350e5463e53459a71ce03ba3c78364c8b57b055c Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 11 May 2024 00:03:52 +0200
+Subject: .bashrc 000: [PATCH 174/191] Prioritize my `mt`
+
+---
+ .bashrc | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -296,6 +296,7 @@ ct () {
+ 
+ find () { my.find "$@"; }
+ df () { my.df "$@"; }
++mt () { /opt/chj/bin/mt "$@"; }
+ 
+ mv () { command mv -i "$@"; }
+ cp () { command cp -i "$@"; }

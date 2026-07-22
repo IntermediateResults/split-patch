@@ -1,0 +1,21 @@
+From 497bc6425624f556c278479259129b55e0c30db3 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 7 Jun 2020 22:07:41 +0100
+Subject: .bashrc 000: [PATCH 077/191] .bashrc: make u etc. "transaction safe" (kind of)
+
+---
+ .bashrc | 25 +++++++++++++++++++------
+ 1 file changed, 19 insertions(+), 6 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -59,7 +59,7 @@ fi
+ #    . /etc/bash_completion
+ #fi
+ 
+-maybe_cd () {
++possibly_cd () {
+     if [ $# = 1 ]; then
+         cd "$1"
+     elif [ $# -gt 1 ]; then

@@ -1,0 +1,32 @@
+From 5d40a923f4a9622d316d7e66a371eae6e405a09c Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 27 Nov 2021 03:04:27 +0000
+Subject: [PATCH 138/191] .xscreensaver: turn off dpms
+
+---
+ .chj-home/.xscreensaver | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/.chj-home/.xscreensaver b/.chj-home/.xscreensaver
+index 1e0c9c8..4ed1365 100644
+--- a/.chj-home/.xscreensaver
++++ b/.chj-home/.xscreensaver
+@@ -1,5 +1,5 @@
+ # XScreenSaver Preferences File
+-# Written by xscreensaver-demo 5.45 for chris on Thu Nov 25 11:19:54 2021.
++# Written by xscreensaver-demo 5.45 for chris on Sat Nov 27 03:04:22 2021.
+ # https://www.jwz.org/xscreensaver/
+ 
+ timeout:	0:10:00
+@@ -24,7 +24,7 @@ fadeTicks:	20
+ captureStderr:	True
+ ignoreUninstalledPrograms:False
+ font:		*-medium-r-*-140-*-m-*
+-dpmsEnabled:	True
++dpmsEnabled:	False
+ dpmsQuickOff:	False
+ dpmsStandby:	0:20:00
+ dpmsSuspend:	0:21:00
+-- 
+2.47.3
+

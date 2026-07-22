@@ -1,0 +1,38 @@
+From eef40bb6167612071ffd1fd1a9c31dad403639b6 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 25 Nov 2017 18:18:38 +0000
+Subject: .bashrc 000: [PATCH 030/191] remove entries that can be moved to .bashrc_local
+
+---
+ .bashrc | 19 -------------------
+ 1 file changed, 19 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -142,25 +142,6 @@ settitle () {
+ }
+ 
+ 
+-newAI () {
+-    cd ~/Github/LondonHackspaceAI-common
+-    cat <<EOF >> users/Christian.md
+-* []() ([HN]())
+-
+-EOF
+-    E users/Christian.md
+-}
+-
+-newRust () {
+-    cd ~/Github/LondonRustLearners-wiki
+-    cat <<EOF >> users/Christian_Jaeger.md
+-* []() ([HN]())
+-
+-EOF
+-    E users/Christian_Jaeger.md
+-}
+-
+-
+ # --- End -------------------------------------
+ if [ -f ~/.bashrc_local ]; then
+     source ~/.bashrc_local

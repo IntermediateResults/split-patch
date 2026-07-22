@@ -1,0 +1,26 @@
+From 0964a3475f74aad42c2bcc123a0edd0ee3a3bc9d Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 25 Jul 2024 16:53:08 +0200
+Subject: [PATCH 176/191] .bashrc: add `cdat`
+
+---
+ .bashrc | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/.bashrc b/.bashrc
+index 502f29c..25149c4 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -147,6 +147,9 @@ cd_newest_sisterfolder () {
+ cd_newest () {
+     cd "$(_ls_newest .)"
+ }
++cdat() {
++    cdnewdir "$(dat --day --week)"
++}
+ cdn () {
+     if [ $# -eq 0 ]; then
+ 	cd_newest
+-- 
+2.47.3
+

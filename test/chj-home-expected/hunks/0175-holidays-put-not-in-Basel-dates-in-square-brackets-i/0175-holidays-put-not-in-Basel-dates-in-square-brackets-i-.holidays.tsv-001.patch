@@ -1,0 +1,22 @@
+From e710aad91c30b966e8f4ec19027d3414b8ee5b0f Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 31 May 2024 11:31:56 +0200
+Subject: .holidays.tsv 001: [PATCH 175/191] holidays: put not-in-Basel dates in square brackets,
+ in all years
+
+---
+ .holidays.tsv | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/.holidays.tsv b/.holidays.tsv
+--- a/.holidays.tsv
++++ b/.holidays.tsv
+@@ -30,7 +30,7 @@ Ostermontag 2025 	Montag 21 April 2025 	17
+ Tag der Arbeit 2025 	Donnerstag 1 Mai 2025 	18
+ Auffahrt 2025 	Donnerstag 29 Mai 2025 	22
+ Pfingstmontag 2025 	Montag 9 Juni 2025 	24
+-Fronleichnam 2025 	Donnerstag 19 Juni 2025 	25
++[Fronleichnam] 2025 	Donnerstag 19 Juni 2025 	25
+ Bundesfeiertag 2025 	Freitag 1 August 2025 	31
+ Mariä Himmelfahrt 2025 	Freitag 15 August 2025 	33
+ Allerheiligen 2025 	Samstag 1 November 2025 	44

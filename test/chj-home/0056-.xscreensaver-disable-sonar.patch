@@ -1,0 +1,35 @@
+From 765a83c942cd6d08a7af3fc0bdb6c59bccda7090 Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Sat, 21 Apr 2018 14:38:14 +0100
+Subject: [PATCH 056/191] .xscreensaver: disable sonar
+
+it's bad   ARP packegts only but soo many of them.
+
+Also saving setuid that way.~
+---
+ .xscreensaver | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/.xscreensaver b/.xscreensaver
+index 278098b..26376cf 100644
+--- a/.xscreensaver
++++ b/.xscreensaver
+@@ -1,5 +1,5 @@
+ # XScreenSaver Preferences File
+-# Written by xscreensaver-demo 5.36 for rustaceans on Sat Apr 21 14:30:36 2018.
++# Written by xscreensaver-demo 5.36 for rustaceans on Sat Apr 21 14:37:54 2018.
+ # https://www.jwz.org/xscreensaver/
+ 
+ timeout:	0:10:00
+@@ -109,7 +109,7 @@ programs:								      \
+ -				kumppa -root				    \n\
+ - GL: 				lament -root				    \n\
+ -				moire2 -root				    \n\
+-  GL: 				sonar -root				    \n\
++- GL: 				sonar -root				    \n\
+ - GL: 				stairs -root				    \n\
+ -				truchet -root				    \n\
+ -				vidwhacker -root			    \n\
+-- 
+2.47.3
+

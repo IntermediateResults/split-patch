@@ -1,0 +1,25 @@
+From 36dc8c5445d9ac4377f3e80dba199787b549b365 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Tue, 4 Oct 2022 10:52:53 +0100
+Subject: [PATCH 154/191] .bashrc: update for lastitem from chj-rustbin
+
+---
+ .bashrc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.bashrc b/.bashrc
+index 5edf97b..d2a14cd 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -138,7 +138,7 @@ mvcd () {
+     fi
+ }
+ _ls_newest () {
+-    lastdir --full -a -- "$@"
++    lastdir --fullpath -a -- "$@"
+ }
+ cd_newest_sisterfolder () {
+     cd "$(_ls_newest ..)$"
+-- 
+2.47.3
+

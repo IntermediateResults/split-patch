@@ -1,0 +1,49 @@
+From 63b5bce62f43d25c32e4532604bcfac94264b1e8 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 30 Nov 2017 17:05:56 +0000
+Subject: [PATCH 045/191] .bashrc: add functions for accessing tools from
+ chj-bin when last in PATH
+
+---
+ .bashrc | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+
+diff --git a/.bashrc b/.bashrc
+index 8bd5808..44629b2 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -154,6 +154,31 @@ if [ "$UID" -eq 0 ]; then
+ fi
+ 
+ 
++ps () {
++    command ps --sort=start_time "$@"
++}
++
++lsof () {
++    command lsof -nP "$@"
++    # -n = no host names
++    # -P = no port names
++}
++
++# Utils which might be later in PATH than system ones:
++
++ls () { /opt/chj/bin/ls "$@"; } # XX is this still useful?
++sort () { /opt/chj/bin/sort "$@"; }
++smplayer () { /opt/chj/bin/smplayer "$@"; }
++zless () { /opt/chj/bin/zless "$@"; }
++xpdf () { /opt/chj/bin/xpdf "$@"; }
++modprobe () { /opt/chj/bin/modprobe "$@"; }
++halt () { /opt/chj/bin/halt "$@"; }
++open () { /opt/chj/bin/open "$@"; }
++suxterm () { /opt/chj/bin/suxterm "$@"; }
++pdftotext () { /opt/chj/bin/pdftotext "$@"; }
++gv () { /opt/chj/bin/gv "$@"; }
++
++
+ # --- End -------------------------------------
+ if [ -f ~/.bashrc_local ]; then
+     source ~/.bashrc_local
+-- 
+2.47.3
+

@@ -1,0 +1,22 @@
+From 1c2484992ae5d3745204f68a3223655f8fc88b44 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Tue, 30 May 2023 11:49:02 +0000
+Subject: .bashrc 000: [PATCH 160/191] .bashrc: update wg alias
+
+The wg script does not exist anymore.
+---
+ .bashrc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -358,7 +358,7 @@ open () { /opt/chj/bin/open "$@"; }
+ suxterm () { /opt/chj/bin/suxterm "$@"; }
+ pdftotext () { /opt/chj/bin/pdftotext "$@"; }
+ gv () { /opt/chj/bin/gv "$@"; }
+-wg () { /opt/chj/bin/wg "$@"; }
++wg () { /opt/chj/bin/wgit "$@"; }
+ 
+ 
+ # --- End -------------------------------------

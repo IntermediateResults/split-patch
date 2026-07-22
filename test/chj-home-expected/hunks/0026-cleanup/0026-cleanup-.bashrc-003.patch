@@ -1,0 +1,22 @@
+From 9172035a88746f4e65ae8e1f1065672bbee570ae Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 25 Nov 2017 18:12:53 +0000
+Subject: .bashrc 003: [PATCH 026/191] cleanup
+
+---
+ .bashrc | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -127,9 +123,6 @@ unlimit() {
+ cs() {
+     cd ~/scratch
+ }
+-ct () {
+-    cd ~/Projekte/thesis
+-}
+ 
+ find() { my.find "$@"; }
+ df() { my.df "$@"; }

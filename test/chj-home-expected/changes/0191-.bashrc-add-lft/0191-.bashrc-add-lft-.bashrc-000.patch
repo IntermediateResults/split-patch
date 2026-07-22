@@ -1,0 +1,20 @@
+From 1f64e01e368afe9698d7a7f15ad92fb231bd8883 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 11 Jun 2026 20:22:20 +0200
+Subject: .bashrc 000: [PATCH 191/191] .bashrc: add `lft`
+
+---
+ .bashrc | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -393,6 +393,7 @@ ct () {
+ 
+ find () { my.find "$@"; }
+ mt () { /opt/chj/bin/mt "$@"; }
++lft () { my.lft "$@"; }
+ 
+ mv () { command mv -i "$@"; }
+ cp () { command cp -i "$@"; }

@@ -1,0 +1,28 @@
+From 006ffe031ba70bdfac36a2425adf7b5d331eeb93 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 23 Sep 2021 17:19:01 +0100
+Subject: [PATCH 128/191] init: install .xscreensaver if not already exists
+
+---
+ .chj-home/init | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/.chj-home/init b/.chj-home/init
+index 03d19b4..eb7fc05 100755
+--- a/.chj-home/init
++++ b/.chj-home/init
+@@ -21,6 +21,11 @@ for d in  .links2 .vnc; do
+     fi
+ done
+ 
++if [ -e .xscreensaver ]; then
++    echo "File .xscreensaver already exists, not touching it."
++else
++    cp .chj-home/.xscreensaver .
++fi
+ 
+ cancel() {
+     echo "$0: cancelled due to missing answer."
+-- 
+2.47.3
+

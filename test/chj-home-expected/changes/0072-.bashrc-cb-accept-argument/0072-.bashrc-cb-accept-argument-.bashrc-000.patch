@@ -1,0 +1,21 @@
+From bb7ed9595e09670c9aa9b6c7725a08bdf2408a5e Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Fri, 16 Aug 2019 01:20:18 +0100
+Subject: .bashrc 000: [PATCH 072/191] .bashrc: cb: accept argument
+
+---
+ .bashrc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -136,7 +136,7 @@ cs () {
+ }
+ 
+ cb () {
+-    cd ~/bookmarks
++    cd ~/bookmarks/"${1-}"
+ }
+ 
+ find () { my.find "$@"; }

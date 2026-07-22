@@ -1,0 +1,22 @@
+From c0dc80eec89295c7be39bb600ddee1df86126131 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 25 Nov 2017 18:14:31 +0000
+Subject: .bash_profile 001: [PATCH 027/191] more move to .bash_profile, beautify
+
+---
+ .bash_profile | 9 +++++++++
+ .bashrc       | 2 --
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/.bash_profile b/.bash_profile
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -33,5 +35,8 @@ export COLUMNS
+ export HISTSIZE=1500
+ 
+ 
++# --- Machine specific env setup: -------
++export ALSARECDEV='sysdefault:CARD=C1100'
++
+ ulimit -S -v 1200000
+ 

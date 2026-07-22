@@ -1,0 +1,22 @@
+From d42730e14ae6fa78e0521962be4254fd74856e1f Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 26 May 2017 22:15:43 +0100
+Subject: [PATCH 006/191] UK locale
+
+---
+ .bashrc | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/.bashrc b/.bashrc
+index c39fa24..3f7b081 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -195,3 +195,5 @@ newRust () {
+ EOF
+     E users/Christian_Jaeger.md
+ }
++
++export LANG=en_GB.UTF-8
+-- 
+2.47.3
+

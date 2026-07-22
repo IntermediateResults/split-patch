@@ -1,0 +1,26 @@
+From decdeadc8305e681d67103b1dfbbafb6bb24d39c Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Tue, 16 Mar 2021 20:05:04 +0000
+Subject: [PATCH 101/191] .chj-home/init: fix perms on checked-out directories!
+
+---
+ .chj-home/init | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/.chj-home/init b/.chj-home/init
+index 8a394b2..5ffd148 100755
+--- a/.chj-home/init
++++ b/.chj-home/init
+@@ -14,6 +14,9 @@ if [ -e .chj-home/init-done ]; then
+     exit 0
+ fi
+ 
++# fix perms (make private):
++chmod go-rwx .links2 .vnc
++
+ 
+ cancel() {
+     echo "$0: cancelled due to missing answer."
+-- 
+2.47.3
+

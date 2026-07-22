@@ -1,0 +1,21 @@
+From 552df4e787e2a89c22cb84dcc6d9013d67d896ef Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 24 Nov 2017 16:04:15 +0000
+Subject: .bashrc 004: [PATCH 012/191] don't use aliases
+
+---
+ .bashrc | 44 ++++++++++++++------------------------------
+ 1 file changed, 14 insertions(+), 30 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+--- a/.bashrc
++++ b/.bashrc
+@@ -150,6 +134,6 @@ ct () {
+     cd ~/Projekte/thesis
+ }
+ 
+-alias find=my.find
+-alias df=my.df
++find() { my.find "$@"; }
++df() { my.df "$@"; }
+ 

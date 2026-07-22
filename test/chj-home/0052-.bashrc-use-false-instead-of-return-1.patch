@@ -1,0 +1,26 @@
+From 64bb27e1c713cf39365970b6fd5c9bede6300eab Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Tue, 26 Dec 2017 04:44:14 +0000
+Subject: [PATCH 052/191] .bashrc: use false instead of return 1
+
+It is shorter, and is a built-in, too.
+---
+ .bashrc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.bashrc b/.bashrc
+index 44629b2..13d8f31 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -149,7 +149,7 @@ settitle () {
+ if [ "$UID" -eq 0 ]; then
+     tar () {
+ 	echo "'tar': use tar-names or tar-numbers instead" >&2
+-	return 1
++	false
+     }
+ fi
+ 
+-- 
+2.47.3
+

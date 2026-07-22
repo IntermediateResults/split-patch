@@ -1,0 +1,26 @@
+From 3fad176476a40517c24e7f691f002fedb4594d44 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 30 Oct 2025 04:18:54 +0100
+Subject: [PATCH 185/191] .bash_profile: need to set umask now?
+
+Newest Debian?
+---
+ .bash_profile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.bash_profile b/.bash_profile
+index 9a19baa..17592f2 100644
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -18,7 +18,7 @@ fi
+ export CHJHOSTNAME="$(head -1 /etc/hostname)"
+ 
+ # the default umask is set in /etc/login.defs
+-# umask 002
++umask 022
+ 
+ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/opt/chj/bin:/opt/chj/cj-git-patchtool:/opt/chj/git-sign/bin:/opt/chj/cj-qemucontrol/bin:/opt/chj/chjize/bin
+ 
+-- 
+2.47.3
+
