@@ -67,17 +67,7 @@ impl<'a> Hunk<'a> {
             l.starts_with(['-', '+'])
         }
 
-        let mut iter_count = 0;
         while !remaining.is_empty() {
-            let debug = {
-                iter_count += 1;
-                iter_count > 1000
-            };
-            if debug {
-                dbg!(&remaining);
-                panic!();
-            }
-            
             let (pre, after_pre) = take_while(remaining, starts_with_space_or_backslash);
             let (group, after_group) = take_while(after_pre, starts_with_minus_or_plus);
             let (post, rest) = take_while(after_group, starts_with_space_or_backslash);
