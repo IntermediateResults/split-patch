@@ -44,6 +44,11 @@ struct SplitOptions {
     /// subject prefixes instead of `{hunk_id}-{change_id}`.
     #[clap(long)]
     monotonous_numbers: bool,
+
+    /// Path to the directory where to write the split files
+    /// to. Default: the same directory as the input file.
+    #[clap(long)]
+    output_dir: Option<PathBuf>,
 }
 
 /// Split the given patchfile(s) into new files
@@ -90,7 +95,18 @@ fn write_diff(
             .unwrap_or(file)
     };
 
-    let path = add_suffix(original_path, &format!("-{}", prefix.replace("/", "_")))?;
+    let path = {
+        let path_in_old_dir = add_suffix(original_path, &format!("-{}", prefix.replace("/", "_")))?;
+        if let Some(output_dir) = &split_options.output_dir {
+            output_dir.join(
+                path_in_old_dir
+                    .file_name()
+                    .expect("expect file name to be present as suffix was added"),
+            )
+        } else {
+            path_in_old_dir
+        }
+    };
 
     assert_ne!(*path, *original_path);
 
