@@ -60,10 +60,17 @@ impl<'a> Hunk<'a> {
         let mut remaining: &[Line] = &self.lines[1..];
         let mut result = Vec::new();
 
+        fn starts_with_space_or_backslash(l: &Line) -> bool {
+            l.starts_with([' ', '\\'])
+        }
+        fn starts_with_minus_or_plus(l: &Line) -> bool {
+            l.starts_with(['-', '+'])
+        }
+
         while !remaining.is_empty() {
-            let (pre, after_pre) = take_while(remaining, |l| l.starts_with(' '));
-            let (group, after_group) = take_while(after_pre, |l| l.starts_with(['-', '+']));
-            let (post, rest) = take_while(after_group, |l| l.starts_with(' '));
+            let (pre, after_pre) = take_while(remaining, starts_with_space_or_backslash);
+            let (group, after_group) = take_while(after_pre, starts_with_minus_or_plus);
+            let (post, rest) = take_while(after_group, starts_with_space_or_backslash);
 
             let pre_len = pre.len();
 
