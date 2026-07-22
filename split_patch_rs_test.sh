@@ -6,7 +6,7 @@ SPLIT_PATCH_PL="/opt/chj/bin/split-patch";
 # path to rust version of split-patch
 SPLIT_PATCH_RS=...;
 
-DIR="/tmp"
+DIR=$(mktemp -d)
 # commit sha for `git format-patch`
 SHA=...
 
