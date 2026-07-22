@@ -1,0 +1,35 @@
+#!/bin/bash
+set -meuo pipefail
+IFS=
+
+usage() {
+    echo "Usage: $0 git-url revision-range patches-dir"
+    echo "  If patches-dir does not exist, clone git-url and extract all revisions"
+    echo "  from revision-range from it into patches-dir."
+    exit 1
+}
+
+
+if [ $# -ne 3 ]; then
+    usage
+fi
+
+git_url=$1
+revision_range=$2
+output_dir=$3
+
+if [ -d "$output_dir" ]; then
+    echo "$0: '$output_dir' already exists, done."
+    exit
+fi
+
+mkdir "$output_dir"
+
+dir=$(mktemp -d)
+
+git clone "$git_url" "$dir/git"
+
+GIT_DIR="$dir/git/.git" git format-patch -o "$output_dir" "$revision_range"
+
+rm -rf "$dir"
+
