@@ -2,34 +2,34 @@
 set -eux
 
 # path to perl version of split-patch
-SPLIT_PATCH_PL="/opt/chj/bin/split-patch";
+split_patch_pl="/opt/chj/bin/split-patch";
 # path to rust version of split-patch
-SPLIT_PATCH_RS=...;
+split_patch_rs=...;
 
-DIR=$(mktemp -d)
+dir=$(mktemp -d)
 # commit sha for `git format-patch`
-SHA=...
+revision_range=...
 
-PATCH_DIR=$DIR/PATCHES
-mkdir -p "$PATCH_DIR"
-rm -rf "${PATCH_DIR:?}"/*
+patch_dir=$dir/PATCHES
+mkdir -p "$patch_dir"
+rm -rf "${patch_dir:?}"/*
 
-git format-patch -o "$PATCH_DIR" "$SHA"
+git format-patch -o "$patch_dir" "$revision_range"
 
 for opt in "hunks" "changes" "quiet" ; do
     echo "Working on option: $opt"
-    pl_dir="$DIR/pl/$opt"
+    pl_dir="$dir/pl/$opt"
     mkdir -p "$pl_dir"
     rm -rf "${pl_dir:?}"/*
-    rs_dir="$DIR/rs/$opt"
+    rs_dir="$dir/rs/$opt"
     mkdir -p "$rs_dir"
     rm -rf "${rs_dir:?}"/*
 
-    cp "$PATCH_DIR"/* "$pl_dir"
-    "$SPLIT_PATCH_PL" "--$opt" "$pl_dir"/*
+    cp "$patch_dir"/* "$pl_dir"
+    "$split_patch_pl" "--$opt" "$pl_dir"/*
 
-    cp "$PATCH_DIR"/* "$rs_dir"
-    "$SPLIT_PATCH_RS" "--$opt" "$rs_dir"/*
+    cp "$patch_dir"/* "$rs_dir"
+    "$split_patch_rs" "--$opt" "$rs_dir"/*
 
     diff -ru "$pl_dir" "$rs_dir"
 done
