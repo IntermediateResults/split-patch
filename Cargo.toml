@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0"
+bstr = { version = "1.11.3", default-features = false, features = ["alloc"] }
 cj-path-util = { version = "0.4.0", features = ["unix"] }
 clap = { version = "4", features = ["derive"] }
 clap-with-warnings = "0.1.3"
