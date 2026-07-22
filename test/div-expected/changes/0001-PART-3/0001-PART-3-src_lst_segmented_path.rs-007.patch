@@ -1,0 +1,42 @@
+From 4c129168dca2a294142e2ecd74731a5bd1130491 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Mon, 27 Apr 2026 08:29:20 +0200
+Subject: [PATCH]  src/lst/segmented_path.rs 007: PART 3
+
+- Do not use Pin, as we're only ever returning shared `&`, never
+  `&mut`. (Still leave `_pin` in, just in case that changes later.)
+
+-------------------------------- src/bin/lst.rs --------------------------------
+
+- since we now have 2 different path implementations, move the
+  continuation from that point on to its own parameterized
+  continuation function, `main_cont`
+---
+ src/bin/lst.rs                     | 188 +++++++++++++++++--------
+ src/kitschcell.rs                  |  26 ++++
+ src/leaked_region.rs               |   8 +-
+ src/lib.rs                         |   1 +
+ src/lst/get_items.rs               | 188 ++++++++++++++-----------
+ src/lst/possibly_segmented_path.rs |  46 +++---
+ src/lst/segmented_path.rs          | 216 +++++++++++++++++++++++++----
+ 7 files changed, 483 insertions(+), 190 deletions(-)
+ create mode 100644 src/kitschcell.rs
+
+diff --git a/src/lst/segmented_path.rs b/src/lst/segmented_path.rs
+--- a/src/lst/segmented_path.rs
++++ b/src/lst/segmented_path.rs
+@@ -80,7 +92,13 @@ impl<'region> Eq for SegmentedPath<'region> {}
+     let shared_len = p1.depth.min(p2.depth);
+     let p1s = p1.take_segments(shared_len).expect("have shared_len");
+     let p2s = p2.take_segments(shared_len).expect("have shared_len");
+-    _segmented_path_ord(p1s, p2s, leaked_region).then_with(|| {
++
++    let mut get_leaked_region =
++        KitschCell::Uninitialized(|| -> LeakedRegion<'region> {
++            regions.get_region()
++        });
++
++    _segmented_path_ord(p1s, p2s, &mut get_leaked_region).then_with(|| {
+         // Which path ran out?
+         if p1.depth < p2.depth {
+             Ordering::Less

@@ -1,0 +1,36 @@
+From 4c129168dca2a294142e2ecd74731a5bd1130491 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Mon, 27 Apr 2026 08:29:20 +0200
+Subject: [PATCH]  src/lst/get_items.rs 002: PART 3
+
+- Do not use Pin, as we're only ever returning shared `&`, never
+  `&mut`. (Still leave `_pin` in, just in case that changes later.)
+
+-------------------------------- src/bin/lst.rs --------------------------------
+
+- since we now have 2 different path implementations, move the
+  continuation from that point on to its own parameterized
+  continuation function, `main_cont`
+---
+ src/bin/lst.rs                     | 188 +++++++++++++++++--------
+ src/kitschcell.rs                  |  26 ++++
+ src/leaked_region.rs               |   8 +-
+ src/lib.rs                         |   1 +
+ src/lst/get_items.rs               | 188 ++++++++++++++-----------
+ src/lst/possibly_segmented_path.rs |  46 +++---
+ src/lst/segmented_path.rs          | 216 +++++++++++++++++++++++++----
+ 7 files changed, 483 insertions(+), 190 deletions(-)
+ create mode 100644 src/kitschcell.rs
+
+diff --git a/src/lst/get_items.rs b/src/lst/get_items.rs
+--- a/src/lst/get_items.rs
++++ b/src/lst/get_items.rs
+@@ -385,7 +388,7 @@ impl EssentialMetadata {
+     pub link_target: Option<(Box<Path>, Option<Box<EssentialMetadata>>)>,
+     // XX wanted to keep this field private to make it impossible to
+     // create?
+-    pub _phantom: PhantomData<&'region ()>,
++    pub _phantom: PhantomData<fn() -> &'region INLINE>,
+ }
+ 
+ #[test]

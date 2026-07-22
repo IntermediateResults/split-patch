@@ -1,0 +1,261 @@
+From 0deb12a14d7a336245f011135ebd9fe4d45b5a1c Mon Sep 17 00:00:00 2001
+Message-ID: <0deb12a14d7a336245f011135ebd9fe4d45b5a1c.1777272302.git.ch@christianjaeger.ch>
+In-Reply-To: <f3a55cd3c356fdfe5104c5e0596631752bce2c34.1777272302.git.ch@christianjaeger.ch>
+References: <f3a55cd3c356fdfe5104c5e0596631752bce2c34.1777272302.git.ch@christianjaeger.ch>
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 24 Apr 2026 17:40:17 +0200
+Subject: src/lst/segmented_path.rs 000: [PATCH 6/8] -segmented paths, not used yet
+
+----------------------------- src/leaked_region.rs -----------------------------
+
+- add unsafe fn return_unused  XXX unfinished
+
+-------------------------- src/lst/segmented_path.rs --------------------------
+create
+
+struct SegmentedPath
+
+---------------------- src/lst/possibly_segmented_path.rs ----------------------
+create
+
+trait PossiblySegmentedPath
+
+----------------------------- src/lst/get_items.rs -----------------------------
+
+- type-parameterize path in Item (P)
+- pass &Path in addition to P
+
+-------------------------------- src/bin/lst.rs --------------------------------
+
+- add type parameter in addition to the lifetime to `Item`
+---
+ src/bin/lst.rs                     |  20 +--
+ src/leaked_region.rs               |   9 ++
+ src/lst/get_items.rs               |  68 +++++----
+ src/lst/mod.rs                     |   2 +
+ src/lst/possibly_segmented_path.rs |  36 +++++
+ src/lst/segmented_path.rs          | 215 +++++++++++++++++++++++++++++
+ 6 files changed, 314 insertions(+), 36 deletions(-)
+ create mode 100644 src/lst/possibly_segmented_path.rs
+ create mode 100644 src/lst/segmented_path.rs
+
+diff --git a/src/lst/segmented_path.rs b/src/lst/segmented_path.rs
+new file mode 100644
+--- /dev/null
++++ b/src/lst/segmented_path.rs
+@@ -0,0 +1,215 @@
++use std::{cmp::Ordering, ffi::OsStr, path::Path, slice::from_raw_parts};
++
++use crate::leaked_region::LeakedRegion;
++
++#[derive(Debug, Clone)]
++pub struct SegmentedPath<'t> {
++    parent: Option<&'t SegmentedPath<'t>>,
++    depth: u16,
++    /// Length in bytes of the OsStr as bytes (no \0 at the end)
++    orig_name_len: u16,
++    /// Length in bytes after decoding lossily as string, and
++    /// unicode-lower-cased (no \0 at the end)
++    lc_name_str_len: u32,
++}
++
++impl<'t> PartialEq for SegmentedPath<'t> {
++    fn eq(&self, other: &Self) -> bool {
++        self.depth == other.depth
++            && self.orig_name_len == other.orig_name_len
++            && self.lc_name_str_len == other.lc_name_str_len
++            // XXX check parent pointers first!!
++            && self.orig_name() == other.orig_name()
++            && self.parent == other.parent
++    }
++}
++
++impl<'t> Eq for SegmentedPath<'t> {}
++
++impl<'t> PartialOrd for SegmentedPath<'t> {
++    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
++        Some(self.cmp(other))
++    }
++}
++
++// Both must be of the same depth !
++fn segmented_path_ord<'t1, 't2>(
++    p1: &'t1 SegmentedPath<'t1>,
++    p2: &'t2 SegmentedPath<'t2>,
++) -> Ordering {
++    if let Some(p1p) = p1.parent {
++        let p2p = p2
++            .parent
++            .expect("expect that both segmented paths are of the same length");
++        p1p.cmp(p2p)
++            .then_with(|| p1.lc_name_str().cmp(p2.lc_name_str()))
++    } else {
++        p1.lc_name_str().cmp(p2.lc_name_str())
++    }
++}
++
++impl<'t> Ord for SegmentedPath<'t> {
++    fn cmp(&self, other: &Self) -> Ordering {
++        let shared_len = self.depth.min(other.depth);
++        let p1 = self.take_segments(shared_len).expect("have shared_len");
++        let p2 = other.take_segments(shared_len).expect("have shared_len");
++        segmented_path_ord(p1, p2).then_with(|| {
++            // Which path ran out?
++            if p1.depth < p2.depth {
++                Ordering::Less
++            } else {
++                Ordering::Greater
++            }
++        })
++    }
++}
++
++impl<'t> SegmentedPath<'t> {
++    fn new(
++        parent: Option<&'t SegmentedPath<'t>>,
++        orig_name: &OsStr,
++        leaked_region: &mut LeakedRegion<'t>,
++    ) -> &'t Self {
++        let head_size = size_of::<Self>();
++        let orig_name_bytes = orig_name.as_encoded_bytes();
++        let orig_name_len = orig_name_bytes.len();
++        let alloc_len = head_size + orig_name_len * 5;
++        let alloc = leaked_region.allocate(alloc_len);
++        let (alloc_head, rest) = alloc.split_at_mut(head_size);
++        let (alloc_orig, rest) = rest.split_at_mut(orig_name_len);
++        alloc_orig.copy_from_slice(orig_name_bytes);
++        let lc_name = orig_name.to_string_lossy();
++
++        let mut i = 0;
++        for c in lc_name.chars() {
++            if c.is_ascii() {
++                let cl = c.to_ascii_lowercase() as u8;
++                rest[i] = cl;
++                i += 1;
++            } else {
++                for c in c.to_lowercase() {
++                    let encoded = c.encode_utf8(&mut rest[i..]);
++                    i += encoded.len();
++                }
++            }
++        }
++
++        let remainder = rest.len() - i;
++        unsafe {
++            // Safety: we return bytes from the last allocation, it
++            // was on the same `leaked_region`, `remainder` is unused
++            // and smaller than the original allocation.
++            leaked_region.return_unused(remainder);
++        }
++
++        let depth = match parent {
++            Some(d) => d.depth + 1,
++            None => 0,
++        };
++        let slf = Self {
++            parent,
++            depth,
++            orig_name_len: orig_name_len
++                .try_into()
++                .expect("no path segment can be longer than u16::MAX"),
++            lc_name_str_len: i.try_into().expect(
++                "no lowercased path segment can be longer than u32::MAX",
++            ),
++        };
++
++        let self_ptr = alloc_head.as_mut_ptr() as *mut Self;
++        unsafe {
++            // Safety: we reserved the head for it
++            std::ptr::write(self_ptr, slf);
++        }
++
++        unsafe {
++            // Safety: we just wrote the value; and the lifetime is
++            // that of the allocator
++            &*self_ptr
++        }
++    }
++
++    pub fn orig_name(&self) -> &'t OsStr {
++        let head_size = size_of::<Self>();
++        let self_ptr: *const Self = self;
++        let self_addr = self_ptr as *const u8;
++        let bytes_addr = unsafe {
++            // Safety: `new` allocates the whole thing in one go, and
++            // we don't go past it
++            self_addr.add(head_size)
++        };
++        let bytes: &[u8] =
++            unsafe { from_raw_parts(bytes_addr, self.orig_name_len as usize) };
++        unsafe {
++            // Safety: we created the bytes via `as_encoded_bytes()`
++            // in `new`
++            OsStr::from_encoded_bytes_unchecked(bytes)
++        }
++    }
++
++    pub fn lc_name_str(&self) -> &str {
++        let head_size = size_of::<Self>();
++        let self_ptr: *const Self = self;
++        let self_addr = self_ptr as *const u8;
++        let bytes_addr = unsafe {
++            // Safety: `new` allocates the whole thing in one go, and
++            // we don't go past it
++            self_addr.add(head_size + self.orig_name_len as usize)
++        };
++        let bytes: &[u8] = unsafe {
++            from_raw_parts(bytes_addr, self.lc_name_str_len as usize)
++        };
++        unsafe {
++            // Safety: we created the bytes from a &str
++            str::from_utf8_unchecked(bytes)
++        }
++    }
++
++    /// Take the n+1 left-most path segments (n == 0 returns
++    /// `Some(self)`). Returns `None` if n > self.depth.
++    pub fn take_segments(&self, n: u16) -> Option<&Self> {
++        if n > self.depth {
++            None
++        } else {
++            let dropn = self.depth - n;
++            let mut p = self;
++            for _ in 0..dropn {
++                p = p.parent.expect("checked");
++            }
++            Some(p)
++        }
++    }
++
++    /// Appends a '/', always (drop it afterwards). Returns the
++    /// remainder of tmp.
++    fn _to_path<'tmp>(&self, tmp: &'tmp mut [u8]) -> &'tmp mut [u8] {
++        let tmp = if let Some(parent) = self.parent {
++            parent._to_path(tmp)
++        } else {
++            tmp
++        };
++        // Hmm, is encoded bytes the right for Path ???
++        let bytes = self.orig_name().as_encoded_bytes();
++        let (p, rest) = tmp.split_at_mut(bytes.len());
++        p.copy_from_slice(bytes);
++        rest[0] = b'/';
++        &mut rest[1..]
++    }
++
++    /// Panics if tmp is not large enough.
++    pub fn to_path<'tmp>(&self, tmp: &'tmp mut [u8]) -> &'tmp Path {
++        let tmplen = tmp.len();
++        let rest = self._to_path(tmp);
++        let len_used = tmplen - rest.len();
++        let used = &tmp[0..len_used - 1];
++        let osstr = unsafe { OsStr::from_encoded_bytes_unchecked(used) };
++        osstr.as_ref()
++    }
++}
++
++#[test]
++fn t_size() {
++    // Should be true even on 32-bit architectures?
++    assert_eq!(size_of::<SegmentedPath>(), 16);
++}

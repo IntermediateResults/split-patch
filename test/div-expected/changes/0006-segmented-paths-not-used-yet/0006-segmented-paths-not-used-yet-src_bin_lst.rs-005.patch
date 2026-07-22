@@ -1,0 +1,53 @@
+From 0deb12a14d7a336245f011135ebd9fe4d45b5a1c Mon Sep 17 00:00:00 2001
+Message-ID: <0deb12a14d7a336245f011135ebd9fe4d45b5a1c.1777272302.git.ch@christianjaeger.ch>
+In-Reply-To: <f3a55cd3c356fdfe5104c5e0596631752bce2c34.1777272302.git.ch@christianjaeger.ch>
+References: <f3a55cd3c356fdfe5104c5e0596631752bce2c34.1777272302.git.ch@christianjaeger.ch>
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 24 Apr 2026 17:40:17 +0200
+Subject: src/bin/lst.rs 005: [PATCH 6/8] -segmented paths, not used yet
+
+----------------------------- src/leaked_region.rs -----------------------------
+
+- add unsafe fn return_unused  XXX unfinished
+
+-------------------------- src/lst/segmented_path.rs --------------------------
+create
+
+struct SegmentedPath
+
+---------------------- src/lst/possibly_segmented_path.rs ----------------------
+create
+
+trait PossiblySegmentedPath
+
+----------------------------- src/lst/get_items.rs -----------------------------
+
+- type-parameterize path in Item (P)
+- pass &Path in addition to P
+
+-------------------------------- src/bin/lst.rs --------------------------------
+
+- add type parameter in addition to the lifetime to `Item`
+---
+ src/bin/lst.rs                     |  20 +--
+ src/leaked_region.rs               |   9 ++
+ src/lst/get_items.rs               |  68 +++++----
+ src/lst/mod.rs                     |   2 +
+ src/lst/possibly_segmented_path.rs |  36 +++++
+ src/lst/segmented_path.rs          | 215 +++++++++++++++++++++++++++++
+ 6 files changed, 314 insertions(+), 36 deletions(-)
+ create mode 100644 src/lst/possibly_segmented_path.rs
+ create mode 100644 src/lst/segmented_path.rs
+
+diff --git a/src/bin/lst.rs b/src/bin/lst.rs
+--- a/src/bin/lst.rs
++++ b/src/bin/lst.rs
+@@ -577,7 +579,7 @@ fn run_processing_commands<'t: 'u, 'u: 'v, 'v>(
+             }
+             ProcessingCommand::Reverse => selected_items.reverse(),
+             ProcessingCommand::FilterDays(range) => {
+-                let new_items: Vec<Item<'t>> = selected_items
++                let new_items: Vec<Item<_>> = selected_items
+                     .into_iter()
+                     .filter(|item| {
+                         let f = |age_days| match range {
