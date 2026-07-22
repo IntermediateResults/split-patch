@@ -1,13 +1,13 @@
 #!/usr/bin/env sh
 set -eux
 
-# path to perl version of split-patch
-split_patch_pl="/opt/chj/bin/split-patch";
-# path to rust version of split-patch
-split_patch_rs=...;
+# Path to perl version of split-patch
+split_patch_pl=/opt/chj/bin/split-patch
+# Path to rust version of split-patch
+split_patch_rs=target/debug/split-patch
 
 dir=$(mktemp -d)
-# commit sha for `git format-patch`
+# Revisions to make patch files for
 revision_range=...
 
 patch_dir=$dir/PATCHES
@@ -16,7 +16,7 @@ mkdir -p "$patch_dir"
 
 git format-patch -o "$patch_dir" "$revision_range"
 
-for opt in "hunks" "changes" "quiet" ; do
+for opt in "hunks" "changes" "quiet"; do
     echo "Working on option: $opt"
     pl_dir="$dir/pl/$opt"
     rm -rf "$pl_dir"
