@@ -112,7 +112,9 @@ impl<'a> Hunk<'a> {
             // Note that `rest` is *not* the same value as the next
             // `remaining` value! We stop when there is no more groups
             // coming, not when there are no more context lines.
-            if rest.is_empty() {
+
+            // XXX is it safe to compare `rest = [""]`?
+            if rest.is_empty() || rest.iter().any(|l| l.is_empty()) {
                 break;
             }
 
