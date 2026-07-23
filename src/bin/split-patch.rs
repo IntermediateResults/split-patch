@@ -1,9 +1,3 @@
-pub mod format_binary;
-pub mod line;
-pub mod patch;
-pub mod re;
-pub mod utils;
-
 use std::{
     borrow::Cow,
     ffi::OsStr,
@@ -20,9 +14,11 @@ use cj_path_util::temp_file::unbuffered_temp_file_for;
 use clap_with_warnings::clap_with_warnings;
 use regex::bytes::Captures;
 
-use crate::{
+use split_patch::{
     line::{write_lines_to, Line},
+    make_bstring,
     patch::{diff::Diff, hunk::WriteAsHunk},
+    re,
     utils::{add_suffix, split_before},
 };
 
