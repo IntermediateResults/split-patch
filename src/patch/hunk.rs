@@ -61,10 +61,16 @@ impl<'a> Hunk<'a> {
         let mut result = Vec::new();
 
         fn starts_with_space_or_backslash(l: &Line) -> bool {
-            l.starts_with([' ', '\\'])
+            match l.first() {
+                Some(b' ') | Some(b'\\') => true,
+                _ => false,
+            }
         }
         fn starts_with_minus_or_plus(l: &Line) -> bool {
-            l.starts_with(['-', '+'])
+            match l.first() {
+                Some(b'-') | Some(b'+') => true,
+                _ => false,
+            }
         }
 
         while !remaining.is_empty() {
@@ -84,7 +90,7 @@ impl<'a> Hunk<'a> {
             let new_post = if post.len() > 3 { &post[..3] } else { post };
             let new_post_len = new_post.len();
 
-            let group_minus_len = group.iter().filter(|l| l.starts_with('-')).count();
+            let group_minus_len = group.iter().filter(|l| l.starts_with(b"-")).count();
             // The group consists purely of lines starting with '-' and
             // '+' by its construction, hence:
             let group_plus_len = group.len() - group_minus_len;
@@ -122,7 +128,7 @@ impl<'a> Hunk<'a> {
 #[test]
 fn t_split_hunk_into_changes() {
     fn l<'a>(line0: usize, s: &'a str) -> Line<'a> {
-        Line::from_tuple((line0, s))
+        Line::from_tuple((line0, s.as_ref()))
     }
 
     let hunk_str = r#"
@@ -146,7 +152,7 @@ fn t_split_hunk_into_changes() {
             .trim()
             .split("\n")
             .enumerate()
-            .map(Line::from_tuple)
+            .map(|(i, line)| Line::from_tuple((i, line.as_ref())))
             .collect(),
     );
     let changes = hunk.split_into_changes().unwrap();
@@ -157,7 +163,7 @@ fn t_split_hunk_into_changes() {
             orig_len: 7,
             patched_start: 552,
             patched_len: 7,
-            head_post: "@@ fn cmp_function(",
+            head_post: b"@@ fn cmp_function(",
             pre: &[
                 l(1, " }"),
                 l(2, " "),
@@ -178,7 +184,7 @@ fn t_split_hunk_into_changes() {
             orig_len: 7,
             patched_start: 556,
             patched_len: 7,
-            head_post: "@@ fn cmp_function(",
+            head_post: b"@@ fn cmp_function(",
             pre: &[
                 l(6, "     cmds: &[ProcessingCommand],"),
                 l(7, "     now: SystemTime,"),

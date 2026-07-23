@@ -1,7 +1,10 @@
 use anyhow::{bail, Context, Result};
-use itertools::Itertools;
 
-use crate::{line::Line, patch::hunk::Hunk, utils::split_before};
+use crate::{
+    line::{write_lines_to, Line},
+    patch::hunk::Hunk,
+    utils::split_before,
+};
 
 /// A bare diff for a single file. (A Patch file represents any number
 /// of Diff instances.)
@@ -19,7 +22,7 @@ pub struct Diff<'a> {
 impl<'a> Diff<'a> {
     /// Not the head of the patch (i.e. mail headers / commit
     /// message), but of this diff. Ends with a newline.
-    pub fn head(&self) -> String {
+    pub fn head(&self) -> Vec<u8> {
         let Self {
             diff_line,
             newfile_line,
@@ -28,23 +31,25 @@ impl<'a> Diff<'a> {
             plus_line,
             hunks: _,
         } = self;
-        [
-            Some(*diff_line),
-            *newfile_line,
-            Some(*minus_line),
-            Some(*plus_line),
+        let mut head: Vec<u8> = Vec::new();
+
+        let lines = [
+            Some(diff_line),
+            newfile_line.as_ref(),
+            Some(minus_line),
+            Some(plus_line),
         ]
         .into_iter()
-        .flatten()
-        .map(|line| *line)
-        .join("\n")
-            + "\n"
+        .flatten();
+
+        write_lines_to(lines, &mut head).expect("writing to Vec doesn't fail");
+        head
     }
 
     pub fn from_lines(mut lines: impl Iterator<Item = Line<'a>>) -> Result<Diff<'a>> {
         let diff_line = lines
             .next()
-            .filter(|l| l.starts_with("diff "))
+            .filter(|l| l.starts_with(b"diff "))
             .with_context(|| format!("invalid patch file format: missing 'diff ' line"))?;
 
         let line = lines.next().with_context(|| {
@@ -53,7 +58,7 @@ impl<'a> Diff<'a> {
             )
         })?;
 
-        let (newfile_line, line) = if line.starts_with("new file mode ") {
+        let (newfile_line, line) = if line.starts_with(b"new file mode ") {
             (
                 Some(line),
                 lines.next().with_context(|| {
@@ -66,7 +71,7 @@ impl<'a> Diff<'a> {
             (None, line)
         };
 
-        let (index_line, line) = if line.starts_with("index ") {
+        let (index_line, line) = if line.starts_with(b"index ") {
             (
                 Some(line),
                 lines.next().with_context(|| {
@@ -77,7 +82,7 @@ impl<'a> Diff<'a> {
             (None, line)
         };
 
-        if !line.starts_with("--- ") {
+        if !line.starts_with(b"--- ") {
             bail!("invalid patch file format: expected `---` on line {line}",);
         }
         let minus_line = line;
@@ -85,7 +90,7 @@ impl<'a> Diff<'a> {
         let line = lines.next().with_context(|| {
             format!("invalid patch file format [missing `+++` line] on line {line}",)
         })?;
-        if !line.starts_with("+++ ") {
+        if !line.starts_with(b"+++ ") {
             bail!("invalid patch file format: expected `+++` on line {line}",);
         }
         let plus_line = line;
@@ -106,7 +111,7 @@ impl<'a> Diff<'a> {
 fn gather_hunks<'s>(lines: impl Iterator<Item = Line<'s>>) -> Vec<Hunk<'s>> {
     split_before(
         lines,
-        |line| line.starts_with("@@ "),
+        |line| line.starts_with(b"@@ "),
         |group| Hunk { lines: group },
     )
 }

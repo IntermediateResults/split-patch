@@ -1,5 +1,7 @@
 use std::io::Write;
 
+use format_bytes::write_bytes;
+
 use crate::{
     line::{write_lines_to, Line},
     patch::hunk::WriteAsHunk,
@@ -13,7 +15,7 @@ pub struct Change<'a, 'h> {
     pub orig_len: usize,
     pub patched_start: usize,
     pub patched_len: usize,
-    pub head_post: &'a str,
+    pub head_post: &'a [u8],
     pub pre: &'h [Line<'a>],
     pub group: &'h [Line<'a>],
     pub post: &'h [Line<'a>],
@@ -37,10 +39,14 @@ impl<'a, 'h> WriteAsHunk for Change<'a, 'h> {
         // @@ -42 42 @@
         // @@ -42 +1,2 @@
         // @@ -0,0 +1 @@
-        writeln!(
+        write_bytes!(
             &mut out,
-            "@@ -{},{} +{},{} {}",
-            orig_start, orig_len, patched_start, patched_len, head_post
+            b"@@ -{},{} +{},{} {}\n",
+            orig_start,
+            orig_len,
+            patched_start,
+            patched_len,
+            head_post
         )?;
         write_lines_to(*pre, &mut out)?;
         write_lines_to(*group, &mut out)?;

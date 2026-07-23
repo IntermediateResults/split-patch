@@ -6,11 +6,11 @@ use std::{fmt::Display, io::Write, ops::Deref};
 pub struct Line<'a> {
     /// 0-based line number
     line_no0: usize,
-    s: &'a str,
+    s: &'a [u8],
 }
 
 impl<'a> Deref for Line<'a> {
-    type Target = &'a str;
+    type Target = &'a [u8];
 
     fn deref(&self) -> &Self::Target {
         &self.s
@@ -25,12 +25,12 @@ impl<'a> Display for Line<'a> {
 }
 
 impl<'a> Line<'a> {
-    pub fn from_tuple((line_no0, s): (usize, &'a str)) -> Self {
+    pub fn from_tuple((line_no0, s): (usize, &'a [u8])) -> Self {
         Self { line_no0, s }
     }
 
     /// line contents without newline
-    pub fn s(&self) -> &'a str {
+    pub fn s(&self) -> &'a [u8] {
         self.s
     }
 
@@ -51,7 +51,7 @@ pub fn write_lines_to<'a>(
     mut out: impl Write,
 ) -> Result<(), std::io::Error> {
     for line in lines {
-        out.write_all(line.as_bytes())?;
+        out.write_all(line)?;
         out.write_all(b"\n")?;
     }
     Ok(())

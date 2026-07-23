@@ -5,7 +5,7 @@ pub mod utils;
 
 use std::{
     borrow::Cow,
-    fs::read_to_string,
+    fs::read,
     io::{stdout, BufWriter, IoSlice, Write},
     os::unix::ffi::OsStrExt,
     path::{Path, PathBuf},
@@ -13,10 +13,11 @@ use std::{
 };
 
 use anyhow::{anyhow, bail, Context, Result};
+use bstr::ByteSlice;
 use cj_path_util::temp_file::unbuffered_temp_file_for;
 use clap_with_warnings::clap_with_warnings;
-use itertools::Itertools;
-use regex::Captures;
+use format_bytes::format_bytes;
+use regex::bytes::Captures;
 
 use crate::{
     line::{write_lines_to, Line},
@@ -90,13 +91,18 @@ fn write_diff(
     let prefix = {
         let file = &cap[1];
 
-        file.strip_prefix("a/")
-            .or_else(|| file.strip_prefix("b/"))
+        file.strip_prefix(b"a/")
+            .or_else(|| file.strip_prefix(b"b/"))
             .unwrap_or(file)
     };
 
     let path = {
-        let path_in_old_dir = add_suffix(original_path, &format!("-{}", prefix.replace("/", "_")))?;
+        let path_in_old_dir = add_suffix(
+            original_path,
+            &format_bytes!(b"-{}", prefix.replace("/", b"_"))
+                .to_str()
+                .map_err(|e| anyhow!("{e}"))?,
+        )?;
         if let Some(output_dir) = &split_options.output_dir {
             output_dir.join(
                 path_in_old_dir
@@ -131,9 +137,14 @@ fn write_diff(
                             split_options.no_subject_change,
                             head_lines,
                             if split_options.monotonous_numbers {
-                                format!("{prefix} {file_i:03}: ")
+                                format_bytes!(b"{} {}: ", prefix, format!("{file_i:03}").as_bytes())
                             } else {
-                                format!("{prefix} {hunk_i:03}-{change_i:03}: ")
+                                format_bytes!(
+                                    b"{} {}-{}: ",
+                                    prefix,
+                                    format!("{hunk_i:03}").as_bytes(),
+                                    format!("{change_i:03}").as_bytes()
+                                )
                             },
                             original_path,
                         ),
@@ -158,7 +169,7 @@ fn write_diff(
                     head_with_subject_prefix(
                         split_options.no_subject_change,
                         head_lines,
-                        format!("{prefix} {hunk_i:03}: "),
+                        format_bytes!(b"{} {}: ", prefix, format!("{hunk_i:03}").as_bytes()),
                         original_path,
                     ),
                     &diff_string,
@@ -175,7 +186,7 @@ fn write_diff(
             head_with_subject_prefix(
                 split_options.no_subject_change,
                 head_lines,
-                format!("{}: ", prefix),
+                format_bytes!(b"{}: ", prefix),
                 original_path,
             ),
             &diff_string,
@@ -186,21 +197,18 @@ fn write_diff(
 
 fn head_with_subject_prefix(
     no_subject_change: bool,
-    head: &[Line],
-    prefix: String,
+    head_lines: &[Line],
+    prefix: Vec<u8>,
     original_path: &Path,
-) -> String {
-    let mut head = head.iter().map(|line| line.s()).join("\n");
-    // (Or add the newline unconditionally?)
-    if !head.is_empty() {
-        head.push_str("\n");
-    }
+) -> Vec<u8> {
+    let mut head: Vec<u8> = Vec::new();
+    write_lines_to(head_lines, &mut head).expect("writing to Vec doesn't fail");
     if no_subject_change {
         return head;
     }
     let new_head = re!(r"(?i)(\nsubject:\s*(?:\[PATCH]\s*)?)([^'n]*)")
-        .replace(&head, |c: &Captures| {
-            format!("{}{}{}", &c[1], prefix, &c[2])
+        .replace(&head, |c: &Captures| -> Vec<u8> {
+            format_bytes!(b"{}{}{}", &c[1], prefix, &c[2])
         });
     match &new_head {
         Cow::Borrowed(_) => {
@@ -214,12 +222,11 @@ fn head_with_subject_prefix(
     }
 }
 
-fn write_patch_file(new_head: String, diff: &[u8], output_path: PathBuf) -> Result<Arc<Path>> {
-    let new_head = new_head.as_bytes();
+fn write_patch_file(new_head: Vec<u8>, diff: &[u8], output_path: PathBuf) -> Result<Arc<Path>> {
     let expected_n_written = new_head.len() + diff.len();
     let mut file = unbuffered_temp_file_for(&*output_path, None)?;
     let n_written = file
-        .write_vectored(&[IoSlice::new(new_head), IoSlice::new(diff)])
+        .write_vectored(&[IoSlice::new(&new_head), IoSlice::new(diff)])
         .with_context(|| anyhow!("writing to {:?}", file.temp_path()))?;
     if n_written != expected_n_written {
         bail!("could only write {n_written} out of {expected_n_written} bytes to {output_path:?}");
@@ -230,11 +237,15 @@ fn write_patch_file(new_head: String, diff: &[u8], output_path: PathBuf) -> Resu
 /// Returns the list of files created
 fn split_patch(patch_file: &Path, split_options: &SplitOptions) -> Result<Vec<Arc<Path>>> {
     // 1. Read the patchfile
-    let content = read_to_string(&patch_file)?;
+    let content = read(&patch_file)?;
 
-    let content = re!(r"\n(?:-- \n(?:[^\n]*\n){0,3})?$").replace(&content, "\n");
+    let content = re!(r"\n(?:-- \n(?:[^\n]*\n){0,3})?$").replace(&content, b"\n");
 
-    let lines: Vec<Line> = content.lines().enumerate().map(Line::from_tuple).collect();
+    let lines: Vec<Line> = content
+        .split(|b| *b == b'\n')
+        .enumerate()
+        .map(Line::from_tuple)
+        .collect();
 
     if lines.is_empty() {
         bail!("file has no lines"); // ?
@@ -242,7 +253,7 @@ fn split_patch(patch_file: &Path, split_options: &SplitOptions) -> Result<Vec<Ar
 
     // 2. Split the patches in the file to obtain the diffs
 
-    let is_diff_line = |line: &Line| line.starts_with("diff ");
+    let is_diff_line = |line: &Line| line.starts_with(b"diff ");
 
     let chunks = split_before(lines.iter().copied(), is_diff_line, |vec| vec);
 
