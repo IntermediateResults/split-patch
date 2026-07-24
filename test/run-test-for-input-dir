@@ -4,7 +4,7 @@ IFS=
 
 usage() {
     echo "Usage: $0 input-dir"
-    echo "  Runs split-patches-dir for the Rust version, with input-dir-current,"
+    echo "  Runs split-patches-in-dir for the Rust version, with input-dir-current,"
     echo "  then check for differences with input-dir-expected."
     exit 1
 }
@@ -32,7 +32,7 @@ fi
 
 rm -rf "$current_dir"
 
-test/split-patches-dir target/debug/split-patch "$input_dir" "$current_dir"
+test/split-patches-in-dir target/debug/split-patch "$input_dir" "$current_dir"
 
 diff -ruN "$expected_dir" "$current_dir"
 
