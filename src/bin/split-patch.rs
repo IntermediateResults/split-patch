@@ -113,7 +113,7 @@ fn split_diff(
     assert_ne!(*path, *original_path);
 
     if split_options.hunks {
-        let diff = Diff::from_lines(diff_lines.iter().copied())?;
+        let diff = Diff::from_lines(diff_lines.iter().copied()).context("parsing diff")?;
 
         let diff_head = diff.head();
 
@@ -251,18 +251,21 @@ fn split_patch(patch_file: &Path, split_options: &SplitOptions) -> Result<Vec<Ar
 
     let (head, diffs): (&[Line], &[Vec<Line>]) =
         if chunks[0].first().map(is_diff_line).unwrap_or(false) {
+            // No head
             (&[], &chunks)
         } else {
+            // First part is head
             (&chunks[0], &chunks[1..])
         };
     if diffs.is_empty() {
-        bail!("file does not appear to contain diffs");
+        bail!("file does not appear to contain any diffs");
     }
 
     // 3. Write the diffs to individual (separate) files
     let mut written = Vec::new();
-    for diff in diffs {
-        let written_paths = split_diff(head, diff, &patch_file, split_options)?;
+    for (diff_i, diff) in diffs.iter().enumerate() {
+        let written_paths = split_diff(head, diff, &patch_file, split_options)
+            .with_context(|| format!("splitting diff no. {}/{}", diff_i + 1, diffs.len()))?;
         written.extend(written_paths);
     }
 

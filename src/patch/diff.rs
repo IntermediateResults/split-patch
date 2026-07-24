@@ -50,22 +50,18 @@ impl<'a> Diff<'a> {
         let diff_line = lines
             .next()
             .filter(|l| l.starts_with(b"diff "))
-            .with_context(|| format!("invalid patch file format: missing 'diff ' line"))?;
+            .with_context(|| format!("missing `diff ` line"))?;
 
-        let line = lines.next().with_context(|| {
-            format!(
-                "invalid patch file format: unexpected EOF after 'diff ' line on line {diff_line}",
-            )
-        })?;
+        let line = lines
+            .next()
+            .with_context(|| format!("unexpected EOF after line {diff_line}"))?;
 
         let (newfile_line, line) = if line.starts_with(b"new file mode ") {
             (
                 Some(line),
-                lines.next().with_context(|| {
-                    format!(
-                        "invalid patch file format: [missing `index` or `---` line] after line {line}",
-                    )
-                })?,
+                lines
+                    .next()
+                    .with_context(|| format!("unexpected EOF after line {line}"))?,
             )
         } else {
             (None, line)
@@ -74,24 +70,24 @@ impl<'a> Diff<'a> {
         let (index_line, line) = if line.starts_with(b"index ") {
             (
                 Some(line),
-                lines.next().with_context(|| {
-                    format!("invalid patch file format [missing `---` line] after line {line}",)
-                })?,
+                lines
+                    .next()
+                    .with_context(|| "unexpected EOF after line {line}")?,
             )
         } else {
             (None, line)
         };
 
         if !line.starts_with(b"--- ") {
-            bail!("invalid patch file format: expected `---` on line {line}",);
+            bail!("expected `--- ` on line {line}");
         }
         let minus_line = line;
 
-        let line = lines.next().with_context(|| {
-            format!("invalid patch file format [missing `+++` line] on line {line}",)
-        })?;
+        let line = lines
+            .next()
+            .with_context(|| "unexpected EOF after line {line}")?;
         if !line.starts_with(b"+++ ") {
-            bail!("invalid patch file format: expected `+++` on line {line}",);
+            bail!("invalid patch file format: expected `+++ ` on line {line}");
         }
         let plus_line = line;
 
