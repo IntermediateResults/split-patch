@@ -23,11 +23,11 @@ run() {
     "$@"
 }
 
-mkdir -p "$output_base"
+mkdir -p -- "$output_base"
 
 split_patch_abs=$(readlink -f "$split_patch")
 
-for opt in hunks changes; do
+for opt in -- --hunks --changes; do
     echo "Working on option: $opt"
     for input_file in "$input_dir"/*; do
         bn=$(basename "$input_file" .patch)
@@ -38,8 +38,8 @@ for opt in hunks changes; do
             run cd "$output_base"
             output_dir="$opt/$bn"
             # rm -rf "$output_dir"
-            mkdir -p "$output_dir"
-            run "$split_patch_abs" --monotonous-numbers --output-dir "$output_dir" --"$opt" \
+            mkdir -p -- "$output_dir"
+            run "$split_patch_abs" --monotonous-numbers --output-dir "$output_dir" "$opt" \
                 "$input_file_abs" > "$output_dir"/_list
         )
     done
