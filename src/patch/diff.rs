@@ -12,6 +12,7 @@ pub struct Diff<'a> {
     // The line that starts with "diff "
     pub diff_line: Line<'a>,
     pub newfile_line: Option<Line<'a>>,
+    pub deleted_line: Option<Line<'a>>,
     // unused
     pub index_line: Option<Line<'a>>,
     pub minus_line: Line<'a>,
@@ -26,6 +27,7 @@ impl<'a> Diff<'a> {
         let Self {
             diff_line,
             newfile_line,
+            deleted_line,
             index_line: _,
             minus_line,
             plus_line,
@@ -36,6 +38,7 @@ impl<'a> Diff<'a> {
         let lines = [
             Some(diff_line),
             newfile_line.as_ref(),
+            deleted_line.as_ref(),
             Some(minus_line),
             Some(plus_line),
         ]
@@ -57,6 +60,17 @@ impl<'a> Diff<'a> {
             .with_context(|| format!("unexpected EOF after line {diff_line}"))?;
 
         let (newfile_line, line) = if line.starts_with(b"new file mode ") {
+            (
+                Some(line),
+                lines
+                    .next()
+                    .with_context(|| format!("unexpected EOF after line {line}"))?,
+            )
+        } else {
+            (None, line)
+        };
+
+        let (deleted_line, line) = if line.starts_with(b"deleted ") {
             (
                 Some(line),
                 lines
@@ -96,6 +110,7 @@ impl<'a> Diff<'a> {
         Ok(Diff {
             diff_line,
             newfile_line,
+            deleted_line,
             index_line,
             minus_line,
             plus_line,
