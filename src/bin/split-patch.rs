@@ -95,18 +95,18 @@ fn split_diff(
     };
 
     let path = {
-        let path_in_old_dir = add_suffix(
+        let path_in_source_dir = add_suffix(
             original_path,
             OsStr::from_bytes(&*make_bstring!({ b"-" } + { prefix.replace("/", b"_") })),
         )?;
         if let Some(output_dir) = &split_options.output_dir {
             output_dir.join(
-                path_in_old_dir
+                path_in_source_dir
                     .file_name()
                     .expect("expect file name to be present as suffix was added"),
             )
         } else {
-            path_in_old_dir
+            path_in_source_dir
         }
     };
 
