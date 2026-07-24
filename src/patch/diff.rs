@@ -66,14 +66,14 @@ impl<'a> Diff<'a> {
 
         let line = lines
             .next()
-            .with_context(|| format!("unexpected EOF after line {diff_line}"))?;
+            .with_context(|| format!("unexpected end of diff after line {diff_line}"))?;
 
         let (newfile_line, line) = if line.starts_with(b"new file mode ") {
             (
                 Some(line),
                 lines
                     .next()
-                    .with_context(|| format!("unexpected EOF after line {line}"))?,
+                    .with_context(|| format!("unexpected end of diff after line {line}"))?,
             )
         } else {
             (None, line)
@@ -84,7 +84,7 @@ impl<'a> Diff<'a> {
                 Some(line),
                 lines
                     .next()
-                    .with_context(|| format!("unexpected EOF after line {line}"))?,
+                    .with_context(|| format!("unexpected end of diff after line {line}"))?,
             )
         } else {
             (None, line)
@@ -95,7 +95,7 @@ impl<'a> Diff<'a> {
                 Some(line),
                 lines
                     .next()
-                    .with_context(|| format!("unexpected EOF after line {line}"))?,
+                    .with_context(|| format!("unexpected end of diff after line {line}"))?,
             )
         } else {
             (None, line)
@@ -106,7 +106,7 @@ impl<'a> Diff<'a> {
                 Some(line),
                 lines
                     .next()
-                    .with_context(|| format!("unexpected EOF after line {line}"))?,
+                    .with_context(|| format!("unexpected end of diff after line {line}"))?,
             )
         } else {
             (None, line)
@@ -117,7 +117,7 @@ impl<'a> Diff<'a> {
                 Some(line),
                 lines
                     .next()
-                    .with_context(|| format!("unexpected EOF after line {line}"))?,
+                    .with_context(|| format!("unexpected end of diff after line {line}"))?,
             )
         } else {
             (None, line)
@@ -128,7 +128,7 @@ impl<'a> Diff<'a> {
                 Some(line),
                 lines
                     .next()
-                    .with_context(|| "unexpected EOF after line {line}")?,
+                    .with_context(|| "unexpected end of diff after line {line}")?,
             )
         } else {
             (None, line)
@@ -141,7 +141,7 @@ impl<'a> Diff<'a> {
 
         let line = lines
             .next()
-            .with_context(|| "unexpected EOF after line {line}")?;
+            .with_context(|| "unexpected end of diff after line {line}")?;
         if !line.starts_with(b"+++ ") {
             bail!("invalid patch file format: expected `+++ ` on line {line}");
         }
