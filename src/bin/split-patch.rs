@@ -174,7 +174,7 @@ fn split_diff(
         Ok(written_paths)
     } else {
         let mut diff_string: Vec<u8> = Vec::new();
-        write_lines_to(head_lines, &mut diff_string)?;
+        write_lines_to(diff_lines, &mut diff_string)?;
 
         let written_path = write_patch_file(
             head_with_subject_prefix(
