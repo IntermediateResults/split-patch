@@ -71,7 +71,7 @@ struct Args {
 }
 
 /// Receives the lines for a single diff. Returns the list of files created
-fn write_diff(
+fn split_diff(
     head_lines: &[Line],
     // Guaranteed to be at least the "diff " line
     diff_lines: &[Line],
@@ -264,7 +264,7 @@ fn split_patch(patch_file: &Path, split_options: &SplitOptions) -> Result<Vec<Ar
     // 3. Write the diffs to individual (separate) files
     let mut written = Vec::new();
     for diff in diffs {
-        written.extend(write_diff(head, diff, &patch_file, split_options)?);
+        written.extend(split_diff(head, diff, &patch_file, split_options)?);
     }
 
     Ok(written)
