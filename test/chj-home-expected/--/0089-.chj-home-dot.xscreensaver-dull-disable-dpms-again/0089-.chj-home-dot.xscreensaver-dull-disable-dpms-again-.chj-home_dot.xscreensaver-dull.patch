@@ -1,0 +1,23 @@
+From e82275ce63f4669b6b4f1a1bd85c40ad0b0aec45 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 10 Dec 2020 04:18:37 +0000
+Subject: .chj-home/dot.xscreensaver-dull: [PATCH 089/191] .chj-home/dot.xscreensaver-dull: disable dpms again
+
+Is this the reason for the TV-related screen messup problem?
+---
+ .chj-home/dot.xscreensaver-dull | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.chj-home/dot.xscreensaver-dull b/.chj-home/dot.xscreensaver-dull
+index e79c958..6a396ac 100644
+--- a/.chj-home/dot.xscreensaver-dull
++++ b/.chj-home/dot.xscreensaver-dull
+@@ -24,7 +24,7 @@ fadeTicks:	20
+ captureStderr:	True
+ ignoreUninstalledPrograms:False
+ font:		*-medium-r-*-140-*-m-*
+-dpmsEnabled:	True
++dpmsEnabled:	False
+ dpmsQuickOff:	False
+ dpmsStandby:	0:15:00
+ dpmsSuspend:	0:30:00

@@ -1,0 +1,24 @@
+From affa8907b4790ad1833dfe111f6582645425d21a Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 14 Apr 2018 22:03:56 +0100
+Subject: .Xresources: [PATCH 054/191] .Xresources: omfg it *was* correctly displayed
+
+Just that the first window coming up is shorter, somehow. Because it's
+first displaying menu then turning it off?
+---
+ .Xresources | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.Xresources b/.Xresources
+index 5351f20..4d0c54a 100644
+--- a/.Xresources
++++ b/.Xresources
+@@ -14,7 +14,7 @@ xpdf.initialZoom: width
+ 
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ 
+-emacs*geometry: 80x54
++emacs*geometry: 80x51
+ 
+ 
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

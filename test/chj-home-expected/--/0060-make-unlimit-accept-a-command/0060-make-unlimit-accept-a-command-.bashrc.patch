@@ -1,0 +1,29 @@
+From 00c4ac771488a9b8c9caf1e1d621d65eea5bb9fa Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Tue, 17 Jul 2018 13:29:10 +0100
+Subject: .bashrc: [PATCH 060/191] make "unlimit" accept a command
+
+---
+ .bashrc | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/.bashrc b/.bashrc
+index c8ba8a9..92628d4 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -122,7 +122,14 @@ cdpwd() {
+ }
+ 
+ unlimit() {
+-    ulimit -S -v unlimited
++    if [ $# -eq 0 ]; then
++	ulimit -S -v unlimited
++    else
++	(
++	    ulimit -S -v unlimited
++	    exec "$@"
++	)
++    fi
+ }
+ 
+ cs() {

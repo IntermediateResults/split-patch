@@ -1,0 +1,42 @@
+From 4b95227cc931e0a1f6f8126b010dccfdd799df8a Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Wed, 6 Dec 2023 14:18:53 +0100
+Subject: .xmodmaprc_laptopkeyboard: [PATCH 168/191] Add .xmodmaprc_laptopkeyboard
+
+Aha, that was why I did this: stupid PrtSc button on laptop.
+---
+ .xmodmaprc_laptopkeyboard | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+ create mode 100644 .xmodmaprc_laptopkeyboard
+
+diff --git a/.xmodmaprc_laptopkeyboard b/.xmodmaprc_laptopkeyboard
+new file mode 100644
+index 0000000..88b6baf
+--- /dev/null
++++ b/.xmodmaprc_laptopkeyboard
+@@ -0,0 +1,25 @@
++!clear  ?
++
++! Modifier keys:
++!Control_L
++!?
++!Alt_L
++!ISO_Level3_Shift
++!Super_R
++!Menu
++!Control_R
++
++!vs man page: Shift, Lock,
++! Control, Mod1, Mod2, Mod3, Mod4, Mod5
++
++! Mod1 is the emacs meta key  Alt.  sigh.
++
++keycode 133 = less greater less greater backslash brokenbar backslash brokenbar
++keycode 134 = backslash brokenbar
++
++keycode 135 = Alt_L
++
++keycode 107 = Control_R Control_R Control_R Control_R Control_R Control_R Control_R Control_R
++
++add Control = Control_R
++

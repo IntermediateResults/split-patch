@@ -1,0 +1,25 @@
+From 0514027a09064f1f3cad02ebe55ceb1cb5ab68f8 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 21 Feb 2021 21:43:05 +0000
+Subject: .chj-home/init: [PATCH 094/191] .chj-home/init: initialize a Git repo in scratch/
+
+---
+ .chj-home/init | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/.chj-home/init b/.chj-home/init
+index 3a41328..fa1b0d2 100755
+--- a/.chj-home/init
++++ b/.chj-home/init
+@@ -88,6 +88,11 @@ fi
+     umask 077
+     mkdir -p tmp .ssh DROP scratch bin
+ )
++(
++    set -eu
++    cd scratch
++    /opt/chj/bin/cj-git-init || true
++)
+ 
+ chmod a+wxt,g+s DROP
+ touch .ssh/authorized_keys

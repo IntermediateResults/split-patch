@@ -1,0 +1,18 @@
+From 14c4c28f5ff1c8d68d768a9e741b9e2043b3e82c Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 2 Nov 2025 04:08:31 +0100
+Subject: .gitignore_global: [PATCH 186/191] .gitignore_global: ignore .cj-cargolock/
+
+---
+ .gitignore_global | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/.gitignore_global b/.gitignore_global
+index d98cee5..d26bf38 100644
+--- a/.gitignore_global
++++ b/.gitignore_global
+@@ -6,3 +6,4 @@ nohup.out
+ .gdb_history
+ a.out
+ .cache/
++.cj-cargolock/

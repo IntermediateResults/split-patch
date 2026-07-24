@@ -1,0 +1,14 @@
+From 5ee554399759df1841851d95959f6e55f61dc356 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 23 Sep 2021 17:17:04 +0100
+Subject: .chj-home/.xscreensaver: [PATCH 127/191] Rename
+
+---
+ .chj-home/{dot.xscreensaver-dull => .xscreensaver} | 0
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ rename .chj-home/{dot.xscreensaver-dull => .xscreensaver} (100%)
+
+diff --git a/.chj-home/dot.xscreensaver-dull b/.chj-home/.xscreensaver
+similarity index 100%
+rename from .chj-home/dot.xscreensaver-dull
+rename to .chj-home/.xscreensaver

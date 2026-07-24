@@ -1,0 +1,24 @@
+From 4b3fcad89017a224beff46e288add7d38a86dd75 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 26 Nov 2017 00:17:33 +0000
+Subject: .bash_profile: [PATCH 037/191] merge root's home's features
+
+---
+ .bash_profile | 3 +++
+ .bashrc       | 7 +++++++
+ 2 files changed, 10 insertions(+)
+
+diff --git a/.bash_profile b/.bash_profile
+index 1c648b2..a665dd1 100644
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -24,6 +24,9 @@ if [ -d ~/local/bin ] ; then
+     PATH=~/local/bin:"${PATH}"
+ fi
+ 
++if [ "$UID" -eq 0 ]; then
++    PATH=/root/local/sbin:/root/sbin:"$PATH"
++fi
+ 
+ # --- General env setup -------
+ unset LESSOPEN

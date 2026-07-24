@@ -1,0 +1,24 @@
+From 678a5e59f0d29e8e5fd079ce2900d64a6e6bfed2 Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Mon, 22 Jul 2019 16:56:26 +0100
+Subject: .bashrc: [PATCH 069/191] .bashrc: shorten that name
+
+Hey, `coma` etc.
+---
+ .bashrc | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/.bashrc b/.bashrc
+index a67a962..bb18c79 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -154,7 +154,8 @@ rensn () {
+     ren -- "$(nonrenamed | tail -1 | ls2list)"
+ }
+ 
+-rensnall () {
++# rename scratch nonrenamed all
++rensna () {
+     cd scratch/
+     ren-nonrenamed
+ }

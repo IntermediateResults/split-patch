@@ -1,0 +1,22 @@
+From c51bdfae465c179954d1f6b813acd52b745b1641 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 30 Jun 2023 00:49:46 +0200
+Subject: .bash_profile: [PATCH 164/191] .bash_profile: add dir to newest clang to PATH
+
+---
+ .bash_profile | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/.bash_profile b/.bash_profile
+index a52d352..e5dc946 100644
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -22,6 +22,8 @@ export CHJHOSTNAME="$(head -1 /etc/hostname)"
+ 
+ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/opt/chj/bin:/opt/chj/cj-git-patchtool:/opt/chj/git-sign/bin:/opt/chj/cj-qemucontrol/bin:/opt/chj/chjize/bin
+ 
++PATH="$(path-add-clang-dir)"
++
+ # set PATH so it includes user's private bin if it exists
+ if [ -d ~/bin ] ; then
+     PATH=~/bin:"${PATH}"

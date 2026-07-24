@@ -1,0 +1,49 @@
+From 41deb7dc5bef0df70515401e1c0fecff9adedc6d Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Tue, 15 Jun 2021 12:49:36 +0100
+Subject: .bashrc: [PATCH 107/191] .bashrc: restructure prompt command
+
+---
+ .bashrc | 22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+index ff2706c..b7da0b1 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -26,6 +26,19 @@ __ps1_show_exitcode () {
+     fi
+ }
+ 
++__prompt_command () {
++    # If this is an xterm set the window title
++    case "$TERM" in
++	xterm*|rxvt*)
++	    echo -ne "\033]0;${USER}@$CHJHOSTNAME: ${PWD/$HOME/~}\007"
++	    ;;
++	*)
++	    ;;
++    esac
++}
++
++PROMPT_COMMAND=__prompt_command
++
+ # set a fancy prompt (non-color, unless we know we "want" color)
+ case "$TERM" in
+ xterm-color|xterm)
+@@ -36,15 +49,6 @@ xterm-color|xterm)
+     ;;
+ esac
+ 
+-# If this is an xterm set the window title, via PROMPT_COMMAND
+-case "$TERM" in
+-    xterm*|rxvt*)
+-	PROMPT_COMMAND='echo -ne "\033]0;${USER}@$CHJHOSTNAME: ${PWD/$HOME/~}\007"'
+-	;;
+-    *)
+-	;;
+-esac
+-
+ 
+ # enable color support of ls
+ if [ "$TERM" != "dumb" ]; then
