@@ -13,6 +13,9 @@ pub struct Diff<'a> {
     pub diff_line: Line<'a>,
     pub newfile_line: Option<Line<'a>>,
     pub deleted_line: Option<Line<'a>>,
+    pub similarity_line: Option<Line<'a>>,
+    pub rename_from_line: Option<Line<'a>>,
+    pub rename_to_line: Option<Line<'a>>,
     // unused
     pub index_line: Option<Line<'a>>,
     pub minus_line: Line<'a>,
@@ -28,6 +31,9 @@ impl<'a> Diff<'a> {
             diff_line,
             newfile_line,
             deleted_line,
+            similarity_line,
+            rename_from_line,
+            rename_to_line,
             index_line: _,
             minus_line,
             plus_line,
@@ -39,6 +45,9 @@ impl<'a> Diff<'a> {
             Some(diff_line),
             newfile_line.as_ref(),
             deleted_line.as_ref(),
+            similarity_line.as_ref(),
+            rename_from_line.as_ref(),
+            rename_to_line.as_ref(),
             Some(minus_line),
             Some(plus_line),
         ]
@@ -81,6 +90,39 @@ impl<'a> Diff<'a> {
             (None, line)
         };
 
+        let (similarity_line, line) = if line.starts_with(b"similarity ") {
+            (
+                Some(line),
+                lines
+                    .next()
+                    .with_context(|| format!("unexpected EOF after line {line}"))?,
+            )
+        } else {
+            (None, line)
+        };
+
+        let (rename_from_line, line) = if line.starts_with(b"rename from ") {
+            (
+                Some(line),
+                lines
+                    .next()
+                    .with_context(|| format!("unexpected EOF after line {line}"))?,
+            )
+        } else {
+            (None, line)
+        };
+
+        let (rename_to_line, line) = if line.starts_with(b"rename to ") {
+            (
+                Some(line),
+                lines
+                    .next()
+                    .with_context(|| format!("unexpected EOF after line {line}"))?,
+            )
+        } else {
+            (None, line)
+        };
+
         let (index_line, line) = if line.starts_with(b"index ") {
             (
                 Some(line),
@@ -111,6 +153,9 @@ impl<'a> Diff<'a> {
             diff_line,
             newfile_line,
             deleted_line,
+            similarity_line,
+            rename_from_line,
+            rename_to_line,
             index_line,
             minus_line,
             plus_line,
