@@ -237,21 +237,7 @@ fn split_patch(patch_file: &Path, split_options: &SplitOptions) -> Result<Vec<Ar
 
     let content = re!(r"\n(?:-- \n(?:[^\n]*\n){0,3})?$").replace(&content, b"\n");
 
-    let lines: Vec<Line> = content
-        .split(|b| *b == b'\n')
-        .enumerate()
-        .map(Line::from_tuple)
-        .collect();
-
-    let lines = if let Some(last_line) = lines.last() {
-        if last_line.is_empty() {
-            &lines[0..lines.len() - 1]
-        } else {
-            &*lines
-        }
-    } else {
-        &*lines
-    };
+    let lines: Vec<Line> = content.lines().enumerate().map(Line::from_tuple).collect();
 
     if lines.is_empty() {
         bail!("file has no lines"); // ?
