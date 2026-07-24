@@ -243,6 +243,16 @@ fn split_patch(patch_file: &Path, split_options: &SplitOptions) -> Result<Vec<Ar
         .map(Line::from_tuple)
         .collect();
 
+    let lines = if let Some(last_line) = lines.last() {
+        if last_line.is_empty() {
+            &lines[0..lines.len() - 1]
+        } else {
+            &*lines
+        }
+    } else {
+        &*lines
+    };
+
     if lines.is_empty() {
         bail!("file has no lines"); // ?
     }
