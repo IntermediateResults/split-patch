@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0"
+anyhow = { version = "1.0", features = ["backtrace"] }
 bstr = { version = "1.10", default-features = false, features = ["alloc"] }
 cj-path-util = { version = "0.4.0", features = ["unix"] }
 clap = { version = "4", features = ["derive"] }
