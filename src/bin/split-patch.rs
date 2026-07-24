@@ -176,7 +176,7 @@ fn split_diff(
         let mut diff_string: Vec<u8> = Vec::new();
         write_lines_to(head_lines, &mut diff_string)?;
 
-        Ok(vec![write_patch_file(
+        let written_path = write_patch_file(
             head_with_subject_prefix(
                 split_options.no_subject_change,
                 head_lines,
@@ -185,7 +185,9 @@ fn split_diff(
             ),
             &diff_string,
             path,
-        )?])
+        )?;
+
+        Ok(vec![written_path])
     }
 }
 
@@ -264,7 +266,8 @@ fn split_patch(patch_file: &Path, split_options: &SplitOptions) -> Result<Vec<Ar
     // 3. Write the diffs to individual (separate) files
     let mut written = Vec::new();
     for diff in diffs {
-        written.extend(split_diff(head, diff, &patch_file, split_options)?);
+        let written_paths = split_diff(head, diff, &patch_file, split_options)?;
+        written.extend(written_paths);
     }
 
     Ok(written)
