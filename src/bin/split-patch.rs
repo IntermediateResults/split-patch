@@ -23,6 +23,7 @@ use split_patch::{
 };
 
 #[derive(Debug, clap::Args)]
+#[command(allow_hyphen_values = true)]
 struct SplitOptions {
     /// Split on hunk boundaries, not just file boundaries.
     #[clap(long)]
@@ -55,7 +56,7 @@ struct SplitOptions {
 /// one particular target file.
 #[clap_with_warnings]
 #[derive(Debug, clap::Parser)]
-#[command(version, about, long_about)]
+#[command(version, about, long_about, allow_hyphen_values = true)]
 struct Args {
     /// Path(s) to patch file(s)
     #[clap(required = true)]
