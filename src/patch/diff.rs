@@ -6,6 +6,15 @@ use crate::{
     utils::split_before,
 };
 
+/// The parts of a diff that represent line based differences in a
+/// file (as opposed to pure renames (or deletions?)).
+pub struct DiffDifferences<'a> {
+    pub index_line: Option<Line<'a>>,
+    pub minus_line: Line<'a>,
+    pub plus_line: Line<'a>,
+    pub hunks: Vec<Hunk<'a>>,
+}
+
 /// A bare diff for a single file. (A Patch file represents any number
 /// of Diff instances.)
 pub struct Diff<'a> {
@@ -17,10 +26,7 @@ pub struct Diff<'a> {
     pub rename_from_line: Option<Line<'a>>,
     pub rename_to_line: Option<Line<'a>>,
     // unused
-    pub index_line: Option<Line<'a>>,
-    pub minus_line: Line<'a>,
-    pub plus_line: Line<'a>,
-    pub hunks: Vec<Hunk<'a>>,
+    pub differences: Option<DiffDifferences<'a>>,
 }
 
 impl<'a> Diff<'a> {
@@ -34,10 +40,7 @@ impl<'a> Diff<'a> {
             similarity_line,
             rename_from_line,
             rename_to_line,
-            index_line: _,
-            minus_line,
-            plus_line,
-            hunks: _,
+            differences,
         } = self;
         let mut head: Vec<u8> = Vec::new();
 
@@ -48,13 +51,23 @@ impl<'a> Diff<'a> {
             similarity_line.as_ref(),
             rename_from_line.as_ref(),
             rename_to_line.as_ref(),
-            Some(minus_line),
-            Some(plus_line),
         ]
         .into_iter()
         .flatten();
 
         write_lines_to(lines, &mut head).expect("writing to Vec doesn't fail");
+        if let Some(differences) = differences {
+            let DiffDifferences {
+                index_line: _,
+                minus_line,
+                plus_line,
+                hunks: _,
+            } = differences;
+
+            let lines = [Some(minus_line), Some(plus_line)].into_iter().flatten();
+            write_lines_to(lines, &mut head).expect("writing to Vec doesn't fail");
+        }
+
         head
     }
 
@@ -113,41 +126,47 @@ impl<'a> Diff<'a> {
         };
 
         let (rename_to_line, line) = if line.starts_with(b"rename to ") {
-            (
-                Some(line),
-                lines
-                    .next()
-                    .with_context(|| format!("unexpected end of diff after line {line}"))?,
-            )
+            (Some(line), lines.next())
         } else {
-            (None, line)
+            (None, Some(line))
         };
 
-        let (index_line, line) = if line.starts_with(b"index ") {
-            (
-                Some(line),
-                lines
-                    .next()
-                    .with_context(|| "unexpected end of diff after line {line}")?,
-            )
+        let differences = if let Some(line) = line {
+            let (index_line, line) = if line.starts_with(b"index ") {
+                (
+                    Some(line),
+                    lines
+                        .next()
+                        .with_context(|| "unexpected end of diff after line {line}")?,
+                )
+            } else {
+                (None, line)
+            };
+
+            if !line.starts_with(b"--- ") {
+                bail!("expected `--- ` on line {line}");
+            }
+            let minus_line = line;
+
+            let line = lines
+                .next()
+                .with_context(|| "unexpected end of diff after line {line}")?;
+            if !line.starts_with(b"+++ ") {
+                bail!("invalid patch file format: expected `+++ ` on line {line}");
+            }
+            let plus_line = line;
+
+            let hunks = gather_hunks(lines);
+
+            Some(DiffDifferences {
+                index_line,
+                minus_line,
+                plus_line,
+                hunks,
+            })
         } else {
-            (None, line)
+            None
         };
-
-        if !line.starts_with(b"--- ") {
-            bail!("expected `--- ` on line {line}");
-        }
-        let minus_line = line;
-
-        let line = lines
-            .next()
-            .with_context(|| "unexpected end of diff after line {line}")?;
-        if !line.starts_with(b"+++ ") {
-            bail!("invalid patch file format: expected `+++ ` on line {line}");
-        }
-        let plus_line = line;
-
-        let hunks = gather_hunks(lines);
 
         Ok(Diff {
             diff_line,
@@ -156,10 +175,7 @@ impl<'a> Diff<'a> {
             similarity_line,
             rename_from_line,
             rename_to_line,
-            index_line,
-            minus_line,
-            plus_line,
-            hunks,
+            differences,
         })
     }
 }

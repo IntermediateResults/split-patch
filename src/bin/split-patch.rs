@@ -123,53 +123,57 @@ fn split_diff(
         let mut file_i: usize = 0;
 
         let mut written_paths = Vec::new();
-        for (hunk_i, hunk) in diff.hunks.iter().enumerate() {
-            if split_options.changes {
-                for (change_i, change) in hunk.split_into_changes()?.into_iter().enumerate() {
+        if let Some(differences) = &diff.differences {
+            for (hunk_i, hunk) in differences.hunks.iter().enumerate() {
+                if split_options.changes {
+                    for (change_i, change) in hunk.split_into_changes()?.into_iter().enumerate() {
+                        let mut diff_string: Vec<u8> = diff_head.clone().into();
+                        change.write_as_hunk_to(&mut diff_string)?;
+
+                        written_paths.push(write_patch_file(
+                            head_with_subject_prefix(
+                                split_options.no_subject_change,
+                                head_lines,
+                                if split_options.monotonous_numbers {
+                                    make_bstring!({ prefix } + (" {file_i:03}: "))
+                                } else {
+                                    make_bstring!({ prefix } + (" {hunk_i:03}-{change_i:03}: "))
+                                },
+                                original_path,
+                            ),
+                            &diff_string,
+                            add_suffix(
+                                &path,
+                                if split_options.monotonous_numbers {
+                                    format!("-{file_i:03}")
+                                } else {
+                                    format!("-{hunk_i:03}-{change_i:03}")
+                                }
+                                .as_ref(),
+                            )?
+                            .into(),
+                        )?);
+
+                        file_i += 1;
+                    }
+                } else {
                     let mut diff_string: Vec<u8> = diff_head.clone().into();
-                    change.write_as_hunk_to(&mut diff_string)?;
+                    hunk.write_as_hunk_to(&mut diff_string)?;
 
                     written_paths.push(write_patch_file(
                         head_with_subject_prefix(
                             split_options.no_subject_change,
                             head_lines,
-                            if split_options.monotonous_numbers {
-                                make_bstring!({ prefix } + (" {file_i:03}: "))
-                            } else {
-                                make_bstring!({ prefix } + (" {hunk_i:03}-{change_i:03}: "))
-                            },
+                            make_bstring!({ prefix } + (" {hunk_i:03}: ")),
                             original_path,
                         ),
                         &diff_string,
-                        add_suffix(
-                            &path,
-                            if split_options.monotonous_numbers {
-                                format!("-{file_i:03}")
-                            } else {
-                                format!("-{hunk_i:03}-{change_i:03}")
-                            }
-                            .as_ref(),
-                        )?
-                        .into(),
+                        add_suffix(&path, format!("-{hunk_i:03}").as_ref())?,
                     )?);
-
-                    file_i += 1;
                 }
-            } else {
-                let mut diff_string: Vec<u8> = diff_head.clone().into();
-                hunk.write_as_hunk_to(&mut diff_string)?;
-
-                written_paths.push(write_patch_file(
-                    head_with_subject_prefix(
-                        split_options.no_subject_change,
-                        head_lines,
-                        make_bstring!({ prefix } + (" {hunk_i:03}: ")),
-                        original_path,
-                    ),
-                    &diff_string,
-                    add_suffix(&path, format!("-{hunk_i:03}").as_ref())?,
-                )?);
             }
+        } else {
+            // Simply do not write split versions, OK?
         }
         Ok(written_paths)
     } else {
