@@ -32,7 +32,7 @@ fi
 
 rm -rf "$current_dir"
 
-test/split-patches-in-dir target/debug/split-patch "$input_dir" "$current_dir"
+test/split-patches-in-dir "${SPLIT_PATCH-target/debug/split-patch}" "$input_dir" "$current_dir"
 
 diff -ruN "$expected_dir" "$current_dir"
 
