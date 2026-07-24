@@ -26,5 +26,5 @@ Run `split-patch --help` for usage help.
 
 ## History
 
-This program is a rewrite of a [version written in Perl](https://github.com/pflanze/chj-scripts/blob/a44a1c466f9704a35aa839c653f447d51e2d15df/split-patch).
+This program is a rewrite of a [version written in Perl](https://github.com/pflanze/chj-scripts/blob/7e29f7473f8f874d28914d65a5d0d16b81889945/split-patch).
 
