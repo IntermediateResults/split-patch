@@ -1,3 +1,4 @@
+pub mod format_binary;
 pub mod line;
 pub mod patch;
 pub mod re;
@@ -5,6 +6,7 @@ pub mod utils;
 
 use std::{
     borrow::Cow,
+    ffi::OsStr,
     fs::read,
     io::{stdout, BufWriter, IoSlice, Write},
     os::unix::ffi::OsStrExt,
@@ -13,10 +15,9 @@ use std::{
 };
 
 use anyhow::{anyhow, bail, Context, Result};
-use bstr::ByteSlice;
+use bstr::{BString, ByteSlice};
 use cj_path_util::temp_file::unbuffered_temp_file_for;
 use clap_with_warnings::clap_with_warnings;
-use format_bytes::format_bytes;
 use regex::bytes::Captures;
 
 use crate::{
@@ -99,9 +100,7 @@ fn write_diff(
     let path = {
         let path_in_old_dir = add_suffix(
             original_path,
-            &format_bytes!(b"-{}", prefix.replace("/", b"_"))
-                .to_str()
-                .map_err(|e| anyhow!("{e}"))?,
+            OsStr::from_bytes(&*make_bstring!({ b"-" } + { prefix.replace("/", b"_") })),
         )?;
         if let Some(output_dir) = &split_options.output_dir {
             output_dir.join(
@@ -132,30 +131,27 @@ fn write_diff(
                 for (change_i, change) in hunk.split_into_changes()?.into_iter().enumerate() {
                     let mut diff_string: Vec<u8> = diff_head.clone().into();
                     change.write_as_hunk_to(&mut diff_string)?;
+
                     written_paths.push(write_patch_file(
                         head_with_subject_prefix(
                             split_options.no_subject_change,
                             head_lines,
                             if split_options.monotonous_numbers {
-                                format_bytes!(b"{} {}: ", prefix, format!("{file_i:03}").as_bytes())
+                                make_bstring!({ prefix } + (" {file_i:03}: "))
                             } else {
-                                format_bytes!(
-                                    b"{} {}-{}: ",
-                                    prefix,
-                                    format!("{hunk_i:03}").as_bytes(),
-                                    format!("{change_i:03}").as_bytes()
-                                )
+                                make_bstring!({ prefix } + (" {hunk_i:03}-{change_i:03}: "))
                             },
                             original_path,
                         ),
                         &diff_string,
                         add_suffix(
                             &path,
-                            &if split_options.monotonous_numbers {
+                            if split_options.monotonous_numbers {
                                 format!("-{file_i:03}")
                             } else {
                                 format!("-{hunk_i:03}-{change_i:03}")
-                            },
+                            }
+                            .as_ref(),
                         )?
                         .into(),
                     )?);
@@ -165,15 +161,16 @@ fn write_diff(
             } else {
                 let mut diff_string: Vec<u8> = diff_head.clone().into();
                 hunk.write_as_hunk_to(&mut diff_string)?;
+
                 written_paths.push(write_patch_file(
                     head_with_subject_prefix(
                         split_options.no_subject_change,
                         head_lines,
-                        format_bytes!(b"{} {}: ", prefix, format!("{hunk_i:03}").as_bytes()),
+                        make_bstring!({ prefix } + (" {hunk_i:03}: ")),
                         original_path,
                     ),
                     &diff_string,
-                    add_suffix(&path, &format!("-{hunk_i:03}"))?.into(),
+                    add_suffix(&path, format!("-{hunk_i:03}").as_ref())?,
                 )?);
             }
         }
@@ -186,7 +183,7 @@ fn write_diff(
             head_with_subject_prefix(
                 split_options.no_subject_change,
                 head_lines,
-                format_bytes!(b"{}: ", prefix),
+                make_bstring!({ prefix } + { ": " }),
                 original_path,
             ),
             &diff_string,
@@ -198,7 +195,7 @@ fn write_diff(
 fn head_with_subject_prefix(
     no_subject_change: bool,
     head_lines: &[Line],
-    prefix: Vec<u8>,
+    prefix: BString,
     original_path: &Path,
 ) -> Vec<u8> {
     let mut head: Vec<u8> = Vec::new();
@@ -207,8 +204,8 @@ fn head_with_subject_prefix(
         return head;
     }
     let new_head = re!(r"(?i)(\nsubject:\s*(?:\[PATCH]\s*)?)([^'n]*)")
-        .replace(&head, |c: &Captures| -> Vec<u8> {
-            format_bytes!(b"{}{}{}", &c[1], prefix, &c[2])
+        .replace(&head, |c: &Captures| -> BString {
+            make_bstring!({ &c[1] } + { &*prefix } + { &c[2] })
         });
     match &new_head {
         Cow::Borrowed(_) => {

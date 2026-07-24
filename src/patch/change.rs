@@ -1,7 +1,5 @@
 use std::io::Write;
 
-use format_bytes::write_bytes;
-
 use crate::{
     line::{write_lines_to, Line},
     patch::hunk::WriteAsHunk,
@@ -39,15 +37,13 @@ impl<'a, 'h> WriteAsHunk for Change<'a, 'h> {
         // @@ -42 42 @@
         // @@ -42 +1,2 @@
         // @@ -0,0 +1 @@
-        write_bytes!(
+        write!(
             &mut out,
-            b"@@ -{},{} +{},{} {}\n",
-            orig_start,
-            orig_len,
-            patched_start,
-            patched_len,
-            head_post
+            "@@ -{},{} +{},{} ",
+            orig_start, orig_len, patched_start, patched_len
         )?;
+        out.write_all(head_post)?;
+        out.write_all(b"\n")?;
         write_lines_to(*pre, &mut out)?;
         write_lines_to(*group, &mut out)?;
         write_lines_to(*post, &mut out)?;
