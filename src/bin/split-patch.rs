@@ -14,7 +14,6 @@ use clap_with_warnings::clap_with_warnings;
 use regex::bytes::Captures;
 
 use split_patch::{
-    line::write_lines_to,
     make_bstring,
     patch::{
         diff::Diff,
@@ -192,7 +191,8 @@ fn head_with_subject_prefix(
     original_path: &Path,
 ) -> Vec<u8> {
     let mut head_string: Vec<u8> = Vec::new();
-    write_lines_to(head.lines, &mut head_string).expect("writing to Vec doesn't fail");
+    head.write_to(&mut head_string)
+        .expect("writing to Vec doesn't fail");
     if no_subject_change {
         return head_string;
     }

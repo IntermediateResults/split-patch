@@ -1,19 +1,84 @@
-use std::path::Path;
+use std::{io::Write, path::Path};
 
 use anyhow::{bail, Context, Result};
 use bstr::ByteSlice;
 use ouroboros::self_referencing;
 
-use crate::{line::Line, patch::diff::Diff, utils::split_before};
+use crate::{
+    line::{write_lines_to, Line},
+    patch::diff::Diff,
+    utils::split_before,
+};
+
+/// `git format-patch` style files have a "From " line and then a
+/// number of header lines, before an empty line and body lines
+/// follow; this represents this part before the empty line.
+pub struct PatchHeadHeader<'a> {
+    pub from_line: Line<'a>,
+    pub header_lines: &'a [Line<'a>],
+}
+
+impl<'a> PatchHeadHeader<'a> {
+    pub fn write_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
+        write_lines_to(&[self.from_line], &mut out)?;
+        write_lines_to(self.header_lines, &mut out)
+    }
+}
 
 pub struct PatchHead<'a> {
-    pub lines: &'a [Line<'a>],
+    pub header: Option<PatchHeadHeader<'a>>,
+    /// If a header is given, remaining_lines starts with the empty
+    /// line that follows the header. If no header was found, this
+    /// holds all the lines found.
+    pub remaining_lines: &'a [Line<'a>],
+}
+
+impl<'a> PatchHead<'a> {
+    pub fn from_lines(lines: &'a [Line<'a>]) -> Self {
+        if let Some(from_line) = lines.first().copied() {
+            if from_line.starts_with(b"From ") {
+                if let Some(i) = lines.iter().position(|line| line.is_empty()) {
+                    let header_lines = &lines[1..i];
+                    let remaining_lines = &lines[i..];
+                    return PatchHead {
+                        header: Some(PatchHeadHeader {
+                            from_line,
+                            header_lines,
+                        }),
+                        remaining_lines,
+                    };
+                } else {
+                    return PatchHead {
+                        header: Some(PatchHeadHeader {
+                            from_line,
+                            header_lines: lines,
+                        }),
+                        remaining_lines: &[],
+                    };
+                }
+            }
+        }
+        PatchHead {
+            header: None,
+            remaining_lines: lines,
+        }
+    }
+
+    pub fn write_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
+        if let Some(header) = &self.header {
+            header.write_to(&mut out)?;
+        }
+        write_lines_to(self.remaining_lines, &mut out)
+    }
 }
 
 pub struct Patch<'a> {
+    /// The head represents the lines found before the first "diff "
+    /// line.
     pub head: PatchHead<'a>,
     pub diffs: Vec<Diff<'a>>,
-    // The lines from "-- " in git format-patch files
+    /// The lines from "-- " onwards in "git format-patch" style
+    /// files, including the "-- " line.
     pub footer: &'a [Line<'a>],
 }
 
@@ -47,7 +112,7 @@ impl<'a> Patch<'a> {
             bail!("file does not appear to contain any diffs");
         }
 
-        let head = PatchHead { lines: head_lines };
+        let head = PatchHead::from_lines(head_lines);
 
         // Parse the diffs
         let diffs = diff_lines_groups
