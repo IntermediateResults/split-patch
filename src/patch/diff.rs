@@ -1,8 +1,11 @@
+use std::io::Write;
+
 use anyhow::{bail, Context, Result};
+use bstr::BStr;
 
 use crate::{
     line::{write_lines_to, Line},
-    patch::hunk::Hunk,
+    patch::hunk::{Hunk, WriteAsHunk},
     utils::split_before,
 };
 
@@ -20,6 +23,11 @@ pub struct DiffDifferences<'a> {
 pub struct Diff<'a> {
     // The line that starts with "diff "
     pub diff_line: Line<'a>,
+    // The first path including the leading "a/" or similar
+    pub diff_path_a_full: Option<&'a BStr>,
+    // The second path including the leading "b/" or similar
+    pub diff_path_b_full: Option<&'a BStr>,
+
     pub newfile_line: Option<Line<'a>>,
     pub deleted_line: Option<Line<'a>>,
     pub similarity_line: Option<Line<'a>>,
@@ -29,12 +37,53 @@ pub struct Diff<'a> {
     pub differences: Option<DiffDifferences<'a>>,
 }
 
+fn strip_leading_path_segment(s: &BStr) -> Result<&BStr> {
+    if s.first() == Some(&b'/') {
+        bail!("path is absolute: {s:?}")
+    }
+    for i in 0..s.len() {
+        if s[i] == b'/' {
+            for i in i + 1..s.len() {
+                if s[i] != b'/' {
+                    return Ok(&s[i..]);
+                }
+            }
+            bail!("missing path segments after initial segment in: {s:?}")
+        }
+    }
+    bail!("could not find '/' in: {s:?}")
+}
+
+#[test]
+fn t_strip_leading_path_segment() {
+    fn b<'t>(s: &'t str) -> &'t BStr {
+        s.as_ref()
+    }
+    let t = strip_leading_path_segment;
+    assert_eq!(t(b("a/hey")).unwrap(), b("hey"));
+    assert_eq!(t(b("abc///de/f")).unwrap(), b("de/f"));
+    assert_eq!(
+        t(b("a/")).err().unwrap().to_string(),
+        "missing path segments after initial segment in: \"a/\""
+    );
+    assert_eq!(
+        t(b("/a/hey")).err().unwrap().to_string(),
+        "path is absolute: \"/a/hey\""
+    );
+}
+
 impl<'a> Diff<'a> {
     /// Not the head of the patch (i.e. mail headers / commit
     /// message), but of this diff. Ends with a newline.
-    pub fn head(&self) -> Vec<u8> {
+    pub fn write_head_to(
+        &self,
+        print_index_line: bool,
+        mut out: impl Write,
+    ) -> Result<(), std::io::Error> {
         let Self {
             diff_line,
+            diff_path_a_full: _,
+            diff_path_b_full: _,
             newfile_line,
             deleted_line,
             similarity_line,
@@ -42,7 +91,6 @@ impl<'a> Diff<'a> {
             rename_to_line,
             differences,
         } = self;
-        let mut head: Vec<u8> = Vec::new();
 
         let lines = [
             Some(diff_line),
@@ -55,20 +103,68 @@ impl<'a> Diff<'a> {
         .into_iter()
         .flatten();
 
-        write_lines_to(lines, &mut head).expect("writing to Vec doesn't fail");
+        write_lines_to(lines, &mut out).expect("writing to Vec doesn't fail");
         if let Some(differences) = differences {
             let DiffDifferences {
-                index_line: _,
+                index_line,
                 minus_line,
                 plus_line,
                 hunks: _,
             } = differences;
 
-            let lines = [Some(minus_line), Some(plus_line)].into_iter().flatten();
-            write_lines_to(lines, &mut head).expect("writing to Vec doesn't fail");
+            let lines = [
+                if print_index_line {
+                    index_line.as_ref()
+                } else {
+                    None
+                },
+                Some(minus_line),
+                Some(plus_line),
+            ]
+            .into_iter()
+            .flatten();
+            write_lines_to(lines, &mut out)?;
         }
 
+        Ok(())
+    }
+
+    /// Not the head of the patch (i.e. mail headers / commit
+    /// message), but of this diff. Ends with a newline.
+    pub fn head(&self, print_index_line: bool) -> Vec<u8> {
+        let mut head: Vec<u8> = Vec::new();
+        self.write_head_to(print_index_line, &mut head)
+            .expect("writing to Vec doesn't fail");
         head
+    }
+
+    pub fn write_hunks_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
+        if let Some(differences) = &self.differences {
+            for hunk in &differences.hunks {
+                hunk.write_as_hunk_to(&mut out)?;
+            }
+        }
+        Ok(())
+    }
+
+    pub fn write_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
+        self.write_head_to(true, &mut out)?;
+        self.write_hunks_to(&mut out)
+    }
+
+    pub fn diff_path_a(&self) -> Result<&BStr> {
+        strip_leading_path_segment(
+            self.diff_path_a_full
+                .with_context(|| format!("missing first path in 'diff' line {}", self.diff_line))?,
+        )
+    }
+
+    pub fn diff_path_b(&self) -> Result<&BStr> {
+        strip_leading_path_segment(
+            &self.diff_path_b_full.with_context(|| {
+                format!("missing second path in 'diff' line {}", self.diff_line)
+            })?,
+        )
     }
 
     pub fn from_lines(mut lines: impl Iterator<Item = Line<'a>>) -> Result<Diff<'a>> {
@@ -76,6 +172,14 @@ impl<'a> Diff<'a> {
             .next()
             .filter(|l| l.starts_with(b"diff "))
             .with_context(|| format!("missing `diff ` line"))?;
+        let (diff_path_a_full, diff_path_b_full);
+        {
+            let mut parts = diff_line.split(|b| *b == b' ');
+            parts.next().expect("'diff' part was there");
+            let mut parts = parts.skip_while(|p| p.starts_with(b"-"));
+            diff_path_a_full = parts.next().map(AsRef::as_ref);
+            diff_path_b_full = parts.next().map(AsRef::as_ref);
+        }
 
         let line = lines
             .next()
@@ -170,6 +274,8 @@ impl<'a> Diff<'a> {
 
         Ok(Diff {
             diff_line,
+            diff_path_a_full,
+            diff_path_b_full,
             newfile_line,
             deleted_line,
             similarity_line,

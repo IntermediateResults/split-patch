@@ -74,25 +74,11 @@ struct Args {
 fn split_diff(
     head_lines: &[Line],
     // Guaranteed to be at least the "diff " line
-    diff_lines: &[Line],
+    diff: &Diff,
     original_path: &Path,
     split_options: &SplitOptions,
 ) -> Result<Vec<Arc<Path>>> {
-    let first_line = diff_lines[0];
-    let cap = re!(r"^diff.* (\S+)")
-        .captures(*first_line)
-        .with_context(|| {
-            format!(
-                "missing 'diff' marker with file in the first line of the diff on line {first_line}",
-            )
-        })?;
-    let prefix = {
-        let file = &cap[1];
-
-        file.strip_prefix(b"a/")
-            .or_else(|| file.strip_prefix(b"b/"))
-            .unwrap_or(file)
-    };
+    let prefix = diff.diff_path_b()?;
 
     let path = {
         let path_in_source_dir = add_suffix(
@@ -113,9 +99,7 @@ fn split_diff(
     assert_ne!(*path, *original_path);
 
     if split_options.hunks {
-        let diff = Diff::from_lines(diff_lines.iter().copied()).context("parsing diff")?;
-
-        let diff_head = diff.head();
+        let diff_head = diff.head(false);
 
         // Old style sequence numbers, increasing monotonically for
         // all files, for when --changes is used with
@@ -178,7 +162,7 @@ fn split_diff(
         Ok(written_paths)
     } else {
         let mut diff_string: Vec<u8> = Vec::new();
-        write_lines_to(diff_lines, &mut diff_string)?;
+        diff.write_to(&mut diff_string)?;
 
         let written_path = write_patch_file(
             head_with_subject_prefix(
@@ -267,8 +251,11 @@ fn split_patch(patch_file: &Path, split_options: &SplitOptions) -> Result<Vec<Ar
 
     // 3. Write the diffs to individual (separate) files
     let mut written = Vec::new();
-    for (diff_i, diff) in diffs.iter().enumerate() {
-        let written_paths = split_diff(head, diff, &patch_file, split_options)
+    for (diff_i, diff_lines) in diffs.iter().enumerate() {
+        let diff = Diff::from_lines(diff_lines.iter().copied())
+            .with_context(|| format!("parsing diff no. {}/{}", diff_i + 1, diffs.len()))?;
+
+        let written_paths = split_diff(head, &diff, &patch_file, split_options)
             .with_context(|| format!("splitting diff no. {}/{}", diff_i + 1, diffs.len()))?;
         written.extend(written_paths);
     }
