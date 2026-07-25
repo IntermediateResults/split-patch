@@ -105,8 +105,8 @@ fn split_diff(
         // all files, for when --changes is used with
         // --monotonous-numbers
         let mut file_i: usize = 0;
-
         let mut written_paths = Vec::new();
+
         if let Some(differences) = &diff.differences {
             for (hunk_i, hunk) in differences.hunks.iter().enumerate() {
                 if split_options.changes {
@@ -114,7 +114,7 @@ fn split_diff(
                         let mut diff_string: Vec<u8> = diff_head.clone().into();
                         change.write_as_hunk_to(&mut diff_string)?;
 
-                        written_paths.push(write_patch_file(
+                        let written_path = write_patch_file(
                             head_with_subject_prefix(
                                 split_options.no_subject_change,
                                 head_lines,
@@ -136,15 +136,16 @@ fn split_diff(
                                 .as_ref(),
                             )?
                             .into(),
-                        )?);
+                        )?;
 
+                        written_paths.push(written_path);
                         file_i += 1;
                     }
                 } else {
                     let mut diff_string: Vec<u8> = diff_head.clone().into();
                     hunk.write_as_hunk_to(&mut diff_string)?;
 
-                    written_paths.push(write_patch_file(
+                    let written_path = write_patch_file(
                         head_with_subject_prefix(
                             split_options.no_subject_change,
                             head_lines,
@@ -153,7 +154,9 @@ fn split_diff(
                         ),
                         &diff_string,
                         add_suffix(&path, format!("-{hunk_i:03}").as_ref())?,
-                    )?);
+                    )?;
+
+                    written_paths.push(written_path);
                 }
             }
         } else {
@@ -257,6 +260,7 @@ fn split_patch(patch_file: &Path, split_options: &SplitOptions) -> Result<Vec<Ar
 
         let written_paths = split_diff(head, &diff, &patch_file, split_options)
             .with_context(|| format!("splitting diff no. {}/{}", diff_i + 1, diffs.len()))?;
+
         written.extend(written_paths);
     }
 
