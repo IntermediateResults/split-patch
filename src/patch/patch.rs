@@ -6,8 +6,12 @@ use ouroboros::self_referencing;
 
 use crate::{line::Line, patch::diff::Diff, utils::split_before};
 
+pub struct PatchHead<'a> {
+    pub lines: &'a [Line<'a>],
+}
+
 pub struct Patch<'a> {
-    pub head: &'a [Line<'a>],
+    pub head: PatchHead<'a>,
     pub diffs: Vec<Diff<'a>>,
     // The lines from "-- " in git format-patch files
     pub footer: &'a [Line<'a>],
@@ -30,7 +34,7 @@ impl<'a> Patch<'a> {
         // Split into head and diffs
         let is_diff_line = |line: &Line| line.starts_with(b"diff ");
         let chunks = split_before(lines, is_diff_line, |slice| slice);
-        let (head, diffs): (&[Line], &[&[Line]]) =
+        let (head_lines, diff_lines_groups): (&[Line], &[&[Line]]) =
             if chunks[0].first().map(is_diff_line).unwrap_or(false) {
                 // No head
                 (&[], &chunks)
@@ -38,17 +42,25 @@ impl<'a> Patch<'a> {
                 // First part is head
                 (&chunks[0], &chunks[1..])
             };
-        if diffs.is_empty() {
+        if diff_lines_groups.is_empty() {
+            // XXX should perhaps accept that!
             bail!("file does not appear to contain any diffs");
         }
 
+        let head = PatchHead { lines: head_lines };
+
         // Parse the diffs
-        let diffs = diffs
+        let diffs = diff_lines_groups
             .iter()
             .enumerate()
             .map(|(diff_i, diff_lines)| -> Result<_> {
-                Diff::from_lines(*diff_lines)
-                    .with_context(|| format!("parsing diff no. {}/{}", diff_i + 1, diffs.len()))
+                Diff::from_lines(*diff_lines).with_context(|| {
+                    format!(
+                        "parsing diff no. {}/{}",
+                        diff_i + 1,
+                        diff_lines_groups.len()
+                    )
+                })
             })
             .collect::<Result<_>>()?;
 

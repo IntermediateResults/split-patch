@@ -14,9 +14,13 @@ use clap_with_warnings::clap_with_warnings;
 use regex::bytes::Captures;
 
 use split_patch::{
-    line::{write_lines_to, Line},
+    line::write_lines_to,
     make_bstring,
-    patch::{diff::Diff, hunk::WriteAsHunk, patch::PatchFile},
+    patch::{
+        diff::Diff,
+        hunk::WriteAsHunk,
+        patch::{PatchFile, PatchHead},
+    },
     re,
     utils::add_suffix,
 };
@@ -71,7 +75,7 @@ struct Args {
 
 /// Receives the lines for a single diff. Returns the list of files created
 fn split_diff(
-    head_lines: &[Line],
+    head: &PatchHead<'_>,
     // Guaranteed to be at least the "diff " line
     diff: &Diff,
     original_path: &Path,
@@ -116,7 +120,7 @@ fn split_diff(
                         let written_path = write_patch_file(
                             head_with_subject_prefix(
                                 split_options.no_subject_change,
-                                head_lines,
+                                head,
                                 if split_options.monotonous_numbers {
                                     make_bstring!({ prefix } + (" {file_i:03}: "))
                                 } else {
@@ -147,7 +151,7 @@ fn split_diff(
                     let written_path = write_patch_file(
                         head_with_subject_prefix(
                             split_options.no_subject_change,
-                            head_lines,
+                            head,
                             make_bstring!({ prefix } + (" {hunk_i:03}: ")),
                             original_path,
                         ),
@@ -169,7 +173,7 @@ fn split_diff(
         let written_path = write_patch_file(
             head_with_subject_prefix(
                 split_options.no_subject_change,
-                head_lines,
+                head,
                 make_bstring!({ prefix } + { ": " }),
                 original_path,
             ),
@@ -183,26 +187,29 @@ fn split_diff(
 
 fn head_with_subject_prefix(
     no_subject_change: bool,
-    head_lines: &[Line],
+    head: &PatchHead<'_>,
     prefix: BString,
     original_path: &Path,
 ) -> Vec<u8> {
-    let mut head: Vec<u8> = Vec::new();
-    write_lines_to(head_lines, &mut head).expect("writing to Vec doesn't fail");
+    let mut head_string: Vec<u8> = Vec::new();
+    write_lines_to(head.lines, &mut head_string).expect("writing to Vec doesn't fail");
     if no_subject_change {
-        return head;
+        return head_string;
     }
     let new_head = re!(r"(?i)(\nsubject:\s*(?:\[PATCH]\s*)?)([^'n]*)")
-        .replace(&head, |c: &Captures| -> BString {
+        .replace(&head_string, |c: &Captures| -> BString {
             make_bstring!({ &c[1] } + { &*prefix } + { &c[2] })
         });
+
+    // `regex` crate's way to allow to warn about not matching; also
+    // optimize by avoiding a copy of the borrow in that case
     match &new_head {
         Cow::Borrowed(_) => {
             eprintln!(
                 "Warning: could not find subject line in file: {}",
                 original_path.display()
             );
-            head
+            head_string
         }
         Cow::Owned(_) => new_head.into_owned(),
     }
@@ -224,13 +231,12 @@ fn write_patch_file(new_head: Vec<u8>, diff: &[u8], output_path: PathBuf) -> Res
 fn split_patch(patch_file_path: &Path, split_options: &SplitOptions) -> Result<Vec<Arc<Path>>> {
     let patch_file = PatchFile::from_path(patch_file_path)?;
     let patch = patch_file.patch();
-    let head = &*patch.head;
     let diffs = &*patch.diffs;
 
     // Write the diffs to individual (separate) files
     let mut written = Vec::new();
     for (diff_i, diff) in diffs.iter().enumerate() {
-        let written_paths = split_diff(head, &diff, patch_file_path, split_options)
+        let written_paths = split_diff(&patch.head, &diff, patch_file_path, split_options)
             .with_context(|| format!("splitting diff no. {}/{}", diff_i + 1, diffs.len()))?;
 
         written.extend(written_paths);
