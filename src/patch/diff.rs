@@ -130,7 +130,7 @@ impl<'a> Diff<'a> {
 
     /// Not the head of the patch (i.e. mail headers / commit
     /// message), but of this diff. Ends with a newline.
-    pub fn head(&self, print_index_line: bool) -> Vec<u8> {
+    pub fn head_to_string(&self, print_index_line: bool) -> Vec<u8> {
         let mut head: Vec<u8> = Vec::new();
         self.write_head_to(print_index_line, &mut head)
             .expect("writing to Vec doesn't fail");

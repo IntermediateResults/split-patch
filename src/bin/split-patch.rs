@@ -98,7 +98,7 @@ fn split_diff(
     assert_ne!(*path, *original_path);
 
     if split_options.hunks {
-        let diff_head = diff.head(false);
+        let diff_head = diff.head_to_string(false);
 
         // Old style sequence numbers, increasing monotonically for
         // all files, for when --changes is used with
