@@ -50,27 +50,26 @@ fn t_add_suffix() {
 // Can't find anything in itertools; coalesce doesn't allow to build
 // groups of different type than the item type. Don't need it to be
 // lazy, avoids the need for generators.
-pub fn split_before<T, G>(
-    items: impl Iterator<Item = T>,
-    is_boundary: impl Fn(&T) -> bool,
-    group_constructor: impl Fn(Vec<T>) -> G,
+pub fn split_before<'a, T, G>(
+    items: &'a [T],
+    is_boundary: impl Fn(&'a T) -> bool,
+    group_constructor: impl Fn(&'a [T]) -> G,
 ) -> Vec<G> {
-    let finish_group = |groups: &mut Vec<G>, current_group: Vec<T>| {
+    let finish_group = |groups: &mut Vec<G>, current_group: &'a [T]| {
         if !current_group.is_empty() {
             groups.push(group_constructor(current_group));
         }
     };
 
     let mut groups = Vec::new();
-    let mut current_group = Vec::new();
-    for item in items {
-        if is_boundary(&item) {
-            finish_group(&mut groups, current_group);
-            current_group = Vec::new();
+    let mut current_group_start = 0;
+    for (i, item) in items.iter().enumerate() {
+        if is_boundary(item) {
+            finish_group(&mut groups, &items[current_group_start..i]);
+            current_group_start = i;
         }
-        current_group.push(item);
     }
-    finish_group(&mut groups, current_group);
+    finish_group(&mut groups, &items[current_group_start..]);
 
     groups
 }
@@ -81,29 +80,29 @@ fn t_split_before() {
         val
     }
 
-    fn t<'s, const N: usize>(items: [&'s str; N]) -> Vec<Vec<&'s str>> {
-        split_before(items.into_iter(), |s| s.starts_with("@"), |v| v)
+    fn t<'a, 's>(items: &'a [&'s str]) -> Vec<&'a [&'s str]> {
+        split_before(items, |s: &&str| s.starts_with("@"), |v| v)
     }
 
-    assert_eq!(t(["@c"]), [vec!["@c"]],);
+    assert_eq!(t(&["@c"]), [vec!["@c"]],);
     // With no lines, no group should be created
-    assert_eq!(t([]), typed::<[Vec<&str>; 0]>([]),);
+    assert_eq!(t(&[]), typed::<[Vec<&str>; 0]>([]),);
     // Not sure how it should behave for this one
     assert_eq!(
-        t(["a", "b", "@c", "d", "@e", "f", "g"]),
+        t(&["a", "b", "@c", "d", "@e", "f", "g"]),
         [vec!["a", "b"], vec!["@c", "d"], vec!["@e", "f", "g"],]
     );
     // The normal cases, right?
     assert_eq!(
-        t(["@a", "b", "@c", "d", "@e", "f", "g"]),
+        t(&["@a", "b", "@c", "d", "@e", "f", "g"]),
         [vec!["@a", "b"], vec!["@c", "d"], vec!["@e", "f", "g"],]
     );
     assert_eq!(
-        t(["@a", "b", "@c", "d", "@e"]),
+        t(&["@a", "b", "@c", "d", "@e"]),
         [vec!["@a", "b"], vec!["@c", "d"], vec!["@e"],]
     );
     assert_eq!(
-        t(["@a", "@b", "@c", "d", "@e"]),
+        t(&["@a", "@b", "@c", "d", "@e"]),
         [vec!["@a"], vec!["@b"], vec!["@c", "d"], vec!["@e"],]
     );
 }

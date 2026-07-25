@@ -1,7 +1,6 @@
 use std::{
     borrow::Cow,
     ffi::OsStr,
-    fs::read,
     io::{stdout, BufWriter, IoSlice, Write},
     os::unix::ffi::OsStrExt,
     path::{Path, PathBuf},
@@ -17,9 +16,9 @@ use regex::bytes::Captures;
 use split_patch::{
     line::{write_lines_to, Line},
     make_bstring,
-    patch::{diff::Diff, hunk::WriteAsHunk},
+    patch::{diff::Diff, hunk::WriteAsHunk, patch::PatchFile},
     re,
-    utils::{add_suffix, split_before},
+    utils::add_suffix,
 };
 
 #[derive(Debug, clap::Args)]
@@ -222,43 +221,16 @@ fn write_patch_file(new_head: Vec<u8>, diff: &[u8], output_path: PathBuf) -> Res
 }
 
 /// Returns the list of files created
-fn split_patch(patch_file: &Path, split_options: &SplitOptions) -> Result<Vec<Arc<Path>>> {
-    // 1. Read the patchfile
-    let content = read(&patch_file)?;
+fn split_patch(patch_file_path: &Path, split_options: &SplitOptions) -> Result<Vec<Arc<Path>>> {
+    let patch_file = PatchFile::from_path(patch_file_path)?;
+    let patch = patch_file.patch();
+    let head = &*patch.head;
+    let diffs = &*patch.diffs;
 
-    let content = re!(r"\n(?:-- \n(?:[^\n]*\n){0,3})?$").replace(&content, b"\n");
-
-    let lines: Vec<Line> = content.lines().enumerate().map(Line::from_tuple).collect();
-
-    if lines.is_empty() {
-        bail!("file has no lines"); // ?
-    }
-
-    // 2. Split the patches in the file to obtain the diffs
-
-    let is_diff_line = |line: &Line| line.starts_with(b"diff ");
-
-    let chunks = split_before(lines.iter().copied(), is_diff_line, |vec| vec);
-
-    let (head, diffs): (&[Line], &[Vec<Line>]) =
-        if chunks[0].first().map(is_diff_line).unwrap_or(false) {
-            // No head
-            (&[], &chunks)
-        } else {
-            // First part is head
-            (&chunks[0], &chunks[1..])
-        };
-    if diffs.is_empty() {
-        bail!("file does not appear to contain any diffs");
-    }
-
-    // 3. Write the diffs to individual (separate) files
+    // Write the diffs to individual (separate) files
     let mut written = Vec::new();
-    for (diff_i, diff_lines) in diffs.iter().enumerate() {
-        let diff = Diff::from_lines(diff_lines.iter().copied())
-            .with_context(|| format!("parsing diff no. {}/{}", diff_i + 1, diffs.len()))?;
-
-        let written_paths = split_diff(head, &diff, &patch_file, split_options)
+    for (diff_i, diff) in diffs.iter().enumerate() {
+        let written_paths = split_diff(head, &diff, patch_file_path, split_options)
             .with_context(|| format!("splitting diff no. {}/{}", diff_i + 1, diffs.len()))?;
 
         written.extend(written_paths);

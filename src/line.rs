@@ -30,7 +30,7 @@ impl<'a> Line<'a> {
     }
 
     /// line contents without newline
-    pub fn s(&self) -> &'a [u8] {
+    pub fn contents(&self) -> &'a [u8] {
         self.s
     }
 

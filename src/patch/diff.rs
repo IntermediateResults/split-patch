@@ -167,8 +167,10 @@ impl<'a> Diff<'a> {
         )
     }
 
-    pub fn from_lines(mut lines: impl Iterator<Item = Line<'a>>) -> Result<Diff<'a>> {
-        let diff_line = lines
+    pub fn from_lines(lines_slice: &'a [Line<'a>]) -> Result<Diff<'a>> {
+        let mut lines = lines_slice.into_iter();
+
+        let diff_line = *lines
             .next()
             .filter(|l| l.starts_with(b"diff "))
             .with_context(|| format!("missing `diff ` line"))?;
@@ -181,14 +183,14 @@ impl<'a> Diff<'a> {
             diff_path_b_full = parts.next().map(AsRef::as_ref);
         }
 
-        let line = lines
+        let line = *lines
             .next()
             .with_context(|| format!("unexpected end of diff after line {diff_line}"))?;
 
         let (newfile_line, line) = if line.starts_with(b"new file mode ") {
             (
                 Some(line),
-                lines
+                *lines
                     .next()
                     .with_context(|| format!("unexpected end of diff after line {line}"))?,
             )
@@ -199,7 +201,7 @@ impl<'a> Diff<'a> {
         let (deleted_line, line) = if line.starts_with(b"deleted ") {
             (
                 Some(line),
-                lines
+                *lines
                     .next()
                     .with_context(|| format!("unexpected end of diff after line {line}"))?,
             )
@@ -210,7 +212,7 @@ impl<'a> Diff<'a> {
         let (similarity_line, line) = if line.starts_with(b"similarity ") {
             (
                 Some(line),
-                lines
+                *lines
                     .next()
                     .with_context(|| format!("unexpected end of diff after line {line}"))?,
             )
@@ -221,7 +223,7 @@ impl<'a> Diff<'a> {
         let (rename_from_line, line) = if line.starts_with(b"rename from ") {
             (
                 Some(line),
-                lines
+                *lines
                     .next()
                     .with_context(|| format!("unexpected end of diff after line {line}"))?,
             )
@@ -230,7 +232,7 @@ impl<'a> Diff<'a> {
         };
 
         let (rename_to_line, line) = if line.starts_with(b"rename to ") {
-            (Some(line), lines.next())
+            (Some(line), lines.next().copied())
         } else {
             (None, Some(line))
         };
@@ -239,7 +241,7 @@ impl<'a> Diff<'a> {
             let (index_line, line) = if line.starts_with(b"index ") {
                 (
                     Some(line),
-                    lines
+                    *lines
                         .next()
                         .with_context(|| "unexpected end of diff after line {line}")?,
                 )
@@ -252,7 +254,7 @@ impl<'a> Diff<'a> {
             }
             let minus_line = line;
 
-            let line = lines
+            let line = *lines
                 .next()
                 .with_context(|| "unexpected end of diff after line {line}")?;
             if !line.starts_with(b"+++ ") {
@@ -260,7 +262,7 @@ impl<'a> Diff<'a> {
             }
             let plus_line = line;
 
-            let hunks = gather_hunks(lines);
+            let hunks = gather_hunks(lines.as_slice());
 
             Some(DiffDifferences {
                 index_line,
@@ -286,7 +288,7 @@ impl<'a> Diff<'a> {
     }
 }
 
-fn gather_hunks<'s>(lines: impl Iterator<Item = Line<'s>>) -> Vec<Hunk<'s>> {
+fn gather_hunks<'s>(lines: &'s [Line<'s>]) -> Vec<Hunk<'s>> {
     split_before(
         lines,
         |line| line.starts_with(b"@@ "),
