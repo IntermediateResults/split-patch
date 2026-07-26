@@ -1,0 +1,7 @@
+#!/bin/bash
+set -meuo pipefail
+IFS=
+
+export MIRIFLAGS=-Zmiri-disable-isolation
+
+exec cargo +nightly miri run --bin split-patch -- "$@"

@@ -19,3 +19,10 @@ test_opt: build_test_opt
 	@echo "++ Run tests on test/chj-home"
 	SPLIT_PATCH=target/release/split-patch test/run-test-for-input-dir test/chj-home
 
+miri_test:
+	cargo +nightly miri test --target powerpc-unknown-linux-gnu
+
+miri_run:
+	SPLIT_PATCH=test/miri-split-patch test/run-test-for-input-dir test/div
+
+miri: miri_test miri_run
