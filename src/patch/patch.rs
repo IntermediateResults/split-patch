@@ -34,7 +34,7 @@ pub struct PatchHead<'a> {
 }
 
 impl<'a> PatchHead<'a> {
-    pub fn from_lines(lines: &'a [Line<'a>]) -> Self {
+    pub fn _from_lines(lines: &'a [Line<'a>]) -> Self {
         if let Some(from_line) = lines.first().copied() {
             if from_line.starts_with(b"From ") {
                 if let Some(i) = lines.iter().position(|line| line.is_empty()) {
@@ -71,6 +71,14 @@ impl<'a> PatchHead<'a> {
         write_lines_to(self.remaining_lines, &mut out)
     }
 }
+
+impl<'a> FromLines<'a> for PatchHead<'a> {
+    fn from_lines(lines: &'a [Line<'a>]) -> Result<Self, anyhow::Error> {
+        Ok(Self::_from_lines(lines))
+    }
+}
+
+def_line_content_for!(OwnedPatchHead, PatchHead);
 
 pub struct Patch<'a> {
     /// The head represents the lines found before the first "diff "
@@ -112,7 +120,7 @@ impl<'a> FromLines<'a> for Patch<'a> {
             bail!("file does not appear to contain any diffs");
         }
 
-        let head = PatchHead::from_lines(head_lines);
+        let head = PatchHead::_from_lines(head_lines);
 
         // Parse the diffs
         let diffs = diff_lines_groups
