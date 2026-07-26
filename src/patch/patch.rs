@@ -25,6 +25,7 @@ impl<'a> PatchHeadHeader<'a> {
     }
 }
 
+/// The part before the first `diff ` line; can be empty
 pub struct PatchHead<'a> {
     pub header: Option<PatchHeadHeader<'a>>,
     /// If a header is given, remaining_lines starts with the empty
@@ -80,6 +81,9 @@ impl<'a> FromLines<'a> for PatchHead<'a> {
 
 def_line_content_for!(OwnedPatchHead, PatchHead);
 
+/// Parsed representation for a whole patch file (as per `git
+/// format-patch`, but should parse files from other files like `diff
+/// -u`, too)
 pub struct Patch<'a> {
     /// The head represents the lines found before the first "diff "
     /// line.
