@@ -18,7 +18,7 @@ use split_patch::{
     patch::{
         diff::Diff,
         hunk::WriteAsHunk,
-        patch::{PatchFile, PatchHead},
+        patch::{OwnedPatch, PatchHead},
     },
     re,
     utils::add_suffix,
@@ -229,8 +229,8 @@ fn write_patch_file(new_head: Vec<u8>, diff: &[u8], output_path: PathBuf) -> Res
 
 /// Returns the list of files created
 fn split_patch(patch_file_path: &Path, split_options: &SplitOptions) -> Result<Vec<Arc<Path>>> {
-    let patch_file = PatchFile::from_path(patch_file_path)?;
-    let patch = patch_file.patch();
+    let owned_patch = OwnedPatch::from_path(patch_file_path)?;
+    let patch = owned_patch.parsed()?;
     let diffs = &*patch.diffs;
 
     // Write the diffs to individual (separate) files
