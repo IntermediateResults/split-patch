@@ -4,7 +4,9 @@ use anyhow::{bail, Context, Result};
 use bstr::BStr;
 
 use crate::{
+    def_line_content_for,
     line::{write_lines_to, Line},
+    line_content::FromLines,
     patch::hunk::{Hunk, WriteAsHunk},
     utils::split_before,
 };
@@ -165,8 +167,18 @@ impl<'a> Diff<'a> {
             })?,
         )
     }
+}
 
-    pub fn from_lines(lines_slice: &'a [Line<'a>]) -> Result<Diff<'a>> {
+fn gather_hunks<'s>(lines: &'s [Line<'s>]) -> Vec<Hunk<'s>> {
+    split_before(
+        lines,
+        |line| line.starts_with(b"@@ "),
+        |group| Hunk { lines: group },
+    )
+}
+
+impl<'a> FromLines<'a> for Diff<'a> {
+    fn from_lines(lines_slice: &'a [Line<'a>]) -> Result<Diff<'a>> {
         let mut lines = lines_slice.into_iter();
 
         let diff_line = *lines
@@ -287,10 +299,4 @@ impl<'a> Diff<'a> {
     }
 }
 
-fn gather_hunks<'s>(lines: &'s [Line<'s>]) -> Vec<Hunk<'s>> {
-    split_before(
-        lines,
-        |line| line.starts_with(b"@@ "),
-        |group| Hunk { lines: group },
-    )
-}
+def_line_content_for!(OwnedDiff, Diff);
