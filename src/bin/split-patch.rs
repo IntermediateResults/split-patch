@@ -1,5 +1,4 @@
 use std::{
-    borrow::Cow,
     ffi::OsStr,
     io::{stdout, BufWriter, IoSlice, Write},
     os::unix::ffi::OsStrExt,
@@ -8,17 +7,15 @@ use std::{
 };
 
 use anyhow::{anyhow, bail, Context, Result};
-use bstr::{BString, ByteSlice};
+use bstr::{BStr, BString, ByteSlice};
 use cj_path_util::temp_file::unbuffered_temp_file_for;
 use clap_with_warnings::clap_with_warnings;
-use regex::bytes::Captures;
-
 use split_patch::{
     make_bstring,
     patch::{
         diff::Diff,
         hunk::WriteAsHunk,
-        patch::{OwnedPatch, PatchHead},
+        patch::{OwnedPatch, OwnedPatchHead, PatchHead},
     },
     re,
     utils::add_suffix,
@@ -81,12 +78,12 @@ fn split_diff(
     original_path: &Path,
     split_options: &SplitOptions,
 ) -> Result<Vec<Arc<Path>>> {
-    let prefix = diff.diff_path_b()?;
+    let b_path = diff.diff_path_b()?;
 
     let path = {
         let path_in_source_dir = add_suffix(
             original_path,
-            OsStr::from_bytes(&*make_bstring!({ b"-" } + { prefix.replace("/", b"_") })),
+            OsStr::from_bytes(&*make_bstring!({ b"-" } + { b_path.replace("/", b"_") })),
         )?;
         if let Some(output_dir) = &split_options.output_dir {
             output_dir.join(
@@ -100,6 +97,19 @@ fn split_diff(
     };
 
     assert_ne!(*path, *original_path);
+
+    let head_with_prefix = |prefix_part: &str| -> OwnedPatchHead {
+        if split_options.no_subject_change {
+            head.make_owned()
+        } else {
+            let prefix = if prefix_part.is_empty() {
+                make_bstring!({ b_path } + { ": " })
+            } else {
+                make_bstring!({ b_path } + { " " } + { prefix_part } + { ": " })
+            };
+            head.map_headers(|key, rest, _line| replace_subject_prefix(key, rest, prefix.as_ref()))
+        }
+    };
 
     if split_options.hunks {
         let diff_head = diff.head_to_string(false);
@@ -117,28 +127,16 @@ fn split_diff(
                         let mut diff_string: Vec<u8> = diff_head.clone().into();
                         change.write_as_hunk_to(&mut diff_string)?;
 
+                        let prefix_part = if split_options.monotonous_numbers {
+                            format!("{file_i:03}")
+                        } else {
+                            format!("{hunk_i:03}-{change_i:03}")
+                        };
+
                         let written_path = write_patch_file(
-                            head_with_subject_prefix(
-                                split_options.no_subject_change,
-                                head,
-                                if split_options.monotonous_numbers {
-                                    make_bstring!({ prefix } + (" {file_i:03}: "))
-                                } else {
-                                    make_bstring!({ prefix } + (" {hunk_i:03}-{change_i:03}: "))
-                                },
-                                original_path,
-                            ),
+                            head_with_prefix(&prefix_part),
                             &diff_string,
-                            add_suffix(
-                                &path,
-                                if split_options.monotonous_numbers {
-                                    format!("-{file_i:03}")
-                                } else {
-                                    format!("-{hunk_i:03}-{change_i:03}")
-                                }
-                                .as_ref(),
-                            )?
-                            .into(),
+                            add_suffix(&path, format!("-{prefix_part}").as_ref())?.into(),
                         )?;
 
                         written_paths.push(written_path);
@@ -148,15 +146,12 @@ fn split_diff(
                     let mut diff_string: Vec<u8> = diff_head.clone().into();
                     hunk.write_as_hunk_to(&mut diff_string)?;
 
+                    let prefix_part = format!("{hunk_i:03}");
+
                     let written_path = write_patch_file(
-                        head_with_subject_prefix(
-                            split_options.no_subject_change,
-                            head,
-                            make_bstring!({ prefix } + (" {hunk_i:03}: ")),
-                            original_path,
-                        ),
+                        head_with_prefix(&prefix_part),
                         &diff_string,
-                        add_suffix(&path, format!("-{hunk_i:03}").as_ref())?,
+                        add_suffix(&path, format!("-{prefix_part}").as_ref())?,
                     )?;
 
                     written_paths.push(written_path);
@@ -167,56 +162,37 @@ fn split_diff(
         }
         Ok(written_paths)
     } else {
-        let mut diff_string: Vec<u8> = Vec::new();
-        diff.write_to(&mut diff_string)?;
-
-        let written_path = write_patch_file(
-            head_with_subject_prefix(
-                split_options.no_subject_change,
-                head,
-                make_bstring!({ prefix } + { ": " }),
-                original_path,
-            ),
-            &diff_string,
-            path,
-        )?;
+        let written_path = write_patch_file(head_with_prefix(""), &diff.to_bstring(), path)?;
 
         Ok(vec![written_path])
     }
 }
 
-fn head_with_subject_prefix(
-    no_subject_change: bool,
-    head: &PatchHead<'_>,
-    prefix: BString,
-    original_path: &Path,
-) -> Vec<u8> {
-    let mut head_string: Vec<u8> = Vec::new();
-    head.write_to(&mut head_string)
-        .expect("writing to Vec doesn't fail");
-    if no_subject_change {
-        return head_string;
-    }
-    let new_head = re!(r"(?i)(\nsubject:\s*(?:\[PATCH]\s*)?)([^'n]*)")
-        .replace(&head_string, |c: &Captures| -> BString {
-            make_bstring!({ &c[1] } + { &*prefix } + { &c[2] })
-        });
-
-    // `regex` crate's way to allow to warn about not matching; also
-    // optimize by avoiding a copy of the borrow in that case
-    match &new_head {
-        Cow::Borrowed(_) => {
-            eprintln!(
-                "Warning: could not find subject line in file: {}",
-                original_path.display()
-            );
-            head_string
+fn replace_subject_prefix(
+    lc_header_name: &BStr,
+    header_line_rest: &BStr,
+    prefix: &BStr,
+) -> Option<BString> {
+    if lc_header_name == "subject" {
+        let insert_after_patch = true;
+        if insert_after_patch {
+            if let Some(cap) = re!(r"^(\s*\[PATCH\]\s*)(.*)").captures(header_line_rest) {
+                return Some(make_bstring!({ &cap[1] } + { prefix } + { &cap[2] }));
+            }
         }
-        Cow::Owned(_) => new_head.into_owned(),
+        // Otherwise just simply:
+        Some(make_bstring!({ prefix } + { header_line_rest }))
+    } else {
+        None
     }
 }
 
-fn write_patch_file(new_head: Vec<u8>, diff: &[u8], output_path: PathBuf) -> Result<Arc<Path>> {
+fn write_patch_file(
+    new_head: OwnedPatchHead,
+    diff: &[u8],
+    output_path: PathBuf,
+) -> Result<Arc<Path>> {
+    let new_head = new_head.content();
     let expected_n_written = new_head.len() + diff.len();
     let mut file = unbuffered_temp_file_for(&*output_path, None)?;
     let n_written = file
