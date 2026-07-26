@@ -77,6 +77,10 @@ fn t_strip_leading_path_segment() {
 impl<'a> Diff<'a> {
     /// Not the head of the patch (i.e. mail headers / commit
     /// message), but of this diff. Ends with a newline.
+    ///
+    /// (Note: can't sensibly split `Diff` into a `DiffHead` that
+    /// would implement `WriteTo`, since part of this "head" part is
+    /// in `Diff.differences`.)
     pub fn write_head_to(
         &self,
         print_index_line: bool,
