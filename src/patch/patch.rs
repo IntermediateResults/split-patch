@@ -1,6 +1,7 @@
 use std::io::Write;
 
 use anyhow::{bail, Context, Result};
+use bstr::{BStr, BString, ByteSlice};
 
 use crate::{
     def_line_content_for,
@@ -17,6 +18,13 @@ use crate::{
 pub struct PatchHeadHeader<'a> {
     pub from_line: Line<'a>,
     pub header_lines: &'a [Line<'a>],
+}
+
+pub fn is_key_char(b: u8) -> bool {
+    match b {
+        b'-' | b'_' => true,
+        _ => b.is_ascii_alphanumeric(),
+    }
 }
 
 impl<'a> WriteTo for PatchHeadHeader<'a> {
@@ -73,6 +81,48 @@ impl<'a> PatchHeadHeader<'a> {
         }
         None
     }
+
+    /// `f` is called for all header lines, currently only the first
+    /// one with the key (i.e. continuation lines are not passed to
+    /// `f` and instead always left unchanged); it receives the
+    /// lower-cased key (header name without the colon), the remainder
+    /// of the line, as well as the whole original line. If it returns
+    /// a value, then it is used as the value after the (original)
+    /// "key: "; if it returns None, the header remains unchanged.
+    pub fn header_mapped_write_to(
+        &self,
+        mut f: impl FnMut(&BStr, &BStr, Line<'a>) -> Option<BString>,
+        mut out: impl Write,
+    ) -> Result<(), std::io::Error> {
+        write_lines_to(&[self.from_line], &mut out)?;
+        for line in self.header_lines {
+            if let Some((key, rest)) = line.split_once_str(b":") {
+                if key.iter().copied().all(is_key_char) {
+                    // Only feed the part after the first space after
+                    // the ":" to the function
+                    let (white, realrest) = if rest.starts_with(b" ") {
+                        (bstr::B(" "), &rest[1..])
+                    } else {
+                        (bstr::B(""), rest)
+                    };
+                    if let Some(replacement) = f(
+                        BStr::new(&key.to_ascii_lowercase()),
+                        BStr::new(realrest),
+                        *line,
+                    ) {
+                        out.write_all(key)?;
+                        out.write_all(b":")?;
+                        out.write_all(white)?;
+                        out.write_all(&replacement)?;
+                        out.write_all(b"\n")?;
+                        continue;
+                    }
+                }
+            }
+            write_lines_to(&[*line], &mut out)?;
+        }
+        Ok(())
+    }
 }
 
 /// The part before the first `diff ` line; can be empty
@@ -96,6 +146,31 @@ impl<'a> PatchHead<'a> {
             header: None,
             remaining_lines: lines,
         }
+    }
+
+    pub fn header_mapped_write_to(
+        &self,
+        f: impl FnMut(&BStr, &BStr, Line<'a>) -> Option<BString>,
+        mut out: impl Write,
+    ) -> Result<(), std::io::Error> {
+        if let Some(header) = &self.header {
+            header.header_mapped_write_to(f, &mut out)?;
+        }
+        write_lines_to(self.remaining_lines, &mut out)
+    }
+
+    /// See docs for `PatchHeadHeader::header_mapped_write_to`.
+    ///
+    /// This makes a complete copy even if no headers end up being
+    /// replaced, or are even present.
+    pub fn map_headers(
+        &self,
+        f: impl FnMut(&BStr, &BStr, Line<'a>) -> Option<BString>,
+    ) -> OwnedPatchHead {
+        let mut out = Vec::new();
+        self.header_mapped_write_to(f, &mut out)
+            .expect("no error writing to Vec");
+        OwnedPatchHead::from_content(BString::new(out))
     }
 }
 
