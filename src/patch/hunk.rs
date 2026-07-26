@@ -51,7 +51,7 @@ impl<'a> Hunk<'a> {
         // @@ -0,0 +1 @@
         let caps = re!(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? (.*)")
             .captures(head_line)
-            .with_context(|| format!("invalid hunk head: {head_line}"))?;
+            .with_context(|| format!("invalid hunk head on line {head_line}"))?;
 
         let mut orig_start: usize = caps.get_str_then_parse(1, head_line.line_no0())?;
         let mut patched_start: usize = caps.get_str_then_parse(3, head_line.line_no0())?;
