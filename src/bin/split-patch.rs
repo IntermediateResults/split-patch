@@ -48,6 +48,11 @@ struct SplitOptions {
     /// to. Default: the same directory as the input file.
     #[clap(long)]
     output_dir: Option<PathBuf>,
+
+    /// Do not insert the prefix after "[PATCH]", but before
+    /// everything.
+    #[clap(long)]
+    no_insert_after_patch: bool,
 }
 
 /// Split the given patchfile(s) into new files
@@ -107,7 +112,14 @@ fn split_diff(
             } else {
                 make_bstring!({ b_path } + { " " } + { prefix_part } + { ": " })
             };
-            head.map_headers(|key, rest, _line| replace_subject_prefix(key, rest, prefix.as_ref()))
+            head.map_headers(|key, rest, _line| {
+                replace_subject_prefix(
+                    key,
+                    rest,
+                    prefix.as_ref(),
+                    !split_options.no_insert_after_patch,
+                )
+            })
         }
     };
 
@@ -172,9 +184,9 @@ fn replace_subject_prefix(
     lc_header_name: &BStr,
     header_line_rest: &BStr,
     prefix: &BStr,
+    insert_after_patch: bool,
 ) -> Option<BString> {
     if lc_header_name == "subject" {
-        let insert_after_patch = true;
         if insert_after_patch {
             if let Some(cap) = re!(r"^(\s*\[PATCH\]\s*)(.*)").captures(header_line_rest) {
                 return Some(make_bstring!({ &cap[1] } + { prefix } + { &cap[2] }));
