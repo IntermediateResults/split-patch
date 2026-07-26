@@ -199,7 +199,8 @@ fn replace_subject_prefix(
     }
 }
 
-fn write_patch_file(
+#[allow(unused)]
+fn write_patch_file_fancy(
     new_head: OwnedPatchHead,
     diff: &[u8],
     output_path: PathBuf,
@@ -214,6 +215,38 @@ fn write_patch_file(
         bail!("could only write {n_written} out of {expected_n_written} bytes to {output_path:?}");
     }
     Ok(file.persist()?)
+}
+
+#[allow(unused)]
+fn write_patch_file_standard(
+    new_head: OwnedPatchHead,
+    diff: &[u8],
+    output_path: PathBuf,
+) -> Result<Arc<Path>> {
+    let mut buf = new_head.content().to_owned();
+    buf.extend_from_slice(diff);
+    let mut file = unbuffered_temp_file_for(&*output_path, None)?;
+    file.write_all(&buf)
+        .with_context(|| anyhow!("writing to {:?}", file.temp_path()))?;
+    Ok(file.persist()?)
+}
+
+#[cfg(not(miri))]
+fn write_patch_file(
+    new_head: OwnedPatchHead,
+    diff: &[u8],
+    output_path: PathBuf,
+) -> Result<Arc<Path>> {
+    write_patch_file_fancy(new_head, diff, output_path)
+}
+
+#[cfg(miri)]
+fn write_patch_file(
+    new_head: OwnedPatchHead,
+    diff: &[u8],
+    output_path: PathBuf,
+) -> Result<Arc<Path>> {
+    write_patch_file_standard(new_head, diff, output_path)
 }
 
 /// Returns the list of files created
