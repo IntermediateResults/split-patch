@@ -8,6 +8,7 @@ use crate::{
     line_content::FromLines,
     patch::diff::Diff,
     utils::split_before,
+    write_to::WriteTo,
 };
 
 /// `git format-patch` style files have a "From " line and then a
@@ -16,6 +17,15 @@ use crate::{
 pub struct PatchHeadHeader<'a> {
     pub from_line: Line<'a>,
     pub header_lines: &'a [Line<'a>],
+}
+
+impl<'a> WriteTo for PatchHeadHeader<'a> {
+    type Owned = OwnedPatchHeadHeader;
+
+    fn write_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
+        write_lines_to(&[self.from_line], &mut out)?;
+        write_lines_to(self.header_lines, &mut out)
+    }
 }
 
 impl<'a> FromLines<'a> for PatchHeadHeader<'a> {
@@ -36,11 +46,6 @@ impl<'a> FromLines<'a> for PatchHeadHeader<'a> {
 def_line_content_for!(OwnedPatchHeadHeader, PatchHeadHeader);
 
 impl<'a> PatchHeadHeader<'a> {
-    pub fn write_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
-        write_lines_to(&[self.from_line], &mut out)?;
-        write_lines_to(self.header_lines, &mut out)
-    }
-
     /// Returns Self and the rest after the header if there is one
     pub fn _from_lines(lines: &'a [Line<'a>]) -> Option<(Self, &'a [Line<'a>])> {
         if let Some(from_line) = lines.first().copied() {
@@ -92,8 +97,12 @@ impl<'a> PatchHead<'a> {
             remaining_lines: lines,
         }
     }
+}
 
-    pub fn write_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
+impl<'a> WriteTo for PatchHead<'a> {
+    type Owned = OwnedPatchHead;
+
+    fn write_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
         if let Some(header) = &self.header {
             header.write_to(&mut out)?;
         }

@@ -22,6 +22,7 @@ use split_patch::{
     },
     re,
     utils::add_suffix,
+    write_to::WriteTo,
 };
 
 #[derive(Debug, clap::Args)]

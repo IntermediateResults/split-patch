@@ -9,6 +9,7 @@ use crate::{
     line_content::FromLines,
     patch::hunk::{Hunk, WriteAsHunk},
     utils::split_before,
+    write_to::WriteTo,
 };
 
 /// The parts of a diff that represent line based differences in a
@@ -148,11 +149,6 @@ impl<'a> Diff<'a> {
         Ok(())
     }
 
-    pub fn write_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
-        self.write_head_to(true, &mut out)?;
-        self.write_hunks_to(&mut out)
-    }
-
     pub fn diff_path_a(&self) -> Result<&BStr> {
         strip_leading_path_segment(
             self.diff_path_a_full
@@ -175,6 +171,15 @@ fn gather_hunks<'s>(lines: &'s [Line<'s>]) -> Vec<Hunk<'s>> {
         |line| line.starts_with(b"@@ "),
         |group| Hunk { lines: group },
     )
+}
+
+impl<'a> WriteTo for Diff<'a> {
+    type Owned = OwnedDiff;
+
+    fn write_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
+        self.write_head_to(true, &mut out)?;
+        self.write_hunks_to(&mut out)
+    }
 }
 
 impl<'a> FromLines<'a> for Diff<'a> {
