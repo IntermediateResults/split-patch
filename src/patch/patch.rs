@@ -18,10 +18,55 @@ pub struct PatchHeadHeader<'a> {
     pub header_lines: &'a [Line<'a>],
 }
 
+impl<'a> FromLines<'a> for PatchHeadHeader<'a> {
+    fn from_lines(lines: &'a [Line<'a>]) -> Result<Self, anyhow::Error> {
+        if let Some((header, rest)) = Self::_from_lines(lines) {
+            if rest.is_empty() {
+                return Ok(header);
+            }
+            bail!(
+                "the given lines contain a patch head header, but also more lines: {}",
+                rest[0]
+            )
+        }
+        bail!("the given lines do not represent a patch head header")
+    }
+}
+
+def_line_content_for!(OwnedPatchHeadHeader, PatchHeadHeader);
+
 impl<'a> PatchHeadHeader<'a> {
     pub fn write_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
         write_lines_to(&[self.from_line], &mut out)?;
         write_lines_to(self.header_lines, &mut out)
+    }
+
+    /// Returns Self and the rest after the header if there is one
+    pub fn _from_lines(lines: &'a [Line<'a>]) -> Option<(Self, &'a [Line<'a>])> {
+        if let Some(from_line) = lines.first().copied() {
+            if from_line.starts_with(b"From ") {
+                if let Some(i) = lines.iter().position(|line| line.is_empty()) {
+                    let header_lines = &lines[1..i];
+                    let remaining_lines = &lines[i..];
+                    return Some((
+                        PatchHeadHeader {
+                            from_line,
+                            header_lines,
+                        },
+                        remaining_lines,
+                    ));
+                } else {
+                    return Some((
+                        PatchHeadHeader {
+                            from_line,
+                            header_lines: lines,
+                        },
+                        &[],
+                    ));
+                }
+            }
+        }
+        None
     }
 }
 
@@ -36,28 +81,11 @@ pub struct PatchHead<'a> {
 
 impl<'a> PatchHead<'a> {
     pub fn _from_lines(lines: &'a [Line<'a>]) -> Self {
-        if let Some(from_line) = lines.first().copied() {
-            if from_line.starts_with(b"From ") {
-                if let Some(i) = lines.iter().position(|line| line.is_empty()) {
-                    let header_lines = &lines[1..i];
-                    let remaining_lines = &lines[i..];
-                    return PatchHead {
-                        header: Some(PatchHeadHeader {
-                            from_line,
-                            header_lines,
-                        }),
-                        remaining_lines,
-                    };
-                } else {
-                    return PatchHead {
-                        header: Some(PatchHeadHeader {
-                            from_line,
-                            header_lines: lines,
-                        }),
-                        remaining_lines: &[],
-                    };
-                }
-            }
+        if let Some((header, remaining_lines)) = PatchHeadHeader::_from_lines(lines) {
+            return PatchHead {
+                header: Some(header),
+                remaining_lines,
+            };
         }
         PatchHead {
             header: None,
