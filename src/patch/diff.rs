@@ -33,7 +33,6 @@ pub struct Diff<'a> {
     pub similarity_line: Option<Line<'a>>,
     pub rename_from_line: Option<Line<'a>>,
     pub rename_to_line: Option<Line<'a>>,
-    // unused
     pub differences: Option<DiffDifferences<'a>>,
 }
 
