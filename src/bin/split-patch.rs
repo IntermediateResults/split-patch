@@ -124,7 +124,7 @@ fn split_diff(
     };
 
     if split_options.hunks {
-        let diff_head = diff.head_to_string(false);
+        let diff_head = diff.head_to_bstring(false);
 
         // Old style sequence numbers, increasing monotonically for
         // all files, for when --changes is used with

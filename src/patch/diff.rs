@@ -1,7 +1,7 @@
 use std::io::Write;
 
 use anyhow::{bail, Context, Result};
-use bstr::BStr;
+use bstr::{BStr, BString};
 
 use crate::{
     def_line_content_for,
@@ -137,9 +137,9 @@ impl<'a> Diff<'a> {
 
     /// Not the head of the patch (i.e. mail headers / commit
     /// message), but of this diff. Ends with a newline.
-    pub fn head_to_string(&self, print_index_line: bool) -> Vec<u8> {
-        let mut head: Vec<u8> = Vec::new();
-        self.write_head_to(print_index_line, &mut head)
+    pub fn head_to_bstring(&self, print_index_line: bool) -> BString {
+        let mut head = BString::new(Vec::new());
+        self.write_head_to(print_index_line, &mut *head)
             .expect("writing to Vec doesn't fail");
         head
     }
