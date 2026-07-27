@@ -6,14 +6,14 @@ use std::{fmt::Display, io::Write, ops::Deref};
 pub struct Line<'a> {
     /// 0-based line number
     line_no0: usize,
-    s: &'a [u8],
+    contents: &'a [u8],
 }
 
 impl<'a> Deref for Line<'a> {
     type Target = &'a [u8];
 
     fn deref(&self) -> &Self::Target {
-        &self.s
+        &self.contents
     }
 }
 
@@ -25,13 +25,13 @@ impl<'a> Display for Line<'a> {
 }
 
 impl<'a> Line<'a> {
-    pub fn from_tuple((line_no0, s): (usize, &'a [u8])) -> Self {
-        Self { line_no0, s }
+    pub fn from_tuple((line_no0, contents): (usize, &'a [u8])) -> Self {
+        Self { line_no0, contents }
     }
 
     /// line contents without newline
     pub fn contents(&self) -> &'a [u8] {
-        self.s
+        self.contents
     }
 
     /// 0-based line number
