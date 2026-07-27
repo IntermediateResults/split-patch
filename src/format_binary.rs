@@ -31,6 +31,8 @@ pub enum FormatItem<'t> {
     Vec(#[from] Vec<u8>),
     VecRef(#[from] &'t Vec<u8>),
     BStr(#[from] &'t BStr),
+    BString(#[from] BString),
+    BStringRef(#[from] &'t BString),
     Writer(#[from] &'t dyn Fn(&mut Vec<u8>)),
 }
 
@@ -49,6 +51,8 @@ pub fn build_bstring<'t>(items: impl IntoIterator<Item = FormatItem<'t>>) -> BSt
             FormatItem::Vec(sl) => output.push_str(sl),
             FormatItem::VecRef(sl) => output.push_str(sl),
             FormatItem::BStr(bstr) => output.push_str(bstr),
+            FormatItem::BString(bstr) => output.push_str(bstr),
+            FormatItem::BStringRef(bstr) => output.push_str(bstr),
             FormatItem::Writer(f) => f(&mut output),
         }
     }
