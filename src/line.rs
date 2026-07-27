@@ -34,6 +34,10 @@ impl<'a> Line<'a> {
         self.contents
     }
 
+    pub fn set_contents(&mut self, contents: &'a [u8]) {
+        self.contents = contents;
+    }
+
     /// 0-based line number
     pub fn line_no0(&self) -> usize {
         self.line_no0
