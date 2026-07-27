@@ -3,6 +3,8 @@ use std::{any::type_name, error::Error, str::FromStr};
 use anyhow::{Context, Result};
 use regex::bytes::Captures;
 
+use crate::line::Line;
+
 /// Expands to code that instantiates a `regex::Regex` instance on
 /// first access, but caches it for the remainder of the life of the
 /// program (i.e. returns `&'static Regex`). Note that this panics for
@@ -22,7 +24,7 @@ macro_rules! re {
 pub trait GetStr<'t> {
     fn get_str(&self, i: usize) -> &'t [u8];
 
-    fn get_str_then_parse<T: FromStr>(&self, i: usize, line0: usize) -> Result<T>
+    fn get_str_then_parse<'l, T: FromStr>(&self, i: usize, in_line: Line<'l>) -> Result<T>
     where
         <T as FromStr>::Err: Send + Sync + Error + 'static;
 }
@@ -38,7 +40,7 @@ impl<'t> GetStr<'t> for Captures<'t> {
     /// Panics if i is outside the range of available captures. Parses
     /// the capture to the result type, showing the line number in the
     /// error message if failing to parse.
-    fn get_str_then_parse<T: FromStr>(&self, i: usize, line0: usize) -> Result<T>
+    fn get_str_then_parse<'l, T: FromStr>(&self, i: usize, in_line: Line<'l>) -> Result<T>
     where
         <T as FromStr>::Err: Send + Sync + Error + 'static,
     {
@@ -47,6 +49,6 @@ impl<'t> GetStr<'t> for Captures<'t> {
             format!("parsing into {}: not a string: {:?}", type_name::<T>(), bs)
         })?;
         s.parse()
-            .with_context(|| format!("parsing capture {i} on line {}", line0 + 1))
+            .with_context(|| format!("parsing capture {i} on line {in_line}"))
     }
 }

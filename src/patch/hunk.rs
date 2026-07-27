@@ -53,8 +53,8 @@ impl<'a> Hunk<'a> {
             .captures(head_line)
             .with_context(|| format!("invalid hunk head on line {head_line}"))?;
 
-        let mut orig_start: usize = caps.get_str_then_parse(1, head_line.line_no0())?;
-        let mut patched_start: usize = caps.get_str_then_parse(3, head_line.line_no0())?;
+        let mut orig_start: usize = caps.get_str_then_parse(1, *head_line)?;
+        let mut patched_start: usize = caps.get_str_then_parse(3, *head_line)?;
         let head_post = caps.get_str(5);
 
         let mut remaining: &[Line] = &self.lines[1..];
