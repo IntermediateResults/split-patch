@@ -148,7 +148,7 @@ fn split_diff(
                         let written_path = write_patch_file(
                             head_with_prefix(&prefix_part),
                             &diff_string,
-                            add_suffix(&path, format!("-{prefix_part}").as_ref())?.into(),
+                            add_suffix(&path, format!("-{prefix_part}"))?.into(),
                         )?;
 
                         written_paths.push(written_path);
@@ -163,7 +163,7 @@ fn split_diff(
                     let written_path = write_patch_file(
                         head_with_prefix(&prefix_part),
                         &diff_string,
-                        add_suffix(&path, format!("-{prefix_part}").as_ref())?,
+                        add_suffix(&path, format!("-{prefix_part}"))?,
                     )?;
 
                     written_paths.push(written_path);

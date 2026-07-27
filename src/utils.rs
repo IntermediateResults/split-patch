@@ -13,7 +13,7 @@ pub fn take_while<'a, T>(lines: &'a [T], predicate: impl Fn(&T) -> bool) -> (&'a
 
 /// This does not add a file extension, but adds a suffix to the file
 /// name *before* the existing and unchanged file extension
-pub fn add_suffix(path: &Path, addon: &OsStr) -> Result<PathBuf> {
+pub fn add_suffix(path: &Path, addon: impl AsRef<OsStr>) -> Result<PathBuf> {
     let file_name = {
         let mut stem = path
             .file_stem()
@@ -36,7 +36,7 @@ pub fn add_suffix(path: &Path, addon: &OsStr) -> Result<PathBuf> {
 #[test]
 fn t_add_suffix() {
     let t = |path: &str, addon: &str| -> String {
-        add_suffix(path.as_ref(), addon.as_ref())
+        add_suffix(path.as_ref(), addon)
             .unwrap()
             .to_str()
             .unwrap()
