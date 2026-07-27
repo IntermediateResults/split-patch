@@ -12,6 +12,63 @@ use crate::{
     write_to::WriteTo,
 };
 
+/// ASCII-case insensitive string comparison
+pub fn string_equal_ci<A: AsRef<[u8]>, B: AsRef<[u8]>>(a: A, b: B) -> bool {
+    let a = a.as_ref();
+    let b = b.as_ref();
+    a.len() == b.len() && {
+        for (ac, bc) in a.iter().zip(b) {
+            if ac.to_ascii_lowercase() != bc.to_ascii_lowercase() {
+                return false;
+            }
+        }
+        true
+    }
+}
+
+#[test]
+fn t_ci_eq() {
+    use string_equal_ci as eq;
+    assert!(eq(b"", b""));
+    assert!(!eq(b"a", b""));
+    assert!(eq(b"a", b"a"));
+    assert!(eq(b"a", b"A"));
+    assert!(!eq(b"a", b"B"));
+    assert!(!eq(b"a", b"b"));
+    assert!(!eq(b"a", b"aa"));
+    assert!(eq(b"aB", b"Ab"));
+    assert!(eq(b"a1", b"A1"));
+    assert!(!eq(b"a1", b"A2"));
+}
+
+struct HeaderLine<'a> {
+    mixed_case_header_name: &'a [u8],
+    // b": " or b":"
+    separator: &'static [u8],
+    value: &'a [u8],
+}
+
+impl<'a> HeaderLine<'a> {
+    fn from_line(line: Line<'a>) -> Option<HeaderLine<'a>> {
+        if let Some((mixed_case_header_name, rest)) = line.split_once_str(b":") {
+            if mixed_case_header_name.iter().copied().all(is_key_char) {
+                // Only use the part after the first space after the ":"
+                let (separator, value) = if rest.starts_with(b" ") {
+                    (bstr::B(": "), &rest[1..])
+                } else {
+                    (bstr::B(":"), rest)
+                };
+                return Some(Self {
+                    mixed_case_header_name,
+                    separator,
+                    value,
+                });
+            }
+        }
+        None
+    }
+}
+
 /// `git format-patch` style files have a "From " line and then a
 /// number of header lines, before an empty line and body lines
 /// follow; this represents this part before the empty line.
@@ -84,39 +141,30 @@ impl<'a> PatchHeadHeader<'a> {
 
     /// `f` is called for all header lines, currently only the first
     /// one with the key (i.e. continuation lines are not passed to
-    /// `f` and instead always left unchanged); it receives the
-    /// lower-cased key (header name without the colon), the remainder
-    /// of the line, as well as the whole original line. If it returns
-    /// a value, then it is used as the value after the (original)
-    /// "key: "; if it returns None, the header remains unchanged.
+    /// `f` and instead always left unchanged); it receives the header
+    /// name (without the colon), the remainder of the line (after the
+    /// colon and optionally a single space), as well as the whole
+    /// original line. If it returns a value, then it is used as the
+    /// value after the (original) "key: "; if it returns None, the
+    /// header remains unchanged.
     pub fn header_mapped_write_to(
         &self,
         mut f: impl FnMut(&BStr, &BStr, Line<'a>) -> Option<BString>,
         mut out: impl Write,
     ) -> Result<(), std::io::Error> {
         write_lines_to(&[self.from_line], &mut out)?;
-        for line in self.header_lines {
-            if let Some((key, rest)) = line.split_once_str(b":") {
-                if key.iter().copied().all(is_key_char) {
-                    // Only feed the part after the first space after
-                    // the ":" to the function
-                    let (white, realrest) = if rest.starts_with(b" ") {
-                        (bstr::B(" "), &rest[1..])
-                    } else {
-                        (bstr::B(""), rest)
-                    };
-                    if let Some(replacement) = f(
-                        BStr::new(&key.to_ascii_lowercase()),
-                        BStr::new(realrest),
-                        *line,
-                    ) {
-                        out.write_all(key)?;
-                        out.write_all(b":")?;
-                        out.write_all(white)?;
-                        out.write_all(&replacement)?;
-                        out.write_all(b"\n")?;
-                        continue;
-                    }
+        for line in &*self.header_lines {
+            if let Some(header_line) = HeaderLine::from_line(*line) {
+                if let Some(replacement) = f(
+                    BStr::new(header_line.mixed_case_header_name),
+                    BStr::new(header_line.value),
+                    *line,
+                ) {
+                    out.write_all(header_line.mixed_case_header_name)?;
+                    out.write_all(header_line.separator)?;
+                    out.write_all(&replacement)?;
+                    out.write_all(b"\n")?;
+                    continue;
                 }
             }
             write_lines_to(&[*line], &mut out)?;

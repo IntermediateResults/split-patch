@@ -15,7 +15,7 @@ use split_patch::{
     patch::{
         diff::Diff,
         hunk::WriteAsHunk,
-        patch::{OwnedPatch, OwnedPatchHead, PatchHead},
+        patch::{string_equal_ci, OwnedPatch, OwnedPatchHead, PatchHead},
     },
     re,
     utils::add_suffix,
@@ -181,19 +181,19 @@ fn split_diff(
 }
 
 fn replace_subject_prefix(
-    lc_header_name: &BStr,
-    header_line_rest: &BStr,
+    header_name: &BStr,
+    value: &BStr,
     prefix: &BStr,
     insert_after_patch: bool,
 ) -> Option<BString> {
-    if lc_header_name == "subject" {
+    if string_equal_ci(header_name, "subject") {
         if insert_after_patch {
-            if let Some(cap) = re!(r"^(\s*\[PATCH\]\s*)(.*)").captures(header_line_rest) {
+            if let Some(cap) = re!(r"^(\s*\[PATCH\]\s*)(.*)").captures(value) {
                 return Some(make_bstring!({ &cap[1] } + { prefix } + { &cap[2] }));
             }
         }
         // Otherwise just simply:
-        Some(make_bstring!({ prefix } + { header_line_rest }))
+        Some(make_bstring!({ prefix } + { value }))
     } else {
         None
     }
