@@ -75,6 +75,23 @@ fn t_strip_leading_path_segment() {
 }
 
 impl<'a> Diff<'a> {
+    /// Replace the hunks with the given ones, while keeping file
+    /// context information (except for deleting if
+    /// `delete_index_line` is true).
+    ///
+    /// Panics if self does not contain a `DiffDifferences`.
+    pub fn set_hunks(&mut self, hunks: Vec<Hunk<'a>>, delete_index_line: bool) -> &mut Self {
+        let differences = self
+            .differences
+            .as_mut()
+            .expect("`differences` required for setting hunks on Diff");
+        differences.hunks = hunks;
+        if delete_index_line {
+            differences.index_line = None;
+        }
+        self
+    }
+
     /// Not the head of the patch (i.e. mail headers / commit
     /// message), but of this diff. Ends with a newline.
     ///
