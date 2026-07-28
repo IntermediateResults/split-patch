@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::{borrow::Cow, io::Write};
 
 use anyhow::{bail, Context, Result};
 use bstr::{BStr, BString};
@@ -190,7 +190,9 @@ fn gather_hunks<'s>(lines: &'s [Line<'s>]) -> Vec<Hunk<'s>> {
     split_before(
         lines,
         |line| line.starts_with(b"@@ "),
-        |group| Hunk { lines: group },
+        |group| Hunk {
+            lines: Cow::Borrowed(group),
+        },
     )
 }
 

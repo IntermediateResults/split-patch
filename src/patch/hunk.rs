@@ -1,4 +1,4 @@
-use std::io::Write;
+use std::{borrow::Cow, io::Write};
 
 use anyhow::{Context, Result};
 
@@ -21,19 +21,19 @@ pub struct Hunk<'a> {
     /// The Vec is never empty, at least the "@@ " line is ensured by
     /// construction via `split_before` which does not create a group
     /// out of no lines.
-    pub lines: &'a [Line<'a>],
+    pub lines: Cow<'a, [Line<'a>]>,
 }
 
 impl<'a> WriteAsHunk for Hunk<'a> {
     fn write_as_hunk_to(&self, out: impl Write) -> Result<(), std::io::Error> {
-        write_lines_to(self.lines, out)
+        write_lines_to(&*self.lines, out)
     }
 }
 
 impl<'a> Hunk<'a> {
     // Just for testing
     #[allow(unused)]
-    fn from_lines(lines: &'a [Line<'a>]) -> Self {
+    fn from_lines(lines: Cow<'a, [Line<'a>]>) -> Self {
         Self { lines }
     }
 
@@ -155,7 +155,7 @@ fn t_split_hunk_into_changes() {
         .enumerate()
         .map(|(i, line)| Line::from_tuple((i, line.as_ref())))
         .collect();
-    let hunk = Hunk::from_lines(&lines);
+    let hunk = Hunk::from_lines(lines.into());
     let changes = hunk.split_into_changes().unwrap();
 
     let expected_changes = [
