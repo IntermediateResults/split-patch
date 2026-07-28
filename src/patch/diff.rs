@@ -14,6 +14,7 @@ use crate::{
 
 /// The parts of a diff that represent line based differences in a
 /// file (as opposed to pure renames (or deletions?)).
+#[derive(Clone)]
 pub struct DiffDifferences<'a> {
     pub index_line: Option<Line<'a>>,
     pub minus_line: Line<'a>,
@@ -21,8 +22,29 @@ pub struct DiffDifferences<'a> {
     pub hunks: Vec<Hunk<'a>>,
 }
 
+impl<'a> DiffDifferences<'a> {
+    pub fn reborrow<'b>(&self) -> DiffDifferences<'b>
+    where
+        'a: 'b,
+    {
+        let Self {
+            index_line,
+            minus_line,
+            plus_line,
+            hunks,
+        } = self;
+        DiffDifferences {
+            index_line: index_line.clone(),
+            minus_line: minus_line.clone(),
+            plus_line: plus_line.clone(),
+            hunks: hunks.iter().map(|v| v.reborrow()).collect(),
+        }
+    }
+}
+
 /// A bare diff for a single file. (A Patch file represents any number
 /// of Diff instances.)
+#[derive(Clone)]
 pub struct Diff<'a> {
     // The line that starts with "diff "
     pub diff_line: Line<'a>,
@@ -75,6 +97,34 @@ fn t_strip_leading_path_segment() {
 }
 
 impl<'a> Diff<'a> {
+    pub fn reborrow<'b>(&self) -> Diff<'b>
+    where
+        'a: 'b,
+    {
+        let Self {
+            diff_line,
+            diff_path_a_full,
+            diff_path_b_full,
+            newfile_line,
+            deleted_line,
+            similarity_line,
+            rename_from_line,
+            rename_to_line,
+            differences,
+        } = self;
+        Diff {
+            diff_line: *diff_line,
+            diff_path_a_full: diff_path_a_full.clone(),
+            diff_path_b_full: diff_path_b_full.clone(),
+            newfile_line: newfile_line.clone(),
+            deleted_line: deleted_line.clone(),
+            similarity_line: similarity_line.clone(),
+            rename_from_line: rename_from_line.clone(),
+            rename_to_line: rename_to_line.clone(),
+            differences: differences.as_ref().map(|v| v.reborrow()),
+        }
+    }
+
     /// Replace the hunks with the given ones, while keeping file
     /// context information (except for deleting if
     /// `delete_index_line` is true).

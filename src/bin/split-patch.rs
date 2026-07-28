@@ -1,21 +1,21 @@
 use std::{
     ffi::OsStr,
-    io::{stdout, BufWriter, IoSlice, Write},
+    io::{stdout, BufWriter, Write},
     os::unix::ffi::OsStrExt,
     path::{Path, PathBuf},
     sync::Arc,
 };
 
-use anyhow::{anyhow, bail, Context, Result};
-use bstr::{BStr, BString, ByteSlice};
-use cj_path_util::temp_file::unbuffered_temp_file_for;
+use anyhow::{anyhow, Context, Result};
+use bstr::{BStr, ByteSlice};
+use bumpalo::Bump;
+use cj_path_util::temp_file::temp_file_for;
 use clap_with_warnings::clap_with_warnings;
 use split_patch::{
     make_bstring,
     patch::{
         diff::Diff,
-        hunk::WriteAsHunk,
-        patch::{string_equal_ci, OwnedPatch, OwnedPatchHead, PatchHead},
+        patch::{OwnedPatch, PatchHead},
     },
     re,
     utils::add_suffix,
@@ -76,13 +76,18 @@ struct Args {
 }
 
 /// Receives the lines for a single diff. Returns the list of files created
-fn split_diff(
-    head: &PatchHead<'_>,
+fn split_diff<'head, 'head_a, 'diff, 'diff_a>(
+    head: &'head PatchHead<'head_a>,
     // Guaranteed to be at least the "diff " line
-    diff: &Diff,
+    diff: &'diff Diff<'diff_a>,
     original_path: &Path,
     split_options: &SplitOptions,
-) -> Result<Vec<Arc<Path>>> {
+) -> Result<Vec<Arc<Path>>>
+where
+    'head_a: 'head,
+    'diff_a: 'diff,
+{
+    let delete_index_line = true; // XX make configurable
     let b_path = diff.diff_path_b()?;
 
     let path = {
@@ -100,45 +105,30 @@ fn split_diff(
             path_in_source_dir
         }
     };
-
     assert_ne!(*path, *original_path);
 
-    let head_with_prefix = |prefix_part: &str| -> OwnedPatchHead {
-        if split_options.no_subject_change {
-            head.make_owned()
-        } else {
-            let prefix = if prefix_part.is_empty() {
-                make_bstring!({ b_path } + { ": " })
-            } else {
-                make_bstring!({ b_path } + { " " } + { prefix_part } + { ": " })
-            };
-            head.map_headers(|key, rest, _line| {
-                replace_subject_prefix(
-                    key,
-                    rest,
-                    prefix.as_ref(),
-                    !split_options.no_insert_after_patch,
-                )
-            })
-        }
-    };
+    let bump = Bump::new();
+    let head_with_prefix =
+        |prefix_part: &str| _head_with_prefix(split_options, b_path, head, prefix_part, &bump);
 
     if split_options.hunks {
-        let diff_head = diff.head_to_bstring(false);
-
         // Old style sequence numbers, increasing monotonically for
         // all files, for when --changes is used with
         // --monotonous-numbers
         let mut file_i: usize = 0;
         let mut written_paths = Vec::new();
 
+        macro_rules! diff_with_hunk {
+            { $hunk:expr } => {
+                diff.reborrow()
+                    .set_hunks(vec![$hunk], delete_index_line)
+            }
+        }
+
         if let Some(differences) = &diff.differences {
             for (hunk_i, hunk) in differences.hunks.iter().enumerate() {
                 if split_options.changes {
                     for (change_i, change) in hunk.split_into_changes()?.into_iter().enumerate() {
-                        let mut diff_string: Vec<u8> = diff_head.clone().into();
-                        change.write_as_hunk_to(&mut diff_string)?;
-
                         let prefix_part = if split_options.monotonous_numbers {
                             format!("{file_i:03}")
                         } else {
@@ -146,8 +136,8 @@ fn split_diff(
                         };
 
                         let written_path = write_patch_file(
-                            head_with_prefix(&prefix_part),
-                            &diff_string,
+                            &head_with_prefix(&prefix_part),
+                            diff_with_hunk!(change.to_hunk(&bump)),
                             add_suffix(&path, format!("-{prefix_part}"))?.into(),
                         )?;
 
@@ -155,14 +145,11 @@ fn split_diff(
                         file_i += 1;
                     }
                 } else {
-                    let mut diff_string: Vec<u8> = diff_head.clone().into();
-                    hunk.write_as_hunk_to(&mut diff_string)?;
-
                     let prefix_part = format!("{hunk_i:03}");
 
                     let written_path = write_patch_file(
                         head_with_prefix(&prefix_part),
-                        &diff_string,
+                        diff_with_hunk!(hunk.clone()),
                         add_suffix(&path, format!("-{prefix_part}"))?,
                     )?;
 
@@ -170,83 +157,60 @@ fn split_diff(
                 }
             }
         } else {
-            // Simply do not write split versions, OK?
+            // Simply do not write split versions, OK? -- XX todo:
+            // should write such files, at least for renames. (Perl
+            // version doesn't, either.)
         }
         Ok(written_paths)
     } else {
-        let written_path = write_patch_file(head_with_prefix(""), &diff.to_bstring(), path)?;
+        let written_path = write_patch_file(head_with_prefix(""), diff, path)?;
 
         Ok(vec![written_path])
     }
 }
 
-fn replace_subject_prefix(
-    header_name: &BStr,
-    value: &BStr,
-    prefix: &BStr,
-    insert_after_patch: bool,
-) -> Option<BString> {
-    if string_equal_ci(header_name, "subject") {
-        if insert_after_patch {
-            if let Some(cap) = re!(r"^(\s*\[PATCH\]\s*)(.*)").captures(value) {
-                return Some(make_bstring!({ &cap[1] } + { prefix } + { &cap[2] }));
-            }
-        }
-        // Otherwise just simply:
-        Some(make_bstring!({ prefix } + { value }))
+fn _head_with_prefix<'a: 'b, 'b>(
+    split_options: &SplitOptions,
+    b_path: &BStr,
+    head: &PatchHead<'a>,
+    prefix_part: &str,
+    bump: &'b Bump,
+) -> &'b PatchHead<'b> {
+    if split_options.no_subject_change {
+        bump.alloc(head.reborrow())
     } else {
-        None
+        let mut head = head.reborrow();
+        let prefix = if prefix_part.is_empty() {
+            make_bstring!({ b_path } + { ": " })
+        } else {
+            make_bstring!({ b_path } + { " " } + { prefix_part } + { ": " })
+        };
+        head.update_header(
+            "Subject",
+            |value| {
+                if !split_options.no_insert_after_patch {
+                    if let Some(cap) = re!(r"^(\s*\[PATCH\]\s*)(.*)").captures(value) {
+                        return Some(make_bstring!({ &cap[1] } + { &prefix } + { &cap[2] }));
+                    }
+                }
+                // Otherwise just simply:
+                Some(make_bstring!({ &prefix } + { value }))
+            },
+            bump,
+        );
+        bump.alloc(head)
     }
 }
 
-#[allow(unused)]
-fn write_patch_file_fancy(
-    new_head: OwnedPatchHead,
-    diff: &[u8],
+fn write_patch_file<'t1, 't2, 't3, 't4>(
+    head: &'t1 PatchHead<'t2>,
+    diff: &'t3 Diff<'t4>,
     output_path: PathBuf,
 ) -> Result<Arc<Path>> {
-    let new_head = new_head.content();
-    let expected_n_written = new_head.len() + diff.len();
-    let mut file = unbuffered_temp_file_for(&*output_path, None)?;
-    let n_written = file
-        .write_vectored(&[IoSlice::new(&new_head), IoSlice::new(diff)])
-        .with_context(|| anyhow!("writing to {:?}", file.temp_path()))?;
-    if n_written != expected_n_written {
-        bail!("could only write {n_written} out of {expected_n_written} bytes to {output_path:?}");
-    }
+    let mut file = temp_file_for(&*output_path, None)?;
+    head.write_to(&mut *file)?;
+    diff.write_to(&mut *file)?;
     Ok(file.persist()?)
-}
-
-#[allow(unused)]
-fn write_patch_file_standard(
-    new_head: OwnedPatchHead,
-    diff: &[u8],
-    output_path: PathBuf,
-) -> Result<Arc<Path>> {
-    let mut buf = new_head.content().to_owned();
-    buf.extend_from_slice(diff);
-    let mut file = unbuffered_temp_file_for(&*output_path, None)?;
-    file.write_all(&buf)
-        .with_context(|| anyhow!("writing to {:?}", file.temp_path()))?;
-    Ok(file.persist()?)
-}
-
-#[cfg(not(miri))]
-fn write_patch_file(
-    new_head: OwnedPatchHead,
-    diff: &[u8],
-    output_path: PathBuf,
-) -> Result<Arc<Path>> {
-    write_patch_file_fancy(new_head, diff, output_path)
-}
-
-#[cfg(miri)]
-fn write_patch_file(
-    new_head: OwnedPatchHead,
-    diff: &[u8],
-    output_path: PathBuf,
-) -> Result<Arc<Path>> {
-    write_patch_file_standard(new_head, diff, output_path)
 }
 
 /// Returns the list of files created

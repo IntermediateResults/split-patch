@@ -1,4 +1,4 @@
-use std::{borrow::Cow, io::Write};
+use std::{borrow::Cow, io::Write, ops::Deref};
 
 use anyhow::{Context, Result};
 
@@ -16,7 +16,7 @@ pub trait WriteAsHunk {
 
 /// A group of lines starting with a "@@" line and not containing
 /// other such lines; contains any number of changes
-#[derive(PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Hunk<'a> {
     /// The Vec is never empty, at least the "@@ " line is ensured by
     /// construction via `split_before` which does not create a group
@@ -35,6 +35,15 @@ impl<'a> Hunk<'a> {
     #[allow(unused)]
     fn from_lines(lines: Cow<'a, [Line<'a>]>) -> Self {
         Self { lines }
+    }
+
+    pub fn reborrow<'b>(&self) -> Hunk<'b>
+    where
+        'a: 'b,
+    {
+        Hunk {
+            lines: self.lines.deref().to_owned().into(),
+        }
     }
 
     pub fn split_into_changes<'h>(&'h self) -> Result<Vec<Change<'a, 'h>>> {

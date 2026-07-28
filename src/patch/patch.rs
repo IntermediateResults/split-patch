@@ -1,7 +1,8 @@
-use std::io::Write;
+use std::{borrow::Cow, io::Write, ops::Deref};
 
 use anyhow::{bail, Context, Result};
-use bstr::{BStr, BString, ByteSlice};
+use bstr::{BStr, BString, ByteSlice, ByteVec};
+use bumpalo::Bump;
 
 use crate::{
     def_line_content_for,
@@ -72,9 +73,14 @@ impl<'a> HeaderLine<'a> {
 /// `git format-patch` style files have a "From " line and then a
 /// number of header lines, before an empty line and body lines
 /// follow; this represents this part before the empty line.
+#[derive(Clone)]
 pub struct PatchHeadHeader<'a> {
     pub from_line: Line<'a>,
-    pub header_lines: &'a [Line<'a>],
+    // Owning *here* is the means for *repeated* mutation without
+    // copying again into a new slice. Thus use Cow over fresh
+    // allocations from bumpalo (locally-generated line contents are
+    // still owned by bumpalo).
+    pub header_lines: Cow<'a, [Line<'a>]>,
 }
 
 pub fn is_key_char(b: u8) -> bool {
@@ -89,7 +95,7 @@ impl<'a> WriteTo for PatchHeadHeader<'a> {
 
     fn write_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
         write_lines_to(&[self.from_line], &mut out)?;
-        write_lines_to(self.header_lines, &mut out)
+        write_lines_to(&*self.header_lines, &mut out)
     }
 }
 
@@ -116,7 +122,7 @@ impl<'a> PatchHeadHeader<'a> {
         if let Some(from_line) = lines.first().copied() {
             if from_line.starts_with(b"From ") {
                 if let Some(i) = lines.iter().position(|line| line.is_empty()) {
-                    let header_lines = &lines[1..i];
+                    let header_lines = (&lines[1..i]).into();
                     let remaining_lines = &lines[i..];
                     return Some((
                         PatchHeadHeader {
@@ -129,10 +135,55 @@ impl<'a> PatchHeadHeader<'a> {
                     return Some((
                         PatchHeadHeader {
                             from_line,
-                            header_lines: lines,
+                            header_lines: lines.into(),
                         },
                         &[],
                     ));
+                }
+            }
+        }
+        None
+    }
+
+    pub fn reborrow<'b>(&self) -> PatchHeadHeader<'b>
+    where
+        'a: 'b,
+    {
+        let Self {
+            from_line,
+            header_lines,
+        } = self;
+        PatchHeadHeader {
+            from_line: *from_line,
+            header_lines: header_lines.deref().to_owned().into(),
+        }
+    }
+
+    /// `header_name` is case insensitive. `f` is called with the
+    /// remainder after the key, colon and optional first space, if a
+    /// header with that name is found, and when it returns a value,
+    /// that value is used to replace the part that was passed in.
+    ///
+    /// Returns the old value when the header was updated.
+    ///
+    /// The new line contents is allocated from `allocator`.
+    pub fn update_header(
+        &mut self,
+        header_name: impl AsRef<BStr>,
+        mut f: impl FnMut(&'a BStr) -> Option<BString>,
+        allocator: &'a Bump,
+    ) -> Option<&'a BStr> {
+        let header_name = header_name.as_ref();
+        for line in self.header_lines.to_mut() {
+            if let Some(header_line) = HeaderLine::from_line(*line) {
+                if string_equal_ci(header_line.mixed_case_header_name, header_name) {
+                    if let Some(mut replacement) = f(header_line.value.as_ref()) {
+                        replacement.insert_str(0, header_line.separator);
+                        replacement.insert_str(0, header_line.mixed_case_header_name);
+                        let replacement = allocator.alloc(replacement);
+                        line.set_contents(replacement);
+                        return Some(header_line.value.as_ref());
+                    }
                 }
             }
         }
@@ -174,6 +225,7 @@ impl<'a> PatchHeadHeader<'a> {
 }
 
 /// The part before the first `diff ` line; can be empty
+#[derive(Clone)]
 pub struct PatchHead<'a> {
     pub header: Option<PatchHeadHeader<'a>>,
     /// If a header is given, remaining_lines starts with the empty
@@ -193,6 +245,33 @@ impl<'a> PatchHead<'a> {
         PatchHead {
             header: None,
             remaining_lines: lines,
+        }
+    }
+
+    pub fn reborrow<'b>(&self) -> PatchHead<'b>
+    where
+        'a: 'b,
+    {
+        let Self {
+            header,
+            remaining_lines,
+        } = self;
+        PatchHead {
+            header: header.as_ref().map(|h| h.reborrow()),
+            remaining_lines,
+        }
+    }
+
+    pub fn update_header(
+        &mut self,
+        header_name: impl AsRef<BStr>,
+        f: impl FnMut(&'a BStr) -> Option<BString>,
+        allocator: &'a Bump,
+    ) -> Option<&'a BStr> {
+        if let Some(header) = &mut self.header {
+            header.update_header(header_name, f, allocator)
+        } else {
+            None
         }
     }
 
@@ -244,6 +323,7 @@ def_line_content_for!(OwnedPatchHead, PatchHead);
 /// Parsed representation for a whole patch file (as per `git
 /// format-patch`, but should parse files from other files like `diff
 /// -u`, too)
+#[derive(Clone)]
 pub struct Patch<'a> {
     /// The head represents the lines found before the first "diff "
     /// line.
