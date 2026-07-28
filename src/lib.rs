@@ -1,4 +1,5 @@
 pub mod anyhow_once;
+pub mod bumpalo_utils;
 pub mod format_binary;
 pub mod line;
 pub mod line_content;
