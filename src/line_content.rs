@@ -10,7 +10,7 @@ pub trait FromLines<'t>: Sized {
     fn from_lines(lines: &'t [Line<'t>], bump: &'t Bump) -> Result<Self, anyhow::Error>;
 }
 
-/// Owned content that can be represented as lines and then by T,
+/// Owned content that can be represented as lines and then as T,
 /// lazily
 pub struct LineContent<T> {
     content: BString,
