@@ -1,4 +1,16 @@
-use std::{fmt::Display, io::Write, ops::Deref};
+use std::{
+    fmt::Display,
+    io::{Read, Write},
+    ops::Deref,
+    path::Path,
+};
+
+use anyhow::{Context, Result};
+use bstr::ByteSlice;
+use bumpalo::{
+    collections::{self as bc, CollectIn},
+    Bump,
+};
 
 use crate::bumpalo_cow::CloneIn;
 
@@ -83,4 +95,28 @@ pub fn write_lines_to<'a>(
         out.write_all(b"\n")?;
     }
     Ok(())
+}
+
+pub fn read_in<'b, P: AsRef<Path>>(path: P, bump: &'b Bump) -> Result<bc::Vec<'b, u8>> {
+    let mut input = std::fs::File::open(path).context("opening file for reading")?;
+    let len = input.metadata()?.len();
+    let len_usize = usize::try_from(len).expect("file is too large");
+    let mut contents = bc::Vec::<u8>::with_capacity_in(len_usize, bump);
+    unsafe {
+        // Safe because we'll never read from the bytes unless they
+        // have been written to
+        contents.set_len(len_usize);
+    }
+
+    input.read_exact(&mut contents)?;
+    Ok(contents)
+}
+
+pub fn read_lines_in<'b, P: AsRef<Path>>(path: P, bump: &'b Bump) -> Result<bc::Vec<'b, Line<'b>>> {
+    let contents = read_in(path, bump)?.into_bump_slice();
+    Ok(contents
+        .lines()
+        .enumerate()
+        .map(Line::from_tuple)
+        .collect_in(bump))
 }
