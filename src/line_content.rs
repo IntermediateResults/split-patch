@@ -72,6 +72,10 @@ impl<T> LineContent<T> {
         &self.__unsafe_parsed_result
     }
 
+    pub unsafe fn __unsafe_parsed_result_mut(&mut self) -> &mut OnceLock<Result<T, AnyhowOnce>> {
+        &mut self.__unsafe_parsed_result
+    }
+
     /// Access to the allocator
     pub fn bump(&self) -> &Bump {
         &self.bump
@@ -153,6 +157,37 @@ macro_rules! def_line_content_for {
                             transmute::<
                                 &$($T)*<'static>,
                                 &'s $($T)*<'s>
+                            >(parsed)
+                        };
+                        Ok(parsed)
+                    },
+                    Err(e) => {
+                        Err(e.take())
+                    }
+                }
+            }
+
+            pub fn parsed_mut<'s>(&'s mut self) -> Result<&'s mut $($T)*<'s>, ::anyhow::Error> {
+                use ::std::mem::transmute;
+
+                let _ = self.parsed();
+
+                let parsed_result = unsafe {
+                    // Safe because we will only give access to the
+                    // value with lifetime 's, not 'static
+                    self.0.__unsafe_parsed_result_mut()
+                }.get_mut().expect("initialized because we called .parsed() above");
+
+                match parsed_result {
+                    Ok(parsed) => {
+                        let parsed = unsafe {
+                            // Safe because the referenced `lines` and
+                            // `content` are on the heap and never modified
+                            // once created, hence don't change address, and
+                            // can't be deallocated for the duration of 's.
+                            transmute::<
+                                &mut $($T)*<'static>,
+                                &'s mut $($T)*<'s>
                             >(parsed)
                         };
                         Ok(parsed)
