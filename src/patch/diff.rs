@@ -183,7 +183,7 @@ impl<'a> Diff<'a> {
         .into_iter()
         .flatten();
 
-        write_lines_to(lines, &mut out).expect("writing to Vec doesn't fail");
+        write_lines_to(lines, &mut out)?;
         if let Some(differences) = differences {
             let DiffDifferences {
                 index_line,
