@@ -1,3 +1,16 @@
+//! Lifetime-free wrappers around borrowing data structures built from
+//! lines from contents of a file
+//!
+//! To support a usage workflow that serializes back to contents, to
+//! avoid the parsing cost, both line and then type-specific parsing
+//! are done lazily.
+//!
+//! Note: only supports read-only access. Writable access to the
+//! parsed data structure cannot be done safely with today's Rust,
+//! AFAIK, since handing out `&'s mut T<'s>` would allow to write
+//! values with a life time that is too short? (Not sure about all the
+//! details.)
+
 use std::{mem::transmute, sync::OnceLock};
 
 use anyhow::Result;
