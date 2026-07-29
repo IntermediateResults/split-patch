@@ -19,6 +19,14 @@ pub struct LineContent<T> {
     __unsafe_parsed_result: OnceLock<Result<T, AnyhowOnce>>,
 }
 
+impl<T> Drop for LineContent<T> {
+    fn drop(&mut self) {
+        self.__unsafe_parsed_result.take();
+        self.__unsafe_lines.take();
+        self.bump.reset();
+    }
+}
+
 impl<T> LineContent<T> {
     pub fn from_content(content: BString) -> Self {
         Self {
