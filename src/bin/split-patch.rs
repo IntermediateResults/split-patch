@@ -12,10 +12,11 @@ use bumpalo::Bump;
 use cj_path_util::temp_file::temp_file_for;
 use clap_with_warnings::clap_with_warnings;
 use split_patch::{
+    line::Line,
     make_bstring,
     patch::{
         diff::Diff,
-        patch::{OwnedPatch, PatchHead},
+        patch::{OwnedPatch, Patch, PatchHead},
     },
     re,
     utils::add_suffix,
@@ -213,9 +214,23 @@ fn write_patch_file<'t1, 't2, 't3, 't4>(
     Ok(file.persist()?)
 }
 
+fn funny_stuff<'a>(owned_patch: &'a mut OwnedPatch) -> Result<()> {
+    let p: &mut Patch = owned_patch.parsed_mut()?;
+    if let Some(diff) = p.diffs.first_mut() {
+        {
+            let l = format!("hi {}", 1 + 1);
+            diff.diff_line = Line::from_generated_content(l.as_bytes());
+        }
+    }
+    Ok(())
+}
+
 /// Returns the list of files created
 fn split_patch(patch_file_path: &Path, split_options: &SplitOptions) -> Result<Vec<Arc<Path>>> {
-    let owned_patch = OwnedPatch::from_path(patch_file_path)?;
+    let mut owned_patch = OwnedPatch::from_path(patch_file_path)?;
+
+    funny_stuff(&mut owned_patch)?;
+
     let patch = owned_patch.parsed()?;
     let diffs = &*patch.diffs;
 
