@@ -2,7 +2,10 @@ use std::{io::Write, ops::Deref};
 
 use anyhow::{bail, Context, Result};
 use bstr::{BStr, BString, ByteSlice};
-use bumpalo::{collections as bc, Bump};
+use bumpalo::{
+    collections::{self as bc, CollectIn},
+    Bump,
+};
 
 use crate::{
     bumpalo_cow::{BumpaloCow, ToOwnedIn},
@@ -327,7 +330,7 @@ pub struct Patch<'a> {
     /// The head represents the lines found before the first "diff "
     /// line.
     pub head: PatchHead<'a>,
-    pub diffs: Vec<Diff<'a>>,
+    pub diffs: bc::Vec<'a, Diff<'a>>,
     /// The lines from "-- " onwards in "git format-patch" style
     /// files, including the "-- " line.
     pub footer: &'a [Line<'a>],
@@ -378,7 +381,7 @@ impl<'a> FromLines<'a> for Patch<'a> {
                     )
                 })
             })
-            .collect::<Result<_>>()?;
+            .collect_in::<Result<_>>(bump)?;
 
         Ok(Patch {
             head,
