@@ -1,8 +1,10 @@
-use std::{borrow::Cow, io::Write, ops::Deref};
+use std::{io::Write, ops::Deref};
 
 use anyhow::{Context, Result};
+use bumpalo::Bump;
 
 use crate::{
+    bumpalo_cow::{BumpaloCow, ToOwnedIn},
     line::{write_lines_to, Line},
     patch::change::Change,
     re,
@@ -16,12 +18,12 @@ pub trait WriteAsHunk {
 
 /// A group of lines starting with a "@@" line and not containing
 /// other such lines; contains any number of changes
-#[derive(Clone, PartialEq, Eq)]
+#[derive(PartialEq, Eq)]
 pub struct Hunk<'a> {
     /// The Vec is never empty, at least the "@@ " line is ensured by
     /// construction via `split_before` which does not create a group
     /// out of no lines.
-    pub lines: Cow<'a, [Line<'a>]>,
+    pub lines: BumpaloCow<'a, 'a, [Line<'a>]>,
 }
 
 impl<'a> WriteAsHunk for Hunk<'a> {
@@ -33,16 +35,16 @@ impl<'a> WriteAsHunk for Hunk<'a> {
 impl<'a> Hunk<'a> {
     // Just for testing
     #[allow(unused)]
-    fn from_lines(lines: Cow<'a, [Line<'a>]>) -> Self {
+    fn from_lines(lines: BumpaloCow<'a, 'a, [Line<'a>]>) -> Self {
         Self { lines }
     }
 
-    pub fn reborrow<'b>(&self) -> Hunk<'b>
+    pub fn reborrow<'b>(&self, _bump: &'b Bump) -> Hunk<'b>
     where
         'a: 'b,
     {
         Hunk {
-            lines: self.lines.deref().to_owned().into(),
+            lines: BumpaloCow::Owned(self.lines.deref().to_owned_in(_bump)),
         }
     }
 
@@ -138,9 +140,16 @@ impl<'a> Hunk<'a> {
 
 #[test]
 fn t_split_hunk_into_changes() {
+    use bumpalo::{
+        collections::{self as bc, CollectIn},
+        Bump,
+    };
+
     fn l<'a>(line0: usize, s: &'a str) -> Line<'a> {
         Line::from_tuple((line0, s.as_ref()))
     }
+
+    let bump = Bump::new();
 
     let hunk_str = r#"
 @@ -550,11 +552,11 @@ fn cmp_function(
@@ -158,13 +167,13 @@ fn t_split_hunk_into_changes() {
      let mut selected_items = unsafe { hack_static(&mut **items) };
      for cmd in cmds {
 "#;
-    let lines: Vec<_> = hunk_str
+    let lines: bc::Vec<_> = hunk_str
         .trim()
         .split("\n")
         .enumerate()
         .map(|(i, line)| Line::from_tuple((i, line.as_ref())))
-        .collect();
-    let hunk = Hunk::from_lines(lines.into());
+        .collect_in(&bump);
+    let hunk = Hunk::from_lines(BumpaloCow::Owned(lines));
     let changes = hunk.split_into_changes().unwrap();
 
     let expected_changes = [

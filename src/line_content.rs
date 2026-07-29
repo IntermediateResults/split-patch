@@ -2,17 +2,19 @@ use std::{mem::transmute, sync::OnceLock};
 
 use anyhow::Result;
 use bstr::{BString, ByteSlice};
+use bumpalo::Bump;
 
 use crate::{anyhow_once::AnyhowOnce, line::Line};
 
 pub trait FromLines<'t>: Sized {
-    fn from_lines(lines: &'t [Line<'t>]) -> Result<Self, anyhow::Error>;
+    fn from_lines(lines: &'t [Line<'t>], bump: &'t Bump) -> Result<Self, anyhow::Error>;
 }
 
 /// Owned content that can be represented as lines and then by T,
 /// lazily
 pub struct LineContent<T> {
     content: BString,
+    bump: Bump,
     __unsafe_lines: OnceLock<Vec<Line<'static>>>,
     __unsafe_parsed_result: OnceLock<Result<T, AnyhowOnce>>,
 }
@@ -21,6 +23,7 @@ impl<T> LineContent<T> {
     pub fn from_content(content: BString) -> Self {
         Self {
             content,
+            bump: Bump::new(),
             __unsafe_lines: OnceLock::new(),
             __unsafe_parsed_result: OnceLock::new(),
         }
@@ -57,6 +60,11 @@ impl<T> LineContent<T> {
     /// `def_line_content_for!` macro), but as `unsafe` function only
     pub unsafe fn __unsafe_parsed_result(&self) -> &OnceLock<Result<T, AnyhowOnce>> {
         &self.__unsafe_parsed_result
+    }
+
+    /// Access to the allocator
+    pub fn bump(&self) -> &Bump {
+        &self.bump
     }
 }
 
@@ -112,7 +120,7 @@ macro_rules! def_line_content_for {
                 }.get_or_init(|| {
                     let lines = self.0.lines();
                     let parsed_result: Result<$($T)*<'s>, $crate::anyhow_once::AnyhowOnce>
-                        = $($T)*::from_lines(lines).map_err(Into::into);
+                        = $($T)*::from_lines(lines, self.0.bump()).map_err(Into::into);
                     unsafe {
                         // Safe because only the life time is modified and no
                         // public access is given to the 'static version

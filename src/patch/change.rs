@@ -1,9 +1,9 @@
-use std::{borrow::Cow, io::Write};
+use std::io::Write;
 
-use bstr::{BString, ByteVec};
-use bumpalo::Bump;
+use bumpalo::{collections as bc, Bump};
 
 use crate::{
+    bumpalo_cow::BumpaloCow,
     line::Line,
     patch::hunk::{Hunk, WriteAsHunk},
 };
@@ -30,7 +30,7 @@ impl<'a, 'h> Change<'a, 'h> {
         'a: 'b,
         'h: 'b,
     {
-        let mut lines = Vec::new();
+        let mut lines = bc::Vec::new_in(bump);
 
         let Self {
             orig_start,
@@ -51,23 +51,23 @@ impl<'a, 'h> Change<'a, 'h> {
         // @@ -42 42 @@
         // @@ -42 +1,2 @@
         // @@ -0,0 +1 @@
-        let mut content = BString::new(
+        let mut content = bc::Vec::new_in(bump);
+        content.extend_from_slice(
             format!(
                 "@@ -{},{} +{},{} ",
                 orig_start, orig_len, patched_start, patched_len
             )
-            .into(),
+            .as_bytes(),
         );
-        content.push_str(head_post);
-        // XX leak? Use Vec<u8> on bumpalo instead?
-        lines.push(Line::from_generated_content(bump.alloc(content)));
+        content.extend_from_slice(head_post);
+        lines.push(Line::from_generated_content(content.into_bump_slice()));
 
         lines.extend_from_slice(pre);
         lines.extend_from_slice(group);
         lines.extend_from_slice(post);
 
         Hunk {
-            lines: Cow::Owned(lines),
+            lines: BumpaloCow::Owned(lines),
         }
     }
 }
@@ -77,6 +77,7 @@ impl<'a, 'h> WriteAsHunk for Change<'a, 'h> {
     fn write_as_hunk_to(&self, out: impl Write) -> Result<(), std::io::Error> {
         // XX a little costly
         let bump = Bump::new();
-        self.to_hunk(&bump).write_as_hunk_to(out)
+        let hunk = self.to_hunk(&bump);
+        hunk.write_as_hunk_to(out)
     }
 }

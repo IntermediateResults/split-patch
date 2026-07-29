@@ -40,6 +40,25 @@ where
     Owned(<B as ToOwnedIn<'b>>::Owned),
 }
 
+impl<'b, 'a, B: ?Sized + 'a> From<&'a B> for BumpaloCow<'b, 'a, B>
+where
+    B: ToOwnedIn<'b>,
+{
+    fn from(value: &'a B) -> Self {
+        BumpaloCow::Borrowed(value)
+    }
+}
+
+// Conflicting implementations with From<T> for T in core.
+// impl<'b, 'a, B: ?Sized + 'a> From<<B as ToOwnedIn<'b>>::Owned> for BumpaloCow<'b, 'a, B>
+// where
+//     B: ToOwnedIn<'b>,
+// {
+//     fn from(value: <B as ToOwnedIn<'b>>::Owned) -> Self {
+//         BumpaloCow::Owned(value)
+//     }
+// }
+
 impl<'b, B: ?Sized + ToOwnedIn<'b>> CloneIn<'b> for BumpaloCow<'b, '_, B> {
     fn clone_in(&self, bump: &'b Bump) -> Self {
         use BumpaloCow::*;
@@ -262,3 +281,11 @@ impl<'bump> ToOwnedIn<'bump> for str {
 //         }
 //     }
 // }
+
+impl<'a, T: 'a + CloneIn<'a>> ToOwnedIn<'a> for [T] {
+    type Owned = bc::Vec<'a, T>;
+
+    fn to_owned_in(&self, bump: &'a Bump) -> Self::Owned {
+        bc::Vec::from_iter_in(self.iter().map(|v| v.clone_in(bump)), bump)
+    }
+}

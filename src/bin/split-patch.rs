@@ -120,8 +120,8 @@ where
 
         macro_rules! diff_with_hunk {
             { $hunk:expr } => {
-                diff.reborrow()
-                    .set_hunks(vec![$hunk], delete_index_line)
+                diff.reborrow(&bump)
+                    .set_hunks(bumpalo::vec![in &bump; $hunk], delete_index_line)
             }
         }
 
@@ -149,7 +149,7 @@ where
 
                     let written_path = write_patch_file(
                         head_with_prefix(&prefix_part),
-                        diff_with_hunk!(hunk.clone()),
+                        diff_with_hunk!(hunk.reborrow(&bump)),
                         add_suffix(&path, format!("-{prefix_part}"))?,
                     )?;
 
@@ -177,9 +177,9 @@ fn _head_with_prefix<'a: 'b, 'b>(
     bump: &'b Bump,
 ) -> &'b PatchHead<'b> {
     if split_options.no_subject_change {
-        bump.alloc(head.reborrow())
+        bump.alloc(head.reborrow(bump))
     } else {
-        let mut head = head.reborrow();
+        let mut head = head.reborrow(bump);
         let prefix = if prefix_part.is_empty() {
             make_bstring!({ b_path } + { ": " })
         } else {

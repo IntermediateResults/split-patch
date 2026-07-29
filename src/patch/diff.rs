@@ -1,29 +1,33 @@
-use std::{borrow::Cow, io::Write};
+use std::io::Write;
 
 use anyhow::{bail, Context, Result};
 use bstr::{BStr, BString};
+use bumpalo::{
+    collections::{self as bc, CollectIn},
+    Bump,
+};
 
 use crate::{
+    bumpalo_cow::BumpaloCow,
+    bumpalo_utils::split_before_in,
     def_line_content_for,
     line::{write_lines_to, Line},
     line_content::FromLines,
     patch::hunk::{Hunk, WriteAsHunk},
-    utils::split_before,
     write_to::WriteTo,
 };
 
 /// The parts of a diff that represent line based differences in a
 /// file (as opposed to pure renames (or deletions?)).
-#[derive(Clone)]
 pub struct DiffDifferences<'a> {
     pub index_line: Option<Line<'a>>,
     pub minus_line: Line<'a>,
     pub plus_line: Line<'a>,
-    pub hunks: Vec<Hunk<'a>>,
+    pub hunks: bc::Vec<'a, Hunk<'a>>,
 }
 
 impl<'a> DiffDifferences<'a> {
-    pub fn reborrow<'b>(&self) -> DiffDifferences<'b>
+    pub fn reborrow<'b>(&self, bump: &'b Bump) -> DiffDifferences<'b>
     where
         'a: 'b,
     {
@@ -37,14 +41,13 @@ impl<'a> DiffDifferences<'a> {
             index_line: index_line.clone(),
             minus_line: minus_line.clone(),
             plus_line: plus_line.clone(),
-            hunks: hunks.iter().map(|v| v.reborrow()).collect(),
+            hunks: hunks.iter().map(|v| v.reborrow(bump)).collect_in(bump),
         }
     }
 }
 
 /// A bare diff for a single file. (A Patch file represents any number
 /// of Diff instances.)
-#[derive(Clone)]
 pub struct Diff<'a> {
     // The line that starts with "diff "
     pub diff_line: Line<'a>,
@@ -97,7 +100,7 @@ fn t_strip_leading_path_segment() {
 }
 
 impl<'a> Diff<'a> {
-    pub fn reborrow<'b>(&self) -> Diff<'b>
+    pub fn reborrow<'b>(&self, bump: &'b Bump) -> Diff<'b>
     where
         'a: 'b,
     {
@@ -121,7 +124,7 @@ impl<'a> Diff<'a> {
             similarity_line: similarity_line.clone(),
             rename_from_line: rename_from_line.clone(),
             rename_to_line: rename_to_line.clone(),
-            differences: differences.as_ref().map(|v| v.reborrow()),
+            differences: differences.as_ref().map(|v| v.reborrow(bump)),
         }
     }
 
@@ -130,7 +133,11 @@ impl<'a> Diff<'a> {
     /// `delete_index_line` is true).
     ///
     /// Panics if self does not contain a `DiffDifferences`.
-    pub fn set_hunks(&mut self, hunks: Vec<Hunk<'a>>, delete_index_line: bool) -> &mut Self {
+    pub fn set_hunks(
+        &mut self,
+        hunks: bc::Vec<'a, Hunk<'a>>,
+        delete_index_line: bool,
+    ) -> &mut Self {
         let differences = self
             .differences
             .as_mut()
@@ -236,13 +243,14 @@ impl<'a> Diff<'a> {
     }
 }
 
-fn gather_hunks<'s>(lines: &'s [Line<'s>]) -> Vec<Hunk<'s>> {
-    split_before(
+fn gather_hunks<'s>(lines: &'s [Line<'s>], bump: &'s Bump) -> bc::Vec<'s, Hunk<'s>> {
+    split_before_in(
         lines,
         |line| line.starts_with(b"@@ "),
         |group| Hunk {
-            lines: Cow::Borrowed(group),
+            lines: BumpaloCow::Borrowed(group),
         },
+        bump,
     )
 }
 
@@ -256,7 +264,7 @@ impl<'a> WriteTo for Diff<'a> {
 }
 
 impl<'a> FromLines<'a> for Diff<'a> {
-    fn from_lines(lines_slice: &'a [Line<'a>]) -> Result<Diff<'a>> {
+    fn from_lines(lines_slice: &'a [Line<'a>], bump: &'a Bump) -> Result<Diff<'a>> {
         let mut lines = lines_slice.into_iter();
 
         let diff_line = *lines
@@ -351,7 +359,7 @@ impl<'a> FromLines<'a> for Diff<'a> {
             }
             let plus_line = line;
 
-            let hunks = gather_hunks(lines.as_slice());
+            let hunks = gather_hunks(lines.as_slice(), bump);
 
             Some(DiffDifferences {
                 index_line,
