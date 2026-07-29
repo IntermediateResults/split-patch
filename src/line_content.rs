@@ -65,7 +65,9 @@ impl<T> LineContent<T> {
     }
 
     /// Give public access to the field (needed for the
-    /// `def_line_content_for!` macro), but as `unsafe` function only
+    /// `def_line_content_for!` macro), but as `unsafe` function only,
+    /// because direct access would give access to T with 'static
+    /// lifetime which is unsafe.
     pub unsafe fn __unsafe_parsed_result(&self) -> &OnceLock<Result<T, AnyhowOnce>> {
         &self.__unsafe_parsed_result
     }
