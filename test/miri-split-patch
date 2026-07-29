@@ -2,6 +2,6 @@
 set -meuo pipefail
 IFS=
 
-export MIRIFLAGS=-Zmiri-disable-isolation
+export MIRIFLAGS='-Zmiri-tree-borrows -Zmiri-disable-isolation'
 
 exec cargo +nightly miri run --bin split-patch -- "$@"
