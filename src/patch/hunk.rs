@@ -164,7 +164,7 @@ fn t_split_hunk_into_changes() {
 -) -> &'v [Item<'t>] {
 +) -> &'v [Item<'t, &'t Path>] {
      probe!("run_processing_commands");
-     let mut selected_items = unsafe { hack_static(&mut **items) };
+     let mut selected_items = un_safe { hack_static(&mut **items) };
      for cmd in cmds {
 "#;
     let lines: bc::Vec<_> = hunk_str
@@ -217,7 +217,7 @@ fn t_split_hunk_into_changes() {
                 l(11, "     probe!(\"run_processing_commands\");"),
                 l(
                     12,
-                    "     let mut selected_items = unsafe { hack_static(&mut **items) };",
+                    "     let mut selected_items = un_safe { hack_static(&mut **items) };",
                 ),
                 l(13, "     for cmd in cmds {"),
             ],
