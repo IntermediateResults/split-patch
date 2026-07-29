@@ -122,6 +122,8 @@ macro_rules! def_line_content_for {
             pub fn parsed<'s>(&'s self) -> Result<&'s $($T)*<'s>, ::anyhow::Error> {
                 use ::std::mem::transmute;
 
+                use $crate::line_content::FromLines;
+
                 let parsed_result = unsafe {
                     // Safe because the life time is changed to 's below
                     self.0.__unsafe_parsed_result()
