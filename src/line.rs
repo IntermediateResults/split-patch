@@ -68,6 +68,7 @@ impl<'a> Line<'a> {
 
     pub fn set_contents(&mut self, contents: &'a [u8]) {
         self.contents = contents;
+        self.line_no0 = usize::MAX;
     }
 
     /// 0-based line number; None if the line was generated (has no location)
