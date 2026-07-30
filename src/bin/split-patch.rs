@@ -78,7 +78,7 @@ struct Args {
 }
 
 /// Receives the lines for a single diff. Returns the list of files created
-fn split_diff<'a, 'h>(
+fn split_diff_in<'a, 'h>(
     head: &'h PatchHead<'a>,
     // Guaranteed to be at least the "diff " line
     diff: &'a Diff<'a>,
@@ -227,7 +227,7 @@ fn split_patch(patch_file_path: &Path, split_options: &SplitOptions) -> Result<V
     let mut written = Vec::new();
     for (diff_i, diff) in diffs.iter().enumerate() {
         let written_paths =
-            split_diff(&patch.head, &diff, patch_file_path, split_options, &bump)
+            split_diff_in(&patch.head, &diff, patch_file_path, split_options, &bump)
                 .with_context(|| format!("splitting diff no. {}/{}", diff_i + 1, diffs.len()))?;
 
         written.extend(written_paths);
