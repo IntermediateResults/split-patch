@@ -10,9 +10,8 @@ use bumpalo::{
 use crate::{
     bumpalo_cow::BumpaloCow,
     bumpalo_utils::split_before_in,
-    def_line_content_for,
+    from_lines::FromLines,
     line::{write_lines_to, Line},
-    line_content::FromLines,
     patch::hunk::{Hunk, WriteAsHunk},
     write_to::WriteTo,
 };
@@ -255,8 +254,6 @@ fn gather_hunks<'s>(lines: &'s [Line<'s>], bump: &'s Bump) -> bc::Vec<'s, Hunk<'
 }
 
 impl<'a> WriteTo for Diff<'a> {
-    type Owned = OwnedDiff;
-
     fn write_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
         self.write_head_to(true, &mut out)?;
         self.write_hunks_to(&mut out)
@@ -384,5 +381,3 @@ impl<'a> FromLines<'a> for Diff<'a> {
         })
     }
 }
-
-def_line_content_for!(OwnedDiff, Diff);

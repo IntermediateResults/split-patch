@@ -9,9 +9,8 @@ use bumpalo::{
 
 use crate::{
     bumpalo_cow::{BumpaloCow, ToOwnedIn},
-    def_line_content_for,
+    from_lines::FromLines,
     line::{write_lines_to, Line},
-    line_content::FromLines,
     patch::diff::Diff,
     utils::split_before,
     write_to::WriteTo,
@@ -94,8 +93,6 @@ pub fn is_key_char(b: u8) -> bool {
 }
 
 impl<'a> WriteTo for PatchHeadHeader<'a> {
-    type Owned = OwnedPatchHeadHeader;
-
     fn write_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
         write_lines_to(&[self.from_line], &mut out)?;
         write_lines_to(&*self.header_lines, &mut out)
@@ -116,8 +113,6 @@ impl<'a> FromLines<'a> for PatchHeadHeader<'a> {
         bail!("the given lines do not represent a patch head header")
     }
 }
-
-def_line_content_for!(OwnedPatchHeadHeader, PatchHeadHeader);
 
 impl<'a> PatchHeadHeader<'a> {
     /// Returns Self and the rest after the header if there is one
@@ -288,25 +283,9 @@ impl<'a> PatchHead<'a> {
         }
         write_lines_to(self.remaining_lines, &mut out)
     }
-
-    /// See docs for `PatchHeadHeader::header_mapped_write_to`.
-    ///
-    /// This makes a complete copy even if no headers end up being
-    /// replaced, or are even present.
-    pub fn map_headers(
-        &self,
-        f: impl FnMut(&BStr, &BStr, Line<'a>) -> Option<BString>,
-    ) -> OwnedPatchHead {
-        let mut out = Vec::new();
-        self.header_mapped_write_to(f, &mut out)
-            .expect("no error writing to Vec");
-        OwnedPatchHead::from_content(BString::new(out))
-    }
 }
 
 impl<'a> WriteTo for PatchHead<'a> {
-    type Owned = OwnedPatchHead;
-
     fn write_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
         if let Some(header) = &self.header {
             header.write_to(&mut out)?;
@@ -320,8 +299,6 @@ impl<'a> FromLines<'a> for PatchHead<'a> {
         Ok(Self::_from_lines(lines))
     }
 }
-
-def_line_content_for!(OwnedPatchHead, PatchHead);
 
 /// Parsed representation for a whole patch file (as per `git
 /// format-patch`, but should parse files from other files like `diff
@@ -390,5 +367,3 @@ impl<'a> FromLines<'a> for Patch<'a> {
         })
     }
 }
-
-def_line_content_for!(OwnedPatch, Patch);
