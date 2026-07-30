@@ -39,7 +39,7 @@ impl<'a> Hunk<'a> {
         Self { lines }
     }
 
-    pub fn reborrow<'b>(&self, _bump: &'b Bump) -> Hunk<'b>
+    pub fn clone_in<'b>(&self, _bump: &'b Bump) -> Hunk<'b>
     where
         'a: 'b,
     {

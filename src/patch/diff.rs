@@ -26,7 +26,7 @@ pub struct DiffDifferences<'a> {
 }
 
 impl<'a> DiffDifferences<'a> {
-    pub fn reborrow<'b>(&self, bump: &'b Bump) -> DiffDifferences<'b>
+    pub fn clone_in<'b>(&self, bump: &'b Bump) -> DiffDifferences<'b>
     where
         'a: 'b,
     {
@@ -40,7 +40,7 @@ impl<'a> DiffDifferences<'a> {
             index_line: index_line.clone(),
             minus_line: minus_line.clone(),
             plus_line: plus_line.clone(),
-            hunks: hunks.iter().map(|v| v.reborrow(bump)).collect_in(bump),
+            hunks: hunks.iter().map(|v| v.clone_in(bump)).collect_in(bump),
         }
     }
 }
@@ -99,7 +99,7 @@ fn t_strip_leading_path_segment() {
 }
 
 impl<'a> Diff<'a> {
-    pub fn reborrow<'b>(&self, bump: &'b Bump) -> Diff<'b>
+    pub fn clone_in<'b>(&self, bump: &'b Bump) -> Diff<'b>
     where
         'a: 'b,
     {
@@ -123,7 +123,7 @@ impl<'a> Diff<'a> {
             similarity_line: similarity_line.clone(),
             rename_from_line: rename_from_line.clone(),
             rename_to_line: rename_to_line.clone(),
-            differences: differences.as_ref().map(|v| v.reborrow(bump)),
+            differences: differences.as_ref().map(|v| v.clone_in(bump)),
         }
     }
 

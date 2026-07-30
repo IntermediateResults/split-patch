@@ -143,7 +143,7 @@ impl<'a> PatchHeadHeader<'a> {
         None
     }
 
-    pub fn reborrow<'b>(&self, bump: &'b Bump) -> PatchHeadHeader<'b>
+    pub fn clone_in<'b>(&self, bump: &'b Bump) -> PatchHeadHeader<'b>
     where
         'a: 'b,
     {
@@ -246,7 +246,7 @@ impl<'a> PatchHead<'a> {
         }
     }
 
-    pub fn reborrow<'b>(&self, bump: &'b Bump) -> PatchHead<'b>
+    pub fn clone_in<'b>(&self, bump: &'b Bump) -> PatchHead<'b>
     where
         'a: 'b,
     {
@@ -255,7 +255,7 @@ impl<'a> PatchHead<'a> {
             remaining_lines,
         } = self;
         PatchHead {
-            header: header.as_ref().map(|h| h.reborrow(bump)),
+            header: header.as_ref().map(|h| h.clone_in(bump)),
             remaining_lines,
         }
     }
