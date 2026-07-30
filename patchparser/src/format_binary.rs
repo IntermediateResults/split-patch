@@ -12,7 +12,7 @@
 //! # Examples
 //!
 //! ```
-//! use split_patch::make_bstring;
+//! use patchparser::make_bstring;
 //! let prefix = b"Hello ";
 //! let i = 77;
 //! let bstring = make_bstring!(

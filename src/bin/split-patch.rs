@@ -11,7 +11,7 @@ use bstr::{BStr, ByteSlice};
 use bumpalo::Bump;
 use cj_path_util::temp_file::temp_file_for;
 use clap_with_warnings::clap_with_warnings;
-use split_patch::{
+use patchparser::{
     from_lines::FromLines,
     line::read_lines_in,
     make_bstring,

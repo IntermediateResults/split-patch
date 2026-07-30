@@ -1,0 +1,27 @@
+[package]
+name = "patchparser"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+authors = [
+    "Yusuf Raji <raji.yusuf234@gmail.com>",
+    "Christian Jaeger <ch@christianjaeger.ch>",
+]
+description = "Parse and modify patch and diff files"
+repository = "https://github.com/IntermediateResults/split-patch"
+keywords = [
+    "diff",
+    "patch",
+    "git",
+]
+
+[lib]
+name = "patchparser"
+
+[dependencies]
+anyhow = { version = "1.0", features = ["backtrace"] }
+bstr = { version = "1.10", default-features = false, features = ["alloc"] }
+bumpalo = { version = "3.19.1", features = ["collections"] }
+derive_more = { version = "2.0.1", features = ["from", "from_str"] }
+lazy_static = "1.4"
+regex = "1.4.6"
