@@ -118,7 +118,7 @@ fn split_diff_in<'a, 'h>(
 
         macro_rules! diff_with_hunk {
             { $hunk:expr } => {
-                diff.clone_in(bump)
+                diff.clone()
                     .set_hunks(bumpalo::vec![in bump; $hunk], delete_index_line)
             }
         }
@@ -147,7 +147,7 @@ fn split_diff_in<'a, 'h>(
 
                     let written_path = write_patch_file(
                         head_with_prefix(&prefix_part),
-                        diff_with_hunk!(hunk.clone_in(bump)),
+                        diff_with_hunk!(hunk.clone()),
                         add_suffix(&path, format!("-{prefix_part}"))?,
                     )?;
 
@@ -180,7 +180,7 @@ where
     if split_options.no_subject_change {
         head
     } else {
-        let mut head = head.clone_in(bump);
+        let mut head = head.clone();
         let prefix = if prefix_part.is_empty() {
             make_bstring!({ b_path } + { ": " })
         } else {
