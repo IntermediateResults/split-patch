@@ -80,6 +80,27 @@ impl<'b, B: ?Sized + ToOwnedIn<'b>> CloneIn<'b> for BumpaloCow<'b, '_, B> {
     }
 }
 
+impl<'b, B: ?Sized + ToOwnedIn<'b>> Clone for BumpaloCow<'b, '_, B>
+where
+    <B as ToOwnedIn<'b>>::Owned: Clone,
+{
+    fn clone(&self) -> Self {
+        use BumpaloCow::*;
+        match *self {
+            Borrowed(b) => Borrowed(b),
+            Owned(ref o) => Owned(o.clone()),
+        }
+    }
+
+    fn clone_from(&mut self, source: &Self) {
+        use BumpaloCow::*;
+        match (self, source) {
+            (&mut Owned(ref mut dest), &Owned(ref o)) => o.clone_into(dest),
+            (t, s) => *t = s.clone(),
+        }
+    }
+}
+
 impl<'b, B: ?Sized + ToOwnedIn<'b>> BumpaloCow<'b, '_, B> {
     pub const fn is_borrowed(&self) -> bool {
         use BumpaloCow::*;
