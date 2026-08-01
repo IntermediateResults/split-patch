@@ -18,7 +18,7 @@ pub trait WriteAsHunk {
 
 /// A group of lines starting with a "@@" line and not containing
 /// other such lines; contains any number of changes
-#[derive(PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Hunk<'a> {
     /// The Vec is never empty, at least the "@@ " line is ensured by
     /// construction via `split_before` which does not create a group

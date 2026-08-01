@@ -76,6 +76,7 @@ impl<'a> HeaderLine<'a> {
 /// `git format-patch` style files have a "From " line and then a
 /// number of header lines, before an empty line and body lines
 /// follow; this represents this part before the empty line.
+#[derive(Clone, PartialEq, Eq)]
 pub struct PatchHeadHeader<'a> {
     pub from_line: Line<'a>,
     // Owning *here* is the means for *repeated* mutation without
@@ -224,6 +225,7 @@ impl<'a> PatchHeadHeader<'a> {
 }
 
 /// The part before the first `diff ` line; can be empty
+#[derive(Clone, PartialEq, Eq)]
 pub struct PatchHead<'a> {
     pub header: Option<PatchHeadHeader<'a>>,
     /// If a header is given, remaining_lines starts with the empty
@@ -303,6 +305,7 @@ impl<'a> FromLines<'a> for PatchHead<'a> {
 /// Parsed representation for a whole patch file (as per `git
 /// format-patch`, but should parse files from other files like `diff
 /// -u`, too)
+#[derive(Clone, PartialEq, Eq)]
 pub struct Patch<'a> {
     /// The head represents the lines found before the first "diff "
     /// line.

@@ -18,6 +18,7 @@ use crate::{
 
 /// The parts of a diff that represent line based differences in a
 /// file (as opposed to pure renames (or deletions?)).
+#[derive(Clone, PartialEq, Eq)]
 pub struct DiffDifferences<'a> {
     pub index_line: Option<Line<'a>>,
     pub minus_line: Line<'a>,
@@ -47,6 +48,7 @@ impl<'a> DiffDifferences<'a> {
 
 /// A bare diff for a single file. (A Patch file represents any number
 /// of Diff instances.)
+#[derive(Clone, PartialEq, Eq)]
 pub struct Diff<'a> {
     // The line that starts with "diff "
     pub diff_line: Line<'a>,
