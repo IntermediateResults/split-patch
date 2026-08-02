@@ -10,6 +10,10 @@ cargo_test:
 	( cd patchparser && cargo test )
 	cargo test
 
+cargo_check:
+	( cd patchparser && cargo test --color=always )
+	cargo test --color=always
+
 test_integration:
 	cargo build --quiet
 	@echo "++ Run tests on test/div"
