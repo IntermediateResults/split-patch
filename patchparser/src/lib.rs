@@ -6,5 +6,6 @@ pub mod from_lines;
 pub mod line;
 pub mod patch;
 pub mod re;
+pub mod reborrow_in;
 pub mod utils;
 pub mod write_to;

@@ -21,6 +21,7 @@ pub trait ToOwnedIn<'b> {
     }
 }
 
+// Also see `ReborrowIn`
 pub trait CloneIn<'b>: Sized {
     fn clone_in(&self, bump: &'b Bump) -> Self;
 
