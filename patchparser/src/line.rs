@@ -12,7 +12,7 @@ use bumpalo::{
     Bump,
 };
 
-use crate::bumpalo_cow::CloneIn;
+use crate::{bumpalo_cow::CloneIn, reborrow_in::ReborrowIn};
 
 /// A reference to a line string without the line ending and the line
 /// number for location reporting
@@ -33,6 +33,17 @@ impl<'a> Deref for Line<'a> {
 
 impl<'a> CloneIn<'a> for Line<'a> {
     fn clone_in(&self, _bump: &'a bumpalo::Bump) -> Self {
+        *self
+    }
+}
+
+impl<'a, 'b> ReborrowIn<'b> for Line<'a>
+where
+    'a: 'b,
+{
+    type Reborrowed = Line<'b>;
+
+    fn reborrow_in(&self, _bump: &'b Bump) -> Self::Reborrowed {
         *self
     }
 }

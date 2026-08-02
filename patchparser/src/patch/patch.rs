@@ -12,6 +12,7 @@ use crate::{
     from_lines::FromLines,
     line::{write_lines_to, Line},
     patch::diff::Diff,
+    reborrow_in::ReborrowIn,
     utils::split_before,
     write_to::WriteTo,
 };
@@ -115,6 +116,27 @@ impl<'a> FromLines<'a> for PatchHeadHeader<'a> {
     }
 }
 
+impl<'a, 'b> ReborrowIn<'b> for PatchHeadHeader<'a>
+where
+    'a: 'b,
+{
+    type Reborrowed = PatchHeadHeader<'b>;
+
+    fn reborrow_in(&self, bump: &'b Bump) -> PatchHeadHeader<'b>
+    where
+        'a: 'b,
+    {
+        let Self {
+            from_line,
+            header_lines,
+        } = self;
+        PatchHeadHeader {
+            from_line: *from_line,
+            header_lines: BumpaloCow::Owned(header_lines.deref().to_owned_in(bump)),
+        }
+    }
+}
+
 impl<'a> PatchHeadHeader<'a> {
     /// Returns Self and the rest after the header if there is one
     pub fn _from_lines(lines: &'a [Line<'a>]) -> Option<(Self, &'a [Line<'a>])> {
@@ -142,20 +164,6 @@ impl<'a> PatchHeadHeader<'a> {
             }
         }
         None
-    }
-
-    pub fn clone_in<'b>(&self, bump: &'b Bump) -> PatchHeadHeader<'b>
-    where
-        'a: 'b,
-    {
-        let Self {
-            from_line,
-            header_lines,
-        } = self;
-        PatchHeadHeader {
-            from_line: *from_line,
-            header_lines: BumpaloCow::Owned(header_lines.deref().to_owned_in(bump)),
-        }
     }
 
     /// `header_name` is case insensitive. `f` is called with the
@@ -234,6 +242,24 @@ pub struct PatchHead<'a> {
     pub remaining_lines: &'a [Line<'a>],
 }
 
+impl<'a, 'b> ReborrowIn<'b> for PatchHead<'a>
+where
+    'a: 'b,
+{
+    type Reborrowed = PatchHead<'b>;
+
+    fn reborrow_in(&self, bump: &'b Bump) -> PatchHead<'b> {
+        let Self {
+            header,
+            remaining_lines,
+        } = self;
+        PatchHead {
+            header: header.as_ref().map(|h| h.reborrow_in(bump)),
+            remaining_lines,
+        }
+    }
+}
+
 impl<'a> PatchHead<'a> {
     pub fn _from_lines(lines: &'a [Line<'a>]) -> Self {
         if let Some((header, remaining_lines)) = PatchHeadHeader::_from_lines(lines) {
@@ -245,20 +271,6 @@ impl<'a> PatchHead<'a> {
         PatchHead {
             header: None,
             remaining_lines: lines,
-        }
-    }
-
-    pub fn clone_in<'b>(&self, bump: &'b Bump) -> PatchHead<'b>
-    where
-        'a: 'b,
-    {
-        let Self {
-            header,
-            remaining_lines,
-        } = self;
-        PatchHead {
-            header: header.as_ref().map(|h| h.clone_in(bump)),
-            remaining_lines,
         }
     }
 

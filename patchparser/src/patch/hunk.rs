@@ -9,6 +9,7 @@ use crate::{
     patch::change::Change,
     re,
     re::GetStr,
+    reborrow_in::ReborrowIn,
     utils::take_while,
 };
 
@@ -32,20 +33,27 @@ impl<'a> WriteAsHunk for Hunk<'a> {
     }
 }
 
-impl<'a> Hunk<'a> {
-    // Just for testing
-    #[allow(unused)]
-    fn from_lines(lines: BumpaloCow<'a, 'a, [Line<'a>]>) -> Self {
-        Self { lines }
-    }
+impl<'a, 'b> ReborrowIn<'b> for Hunk<'a>
+where
+    'a: 'b,
+{
+    type Reborrowed = Hunk<'b>;
 
-    pub fn clone_in<'b>(&self, _bump: &'b Bump) -> Hunk<'b>
+    fn reborrow_in(&self, _bump: &'b Bump) -> Hunk<'b>
     where
         'a: 'b,
     {
         Hunk {
             lines: BumpaloCow::Owned(self.lines.deref().to_owned_in(_bump)),
         }
+    }
+}
+
+impl<'a> Hunk<'a> {
+    // Just for testing
+    #[allow(unused)]
+    fn from_lines(lines: BumpaloCow<'a, 'a, [Line<'a>]>) -> Self {
+        Self { lines }
     }
 
     pub fn split_into_changes<'h>(&'h self) -> Result<Vec<Change<'a, 'h>>> {

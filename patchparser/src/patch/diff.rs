@@ -13,6 +13,7 @@ use crate::{
     from_lines::FromLines,
     line::{write_lines_to, Line},
     patch::hunk::{Hunk, WriteAsHunk},
+    reborrow_in::ReborrowIn,
     write_to::WriteTo,
 };
 
@@ -26,11 +27,13 @@ pub struct DiffDifferences<'a> {
     pub hunks: bc::Vec<'a, Hunk<'a>>,
 }
 
-impl<'a> DiffDifferences<'a> {
-    pub fn clone_in<'b>(&self, bump: &'b Bump) -> DiffDifferences<'b>
-    where
-        'a: 'b,
-    {
+impl<'a, 'b> ReborrowIn<'b> for DiffDifferences<'a>
+where
+    'a: 'b,
+{
+    type Reborrowed = DiffDifferences<'b>;
+
+    fn reborrow_in(&self, bump: &'b Bump) -> DiffDifferences<'b> {
         let Self {
             index_line,
             minus_line,
@@ -41,7 +44,7 @@ impl<'a> DiffDifferences<'a> {
             index_line: index_line.clone(),
             minus_line: minus_line.clone(),
             plus_line: plus_line.clone(),
-            hunks: hunks.iter().map(|v| v.clone_in(bump)).collect_in(bump),
+            hunks: hunks.iter().map(|v| v.reborrow_in(bump)).collect_in(bump),
         }
     }
 }
@@ -100,11 +103,13 @@ fn t_strip_leading_path_segment() {
     );
 }
 
-impl<'a> Diff<'a> {
-    pub fn clone_in<'b>(&self, bump: &'b Bump) -> Diff<'b>
-    where
-        'a: 'b,
-    {
+impl<'a, 'b> ReborrowIn<'b> for Diff<'a>
+where
+    'a: 'b,
+{
+    type Reborrowed = Diff<'b>;
+
+    fn reborrow_in(&self, bump: &'b Bump) -> Diff<'b> {
         let Self {
             diff_line,
             diff_path_a_full,
@@ -125,10 +130,12 @@ impl<'a> Diff<'a> {
             similarity_line: similarity_line.clone(),
             rename_from_line: rename_from_line.clone(),
             rename_to_line: rename_to_line.clone(),
-            differences: differences.as_ref().map(|v| v.clone_in(bump)),
+            differences: differences.as_ref().map(|v| v.reborrow_in(bump)),
         }
     }
+}
 
+impl<'a> Diff<'a> {
     /// Replace the hunks with the given ones, while keeping file
     /// context information (except for deleting if
     /// `delete_index_line` is true).
