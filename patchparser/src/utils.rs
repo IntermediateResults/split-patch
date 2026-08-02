@@ -11,6 +11,26 @@ pub fn take_while<'a, T>(lines: &'a [T], predicate: impl Fn(&T) -> bool) -> (&'a
     lines.split_at(count)
 }
 
+/// `predicate` must return Err(E) to indicate the end of a match with
+/// its reason; this reason is then also returned with the matched
+/// area and rest, unless matching was successful until the end of the
+/// input, in which case None is returned for the reason.
+pub fn try_take_while<'a, T, E>(
+    items: &'a [T],
+    predicate: impl Fn(&T) -> Result<(), E>,
+) -> (&'a [T], &'a [T], Option<E>) {
+    for (i, item) in items.iter().enumerate() {
+        match predicate(item) {
+            Ok(()) => (),
+            Err(e) => {
+                let (good, rest) = items.split_at(i);
+                return (good, rest, Some(e));
+            }
+        }
+    }
+    (items, &[], None)
+}
+
 /// This does not add a file extension, but adds a suffix to the file
 /// name *before* the existing and unchanged file extension
 pub fn add_suffix(path: &Path, addon: impl AsRef<OsStr>) -> Result<PathBuf> {
