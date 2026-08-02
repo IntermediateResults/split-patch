@@ -26,6 +26,9 @@ test_opt:
 	@echo "++ Run tests on test/chj-home"
 	SPLIT_PATCH=target/release/split-patch test/run-test-for-input-dir test/chj-home
 
+test_deny_warnings:
+	RUSTFLAGS="--deny warnings" make cargo_test
+
 miri_test:
 	cargo +nightly miri test --target powerpc-unknown-linux-gnu
 
