@@ -5,26 +5,26 @@ fmt:
 	( cd patchparser && cargo fmt )
 	cargo fmt
 
-build_test:
-	cargo build --quiet
-
 cargo_test:
 	@echo "++ Run cargo test on both crates"
 	( cd patchparser && cargo test )
 	cargo test
 
-test: cargo_test build_test
+test_integration:
+	cargo build --quiet
 	@echo "++ Run tests on test/div"
 	test/run-test-for-input-dir test/div
 	@echo "++ Run tests on test/chj-home"
 	test/run-test-for-input-dir test/chj-home
 
-test_opt:
+test_integration_opt:
 	cargo build --quiet --release
 	@echo "++ Run tests on test/div"
 	SPLIT_PATCH=target/release/split-patch test/run-test-for-input-dir test/div
 	@echo "++ Run tests on test/chj-home"
 	SPLIT_PATCH=target/release/split-patch test/run-test-for-input-dir test/chj-home
+
+test: cargo_test test_integration
 
 test_deny_warnings:
 	RUSTFLAGS="--deny warnings" make cargo_test
