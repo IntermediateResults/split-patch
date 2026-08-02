@@ -31,7 +31,6 @@ impl<'a> Deref for Line<'a> {
     }
 }
 
-// XX painful, really no way out?
 impl<'a> CloneIn<'a> for Line<'a> {
     fn clone_in(&self, _bump: &'a bumpalo::Bump) -> Self {
         *self
