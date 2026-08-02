@@ -355,8 +355,8 @@ impl<'a> FromLines<'a> for Patch<'a> {
                 (&chunks[0], &chunks[1..])
             };
         if diff_lines_groups.is_empty() {
-            // XXX should perhaps accept that!
-            bail!("file does not appear to contain any diffs");
+            // bail!("file does not appear to contain any diffs");
+            // XX should we accept that?
         }
 
         let head = PatchHead::_from_lines(head_lines);
