@@ -8,6 +8,7 @@ use bumpalo::{
 };
 
 use crate::{
+    bumpalo_bstring as b,
     bumpalo_cow::{BumpaloCow, ToOwnedIn},
     from_lines::FromLines,
     line::{write_lines_to, Line},
@@ -185,7 +186,7 @@ impl<'a> PatchHeadHeader<'a> {
             if let Some(header_line) = HeaderLine::from_line(*line) {
                 if string_equal_ci(header_line.mixed_case_header_name, header_name) {
                     if let Some(replacement) = f(header_line.value.as_ref()) {
-                        let mut contents = bc::Vec::new_in(bump);
+                        let mut contents = b::BString::new_in(bump);
                         contents.extend_from_slice(header_line.mixed_case_header_name);
                         contents.extend_from_slice(header_line.separator);
                         contents.extend_from_slice(&replacement);
@@ -334,7 +335,7 @@ impl<'a> FromLines<'a> for Patch<'a> {
         let (lines, footer) = if let Some(rev_i) = lines
             .iter()
             .rev()
-            .position(|line| line.contents() == b"-- ")
+            .position(|line| line.contents() == bstr::B("-- "))
         {
             let i = lines.len() - rev_i - 1;
             (&lines[0..i], &lines[i..])

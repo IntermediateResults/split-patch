@@ -6,7 +6,7 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use bstr::ByteSlice;
+use bstr::{BStr, ByteSlice};
 use bumpalo::{
     collections::{self as bc, CollectIn},
     Bump,
@@ -20,11 +20,11 @@ use crate::{bumpalo_cow::CloneIn, reborrow_in::ReborrowIn};
 pub struct Line<'a> {
     /// 0-based line number; MAX represents "generated" (no location)
     line_no0: usize,
-    contents: &'a [u8],
+    contents: &'a BStr,
 }
 
 impl<'a> Deref for Line<'a> {
-    type Target = &'a [u8];
+    type Target = &'a BStr;
 
     fn deref(&self) -> &Self::Target {
         &self.contents
@@ -60,11 +60,18 @@ impl<'a> Display for Line<'a> {
 }
 
 impl<'a> Line<'a> {
-    pub fn from_tuple((line_no0, contents): (usize, &'a [u8])) -> Self {
+    pub fn from_lineno0_bstr(line_no0: usize, contents: &'a BStr) -> Self {
         Self { line_no0, contents }
     }
 
-    pub fn from_generated_content(contents: &'a [u8]) -> Self {
+    pub fn from_tuple((line_no0, contents): (usize, &'a [u8])) -> Self {
+        Self {
+            line_no0,
+            contents: contents.as_ref(),
+        }
+    }
+
+    pub fn from_generated_content(contents: &'a BStr) -> Self {
         Self {
             line_no0: usize::MAX,
             contents,
@@ -72,11 +79,11 @@ impl<'a> Line<'a> {
     }
 
     /// line contents without newline
-    pub fn contents(&self) -> &'a [u8] {
+    pub fn contents(&self) -> &'a BStr {
         self.contents
     }
 
-    pub fn set_contents(&mut self, contents: &'a [u8]) {
+    pub fn set_contents(&mut self, contents: &'a BStr) {
         self.contents = contents;
         self.line_no0 = usize::MAX;
     }

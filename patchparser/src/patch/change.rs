@@ -3,6 +3,7 @@ use std::io::Write;
 use bumpalo::{collections as bc, Bump};
 
 use crate::{
+    bumpalo_bstring::BString,
     bumpalo_cow::BumpaloCow,
     line::Line,
     patch::hunk::{Hunk, WriteAsHunk},
@@ -51,7 +52,7 @@ impl<'a, 'h> Change<'a, 'h> {
         // @@ -42 42 @@
         // @@ -42 +1,2 @@
         // @@ -0,0 +1 @@
-        let mut content = bc::Vec::new_in(bump);
+        let mut content = BString::new_in(bump);
         content.extend_from_slice(
             format!(
                 "@@ -{},{} +{},{} ",
