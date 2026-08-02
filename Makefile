@@ -4,7 +4,12 @@ build:
 build_test:
 	cargo build --quiet
 
-test: build_test
+cargo_test:
+	@echo "++ Run cargo test on both crates"
+	( cd patchparser && cargo test )
+	cargo test
+
+test: cargo_test build_test
 	@echo "++ Run tests on test/div"
 	test/run-test-for-input-dir test/div
 	@echo "++ Run tests on test/chj-home"
