@@ -1,6 +1,10 @@
 build:
 	cargo build --release
 
+fmt:
+	( cd patchparser && cargo fmt )
+	cargo fmt
+
 build_test:
 	cargo build --quiet
 
