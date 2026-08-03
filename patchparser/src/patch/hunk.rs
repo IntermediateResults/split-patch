@@ -8,8 +8,8 @@ use crate::{
     line::{write_lines_to, Line},
     patch::change::Change,
     re,
-    re::GetStr,
     reborrow_in::ReborrowIn,
+    regex_utils::GetStr,
     utils::take_while,
 };
 
