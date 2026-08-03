@@ -2,6 +2,8 @@
 name = "split-patch"
 version = "0.1.0"
 edition = "2021"
+description = "Split patch files on file, hunk or change boundaries"
+repository = "https://github.com/IntermediateResults/split-patch"
 
 [dependencies]
 patchparser = { path = "patchparser" }
