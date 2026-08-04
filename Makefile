@@ -5,6 +5,9 @@ fmt:
 	( cd patchparser && cargo fmt )
 	cargo fmt
 
+check_formatting: fmt
+	git diff --exit-code
+
 cargo_test:
 	@echo "++ Run cargo test on both crates"
 	( cd patchparser && cargo test )
