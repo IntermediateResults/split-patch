@@ -1,16 +1,19 @@
 use std::{io::Write, ops::Deref};
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use bumpalo::Bump;
 
 use crate::{
     bumpalo_cow::{BumpaloCow, ToOwnedIn},
     line::{write_lines_to, Line},
-    patch::change::Change,
+    patch::{
+        change::Change,
+        change_line::{ChangeLineKind, ChangeLineReport, SeparateErrors},
+    },
     re,
     reborrow_in::ReborrowIn,
     regex_utils::GetStr,
-    utils::take_while,
+    utils::try_take_while,
 };
 
 pub trait WriteAsHunk {
@@ -63,8 +66,6 @@ impl<'a> Hunk<'a> {
     pub fn split_into_changes<'h>(&'h self) -> Result<Vec<Change<'a, 'h>>> {
         let head_line = &self.head_line;
 
-        // XXX: are all these valid patterns? What happens if captures
-        // fail?
         // @@ -0,0 +1,2 @@
         // @@ -42 42 @@
         // @@ -42 +1,2 @@
@@ -73,30 +74,51 @@ impl<'a> Hunk<'a> {
             .captures(head_line)
             .with_context(|| format!("invalid hunk head on line {head_line}"))?;
 
-        let mut orig_start: usize = caps.get_str_then_parse(1, *head_line)?;
-        let mut patched_start: usize = caps.get_str_then_parse(3, *head_line)?;
-        let head_post = caps.get_str(5);
+        let orig_start: usize = caps.str_then_parse(1, *head_line)?;
+        let orig_len: usize = caps.get_str_then_parse(2, *head_line)?.unwrap_or(1);
+        let orig_patched_start: usize = caps.str_then_parse(3, *head_line)?;
+        let orig_patched_len: usize = caps.get_str_then_parse(4, *head_line)?.unwrap_or(1);
+        let head_post = caps.str(5);
 
         let mut remaining: &[Line] = &self.remaining_lines;
         let mut result = Vec::new();
-
-        fn starts_with_space_or_backslash(l: &Line) -> bool {
-            match l.first() {
-                Some(b' ') | Some(b'\\') => true,
-                _ => false,
-            }
-        }
-        fn starts_with_minus_or_plus(l: &Line) -> bool {
-            match l.first() {
-                Some(b'-') | Some(b'+') => true,
-                _ => false,
-            }
-        }
+        let mut start = orig_start;
+        let mut patched_start = orig_patched_start;
 
         while !remaining.is_empty() {
-            let (pre, after_pre) = take_while(remaining, starts_with_space_or_backslash);
-            let (group, after_group) = take_while(after_pre, starts_with_minus_or_plus);
-            let (post, rest) = take_while(after_group, starts_with_space_or_backslash);
+            let (pre, after_pre, stop_reason) = try_take_while(remaining, |line| {
+                ChangeLineReport::from(*line).matches_kinds(&[ChangeLineKind::Context])
+            });
+            stop_reason.separate_errors()?;
+            let (group, after_group, stop_reason) = try_take_while(after_pre, |line| {
+                ChangeLineReport::from(*line)
+                    .matches_kinds(&[ChangeLineKind::Plus, ChangeLineKind::Minus])
+            });
+            stop_reason.separate_errors()?;
+            let (post, rest, stop_reason) = try_take_while(after_group, |line| {
+                ChangeLineReport::from(*line)
+                    .matches_kinds(&[ChangeLineKind::Context, ChangeLineKind::Backslash])
+            });
+            let end_indicator = stop_reason.separate_errors()?;
+            // Optional assertments:
+            match end_indicator {
+                Some(report) => match report {
+                    ChangeLineReport::Kind(change_line_kind) => match change_line_kind {
+                        ChangeLineKind::Plus | ChangeLineKind::Minus => "another group is fine",
+                        ChangeLineKind::Context | ChangeLineKind::Backslash => {
+                            unreachable!("those were taken above")
+                        }
+                    },
+                    ChangeLineReport::Terminator(change_terminator) => unreachable!(
+                        "buggy hunk creation: another {change_terminator:?} \
+                         should not be possible within a hunk"
+                    ),
+                    ChangeLineReport::InvalidSyntax(_) => {
+                        unreachable!("removed by `separate_errors`")
+                    }
+                },
+                None => "end of input is fine",
+            };
 
             let pre_len = pre.len();
 
@@ -119,7 +141,7 @@ impl<'a> Hunk<'a> {
             let patched_len = new_pre_len + group_plus_len + new_post_len;
 
             result.push(Change {
-                orig_start,
+                orig_start: start,
                 orig_len,
                 patched_start,
                 patched_len,
@@ -133,14 +155,43 @@ impl<'a> Hunk<'a> {
             // `remaining` value! We stop when there is no more groups
             // coming, not when there are no more context lines.
 
+            start += pre_len + group_minus_len;
+            patched_start += pre_len + group_plus_len;
+            remaining = after_group;
+
             // XXX is it safe to compare `rest = [""]`?
             if rest.is_empty() || rest.iter().any(|l| l.is_empty()) {
                 break;
             }
+        }
 
-            orig_start += pre_len + group_minus_len;
-            patched_start += pre_len + group_plus_len;
-            remaining = after_group;
+        // "\ .. " lines are not included in the span lengths, thus
+        // exclude them
+        let remaining_active_count = remaining
+            .iter()
+            .filter(|line| {
+                let report = ChangeLineReport::from(**line);
+                !matches!(report, ChangeLineReport::Kind(ChangeLineKind::Backslash))
+            })
+            .count();
+        // dbg!((remaining_active_count, remaining.len()));
+
+        let actual_orig_len = start + remaining_active_count - orig_start;
+        if orig_len != actual_orig_len {
+            bail!(
+                "hunk specified -{orig_start},{orig_len}, \
+                 but the actual length of the hunk is {actual_orig_len} \
+                 on line {head_line}"
+            )
+        }
+
+        let actual_patched_len = patched_start + remaining_active_count - orig_patched_start;
+        if orig_patched_len != actual_patched_len {
+            bail!(
+                "hunk specified +{orig_patched_start},{orig_patched_len}, \
+                 but the actual patched length of the hunk is {actual_patched_len} \
+                 on line {head_line}"
+            )
         }
 
         Ok(result)

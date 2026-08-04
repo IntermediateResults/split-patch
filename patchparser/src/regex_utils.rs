@@ -22,16 +22,27 @@ macro_rules! re {
 }
 
 pub trait GetStr<'t> {
-    fn get_str(&self, i: usize) -> &'t [u8];
+    fn get_str(&self, i: usize) -> Option<&'t [u8]>;
 
-    fn get_str_then_parse<'l, T: FromStr>(&self, i: usize, in_line: Line<'l>) -> Result<T>
+    fn str(&self, i: usize) -> &'t [u8];
+
+    fn get_str_then_parse<'l, T: FromStr>(&self, i: usize, in_line: Line<'l>) -> Result<Option<T>>
+    where
+        <T as FromStr>::Err: Send + Sync + Error + 'static;
+
+    fn str_then_parse<'l, T: FromStr>(&self, i: usize, in_line: Line<'l>) -> Result<T>
     where
         <T as FromStr>::Err: Send + Sync + Error + 'static;
 }
 
 impl<'t> GetStr<'t> for Captures<'t> {
-    /// Panics if i is outside the range of available captures
-    fn get_str(&self, i: usize) -> &'t [u8] {
+    /// Returns `None` if there is no capture with number `i`
+    fn get_str(&self, i: usize) -> Option<&'t [u8]> {
+        self.get(i).map(|c| c.as_bytes())
+    }
+
+    /// Panics if there is no capture with number `i`
+    fn str(&self, i: usize) -> &'t [u8] {
         self.get(i)
             .expect("expected capture to be present")
             .as_bytes()
@@ -40,15 +51,31 @@ impl<'t> GetStr<'t> for Captures<'t> {
     /// Panics if i is outside the range of available captures. Parses
     /// the capture to the result type, showing the line number in the
     /// error message if failing to parse.
-    fn get_str_then_parse<'l, T: FromStr>(&self, i: usize, in_line: Line<'l>) -> Result<T>
+    fn get_str_then_parse<'l, T: FromStr>(&self, i: usize, in_line: Line<'l>) -> Result<Option<T>>
     where
         <T as FromStr>::Err: Send + Sync + Error + 'static,
     {
-        let bs = self.get_str(i);
+        let bs = match self.get_str(i) {
+            Some(v) => v,
+            None => return Ok(None),
+        };
         let s = std::str::from_utf8(bs).with_context(|| {
             format!("parsing into {}: not a string: {:?}", type_name::<T>(), bs)
         })?;
         s.parse()
             .with_context(|| format!("parsing capture {i} on line {in_line}"))
+            .map(Some)
+    }
+
+    /// Panics if there is no capture with number `i`. Parses
+    /// the capture to the result type, showing the line number in the
+    /// error message if failing to parse.
+    fn str_then_parse<'l, T: FromStr>(&self, i: usize, in_line: Line<'l>) -> Result<T>
+    where
+        <T as FromStr>::Err: Send + Sync + Error + 'static,
+    {
+        Ok(self
+            .get_str_then_parse(i, in_line)?
+            .expect("expected capture to be present"))
     }
 }
