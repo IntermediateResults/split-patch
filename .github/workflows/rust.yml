@@ -16,6 +16,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+          patchparser/target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - name: Run tests, deny warnings
       run: make test_deny_warnings
     - name: Run integration tests
