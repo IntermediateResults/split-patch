@@ -24,7 +24,7 @@ jobs:
           ~/.cargo/git
           target
           patchparser/target
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-withleakchecker
     - name: Run tests, deny warnings
       run: make test_deny_warnings
     - name: Run tests with leak checker
