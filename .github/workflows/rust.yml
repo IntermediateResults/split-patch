@@ -31,3 +31,7 @@ jobs:
       run: make test_integration
     - name: Check formatting
       run: make check_formatting
+    - name: Check with Miri
+      run: |
+        rustup component add --toolchain nightly-x86_64-unknown-linux-gnu miri
+        make miri
