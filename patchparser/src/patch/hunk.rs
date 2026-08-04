@@ -21,15 +21,15 @@ pub trait WriteAsHunk {
 /// other such lines; contains any number of changes
 #[derive(Clone, PartialEq, Eq)]
 pub struct Hunk<'a> {
-    /// The Vec is never empty, at least the "@@ " line is ensured by
-    /// construction via `split_before` which does not create a group
-    /// out of no lines.
-    pub lines: BumpaloCow<'a, 'a, [Line<'a>]>,
+    /// The "@@ " line
+    pub head_line: Line<'a>,
+    pub remaining_lines: BumpaloCow<'a, 'a, [Line<'a>]>,
 }
 
 impl<'a> WriteAsHunk for Hunk<'a> {
-    fn write_as_hunk_to(&self, out: impl Write) -> Result<(), std::io::Error> {
-        write_lines_to(&*self.lines, out)
+    fn write_as_hunk_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
+        write_lines_to(&[self.head_line], &mut out)?;
+        write_lines_to(&*self.remaining_lines, &mut out)
     }
 }
 
@@ -44,7 +44,8 @@ where
         'a: 'b,
     {
         Hunk {
-            lines: BumpaloCow::Owned(self.lines.deref().to_owned_in(_bump)),
+            head_line: self.head_line,
+            remaining_lines: BumpaloCow::Owned(self.remaining_lines.deref().to_owned_in(_bump)),
         }
     }
 }
@@ -52,15 +53,15 @@ where
 impl<'a> Hunk<'a> {
     // Just for testing
     #[allow(unused)]
-    fn from_lines(lines: BumpaloCow<'a, 'a, [Line<'a>]>) -> Self {
-        Self { lines }
+    fn from_lines(head_line: Line<'a>, remaining_lines: BumpaloCow<'a, 'a, [Line<'a>]>) -> Self {
+        Self {
+            head_line,
+            remaining_lines,
+        }
     }
 
     pub fn split_into_changes<'h>(&'h self) -> Result<Vec<Change<'a, 'h>>> {
-        let head_line = self
-            .lines
-            .first()
-            .expect("hunks are expected to never be empty by construction");
+        let head_line = &self.head_line;
 
         // XXX: are all these valid patterns? What happens if captures
         // fail?
@@ -76,7 +77,7 @@ impl<'a> Hunk<'a> {
         let mut patched_start: usize = caps.get_str_then_parse(3, *head_line)?;
         let head_post = caps.get_str(5);
 
-        let mut remaining: &[Line] = &self.lines[1..];
+        let mut remaining: &[Line] = &self.remaining_lines;
         let mut result = Vec::new();
 
         fn starts_with_space_or_backslash(l: &Line) -> bool {
@@ -181,7 +182,7 @@ fn t_split_hunk_into_changes() {
         .enumerate()
         .map(|(i, line)| Line::from_tuple((i, line.as_ref())))
         .collect_in(&bump);
-    let hunk = Hunk::from_lines(BumpaloCow::Owned(lines));
+    let hunk = Hunk::from_lines(lines[0], BumpaloCow::Borrowed(&lines[1..]));
     let changes = hunk.split_into_changes().unwrap();
 
     let expected_changes = [

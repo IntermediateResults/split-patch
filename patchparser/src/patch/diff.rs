@@ -256,7 +256,8 @@ fn gather_hunks<'s>(lines: &'s [Line<'s>], bump: &'s Bump) -> bc::Vec<'s, Hunk<'
         lines,
         |line| line.starts_with(b"@@ "),
         |group| Hunk {
-            lines: BumpaloCow::Borrowed(group),
+            head_line: group[0],
+            remaining_lines: BumpaloCow::Borrowed(&group[1..]),
         },
         bump,
     )

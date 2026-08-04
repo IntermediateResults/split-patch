@@ -31,7 +31,7 @@ impl<'a, 'h> Change<'a, 'h> {
         'a: 'b,
         'h: 'b,
     {
-        let mut lines = bc::Vec::new_in(bump);
+        let mut remaining_lines = bc::Vec::new_in(bump);
 
         let Self {
             orig_start,
@@ -44,31 +44,34 @@ impl<'a, 'h> Change<'a, 'h> {
             post,
         } = self;
 
-        // Does the header need to be adapted to the following
-        // patterns? As discovered for `split_hunk` -- cj: Let's just
-        // always print the multi-line range format, it should always
-        // work.
-        // @@ -0,0 +1,2 @@
-        // @@ -42 42 @@
-        // @@ -42 +1,2 @@
-        // @@ -0,0 +1 @@
-        let mut content = BString::new_in(bump);
-        content.extend_from_slice(
-            format!(
-                "@@ -{},{} +{},{} ",
-                orig_start, orig_len, patched_start, patched_len
-            )
-            .as_bytes(),
-        );
-        content.extend_from_slice(head_post);
-        lines.push(Line::from_generated_content(content.into_bump_slice()));
+        let head_line = {
+            // Does the header need to be adapted to the following
+            // patterns? As discovered for `split_hunk` -- cj: Let's just
+            // always print the multi-line range format, it should always
+            // work.
+            // @@ -0,0 +1,2 @@
+            // @@ -42 42 @@
+            // @@ -42 +1,2 @@
+            // @@ -0,0 +1 @@
+            let mut content = BString::new_in(bump);
+            content.extend_from_slice(
+                format!(
+                    "@@ -{},{} +{},{} ",
+                    orig_start, orig_len, patched_start, patched_len
+                )
+                .as_bytes(),
+            );
+            content.extend_from_slice(head_post);
+            Line::from_generated_content(content.into_bump_slice())
+        };
 
-        lines.extend_from_slice(pre);
-        lines.extend_from_slice(group);
-        lines.extend_from_slice(post);
+        remaining_lines.extend_from_slice(pre);
+        remaining_lines.extend_from_slice(group);
+        remaining_lines.extend_from_slice(post);
 
         Hunk {
-            lines: BumpaloCow::Owned(lines),
+            head_line,
+            remaining_lines: BumpaloCow::Owned(remaining_lines),
         }
     }
 }
