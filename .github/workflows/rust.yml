@@ -16,7 +16,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+    - name: Run tests, deny warnings
+      run: make test_deny_warnings
+    - name: Run integration tests
+      run: make test_integration
+    - name: Check formatting
+      run: make check_formatting
