@@ -18,18 +18,16 @@ cargo_check:
 	cargo $(OUR_CARGO_FLAGS) test --color=always
 
 test_integration:
-	cargo $(OUR_CARGO_FLAGS) build --quiet
 	@echo "++ Run tests on test/div"
-	test/run-test-for-input-dir test/div
+	OUR_CARGO_BUILD_FLAGS="" test/run-test-for-input-dir test/div
 	@echo "++ Run tests on test/chj-home"
-	test/run-test-for-input-dir test/chj-home
+	OUR_CARGO_BUILD_FLAGS="" test/run-test-for-input-dir test/chj-home
 
 test_integration_opt:
-	cargo $(OUR_CARGO_FLAGS) build --quiet --release
 	@echo "++ Run tests on test/div"
-	SPLIT_PATCH=target/release/split-patch test/run-test-for-input-dir test/div
+	OUR_CARGO_BUILD_FLAGS="--release" test/run-test-for-input-dir test/div
 	@echo "++ Run tests on test/chj-home"
-	SPLIT_PATCH=target/release/split-patch test/run-test-for-input-dir test/chj-home
+	OUR_CARGO_BUILD_FLAGS="--release" test/run-test-for-input-dir test/chj-home
 
 test: cargo_test test_integration
 

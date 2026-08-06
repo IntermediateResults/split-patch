@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use clap::Parser;
 use clap_with_warnings::clap_with_warnings;
 
-#[derive(Debug, clap::Parser)]
+#[derive(Debug, Clone, clap::Parser)]
 #[command(allow_hyphen_values = true)]
 pub struct SplitOptions {
     /// Split on hunk boundaries, not just file boundaries.
@@ -61,7 +61,7 @@ fn t_config_default_split_options() {
 /// So that each new file only contains the part of the patch for
 /// one particular target file.
 #[clap_with_warnings]
-#[derive(Debug, clap::Parser)]
+#[derive(Debug, Clone, clap::Parser)]
 #[command(version, about, long_about, allow_hyphen_values = true)]
 pub struct Args {
     /// Path(s) to patch file(s)
