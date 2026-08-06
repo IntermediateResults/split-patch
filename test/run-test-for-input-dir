@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -meuo pipefail
-IFS=
+IFS=' '
 
 usage() {
     echo "Usage: $0 input-dir"
@@ -32,7 +32,9 @@ fi
 
 rm -rf "$current_dir"
 
-test/split-patches-in-dir "${SPLIT_PATCH-target/debug/split-patch}" "$input_dir" "$current_dir"
+# We want to split the strings in the `OUR_CARGO_...` variables
+# (according to "$IFS"), thus do *not* surround those with double quotes
+cargo ${OUR_CARGO_FLAGS-} --quiet run $OUR_CARGO_BUILD_FLAGS --bin test-split-patches-in-dir -- --input-dir "$input_dir" --output-base "$current_dir"
 
 diff -ruN "$expected_dir" "$current_dir"
 
