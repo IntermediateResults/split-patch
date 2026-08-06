@@ -6,10 +6,8 @@ use clap_with_warnings::clap_with_warnings;
 #[command(allow_hyphen_values = true)]
 pub struct SplitOptions {
     /// Split on hunk boundaries, not just file boundaries.
-    // This field is private because it is implied by changes, thus
-    // must only be accessible by accessor method.
     #[clap(long)]
-    hunks: bool,
+    pub hunks: bool,
 
     /// Split on individual change groups, too (implies `--hunks`)
     #[clap(short, long)]
