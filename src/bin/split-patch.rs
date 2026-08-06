@@ -23,7 +23,7 @@ use patchparser::{
     write_to::WriteTo,
 };
 
-use split_patch::split_patch_args::{Args, SplitOptions};
+use split_patch::args::{Args, SplitOptions};
 
 /// Receives the lines for a single diff. Returns the list of files created
 fn split_diff_in<'a, 'h>(
