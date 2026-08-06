@@ -10,7 +10,6 @@ use anyhow::{anyhow, Context, Result};
 use bstr::{BStr, ByteSlice};
 use bumpalo::Bump;
 use cj_path_util::temp_file::temp_file_for;
-use clap_with_warnings::clap_with_warnings;
 use patchparser::{
     from_lines::FromLines,
     line::read_lines_in,
@@ -24,58 +23,7 @@ use patchparser::{
     write_to::WriteTo,
 };
 
-#[derive(Debug, clap::Args)]
-#[command(allow_hyphen_values = true)]
-struct SplitOptions {
-    /// Split on hunk boundaries, not just file boundaries.
-    #[clap(long)]
-    hunks: bool,
-
-    /// Split on individual change groups, too (implies `--hunks`)
-    #[clap(short, long)]
-    changes: bool,
-
-    /// Omit the addition of a prefix to the subject line of patch
-    /// files that have a git style patch header
-    #[clap(long)]
-    no_subject_change: bool,
-
-    /// When using `--changes`, use a single number counter for
-    /// generating the ids for the generated output file names and
-    /// subject prefixes instead of `{hunk_id}-{change_id}`.
-    #[clap(long)]
-    monotonous_numbers: bool,
-
-    /// Path to the directory where to write the split files
-    /// to. Default: the same directory as the input file.
-    #[clap(long)]
-    output_dir: Option<PathBuf>,
-
-    /// Do not insert the prefix after "[PATCH]", but before
-    /// everything.
-    #[clap(long)]
-    no_insert_after_patch: bool,
-}
-
-/// Split the given patchfile(s) into new files
-///
-/// So that each new file only contains the part of the patch for
-/// one particular target file.
-#[clap_with_warnings]
-#[derive(Debug, clap::Parser)]
-#[command(version, about, long_about, allow_hyphen_values = true)]
-struct Args {
-    /// Path(s) to patch file(s)
-    #[clap(required = true)]
-    patch_file: Vec<PathBuf>,
-
-    #[clap(flatten)]
-    split_options: SplitOptions,
-
-    /// Do not print the list of generated files.
-    #[clap(short, long)]
-    quiet: bool,
-}
+use split_patch::split_patch_args::{Args, SplitOptions};
 
 /// Receives the lines for a single diff. Returns the list of files created
 fn split_diff_in<'a, 'h>(
@@ -109,7 +57,7 @@ fn split_diff_in<'a, 'h>(
     let head_with_prefix =
         |prefix_part: &str| _head_with_prefix(split_options, b_path, head, prefix_part, bump);
 
-    if split_options.hunks {
+    if split_options.hunks() {
         // Old style sequence numbers, increasing monotonically for
         // all files, for when --changes is used with
         // --monotonous-numbers
@@ -237,13 +185,7 @@ fn split_patch(patch_file_path: &Path, split_options: &SplitOptions) -> Result<V
 }
 
 fn main() -> Result<()> {
-    let mut args = Args::parse();
-
-    // `--changes` implies `--hunks`
-    // XXX: perhaps this can be handled natively by `clap`
-    if args.split_options.changes {
-        args.split_options.hunks = true;
-    }
+    let args = Args::parse();
 
     for patch_file in &args.patch_file {
         let written = split_patch(&patch_file, &args.split_options)
