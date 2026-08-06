@@ -1,8 +1,9 @@
 use std::path::PathBuf;
 
+use clap::Parser;
 use clap_with_warnings::clap_with_warnings;
 
-#[derive(Debug, clap::Args)]
+#[derive(Debug, clap::Parser)]
 #[command(allow_hyphen_values = true)]
 pub struct SplitOptions {
     /// Split on hunk boundaries, not just file boundaries.
@@ -41,6 +42,18 @@ impl SplitOptions {
     pub fn hunks(&self) -> bool {
         self.changes || self.hunks
     }
+}
+
+impl Default for SplitOptions {
+    fn default() -> Self {
+        SplitOptions::parse_from(["ignored-program-name"])
+    }
+}
+
+#[test]
+fn t_config_default_split_options() {
+    let d = SplitOptions::default();
+    assert_eq!(d.no_insert_after_patch, false);
 }
 
 /// Split the given patchfile(s) into new files
