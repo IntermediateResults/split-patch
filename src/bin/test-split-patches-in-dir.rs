@@ -11,7 +11,7 @@ use anyhow::{Context, Ok, Result};
 use clap_with_warnings::clap_with_warnings;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use split_patch::{
-    core::split_patch, path_utils::path_remove_common_lead, split_options::SplitOptions,
+    core::split_patch, path_utils::path_remove_common_lead, split_options::SplitArgs,
 };
 
 /// Test split patches in directory.
@@ -47,10 +47,10 @@ fn main() -> Result<()> {
     fs::create_dir_all(args.output_base.clone()).expect("creating output_base directory");
 
     let output_base = args.output_base;
-    let split_options = [
+    let split_args = [
         (
             "--",
-            SplitOptions {
+            SplitArgs {
                 hunks: false,
                 changes: false,
                 monotonous_numbers: true,
@@ -59,7 +59,7 @@ fn main() -> Result<()> {
         ),
         (
             "--hunks",
-            SplitOptions {
+            SplitArgs {
                 hunks: true,
                 changes: false,
                 monotonous_numbers: true,
@@ -68,7 +68,7 @@ fn main() -> Result<()> {
         ),
         (
             "--changes",
-            SplitOptions {
+            SplitArgs {
                 hunks: false,
                 changes: true,
                 monotonous_numbers: true,
@@ -76,45 +76,43 @@ fn main() -> Result<()> {
             },
         ),
     ];
-    let results: Vec<(&str, Vec<Result<()>>)> = split_options
+    let results: Vec<(&str, Vec<Result<()>>)> = split_args
         .par_iter()
-        .map(
-            |(option_string, split_options)| -> (&str, Vec<Result<()>>) {
-                let results: Vec<Result<()>> = patch_files
-                    .par_iter()
-                    .map(|file| -> Result<()> {
-                        let basename = file
-                            .file_stem()
-                            .with_context(|| anyhow!("extracting file stem from {file:?}"))?;
-                        let full_output_dir = &output_base.join(option_string).join(basename);
-                        fs::create_dir_all(full_output_dir).with_context(|| {
-                            anyhow!("creating output directory {full_output_dir:?}")
-                        })?;
+        .map(|(option_string, split_args)| -> (&str, Vec<Result<()>>) {
+            let results: Vec<Result<()>> = patch_files
+                .par_iter()
+                .map(|file| -> Result<()> {
+                    let basename = file
+                        .file_stem()
+                        .with_context(|| anyhow!("extracting file stem from {file:?}"))?;
+                    let full_output_dir = &output_base.join(option_string).join(basename);
+                    fs::create_dir_all(full_output_dir).with_context(|| {
+                        anyhow!("creating output directory {full_output_dir:?}")
+                    })?;
 
-                        let mut split_options = split_options.clone();
-                        split_options.output_dir = Some(full_output_dir.clone());
+                    let mut split_args = split_args.clone();
+                    split_args.output_dir = Some(full_output_dir.clone());
 
-                        let written = split_patch(&file, &split_options)
-                            .with_context(|| anyhow!("splitting the patch file {file:?}"))?;
+                    let written = split_patch(&file, &split_args.into())
+                        .with_context(|| anyhow!("splitting the patch file {file:?}"))?;
 
-                        let list_path = full_output_dir.join("_list");
-                        (|| {
-                            let mut out = BufWriter::new(File::create(&list_path)?);
-                            for path in written {
-                                let relative_path = path_remove_common_lead(&output_base, path)
-                                    .expect("beginnings are ensured to be identical");
-                                out.write_all(relative_path.as_os_str().as_bytes())?;
-                                out.write_all(b"\n")?;
-                            }
-                            Ok(())
-                        })()
-                        .with_context(|| anyhow!("writing to file {list_path:?}"))?;
+                    let list_path = full_output_dir.join("_list");
+                    (|| {
+                        let mut out = BufWriter::new(File::create(&list_path)?);
+                        for path in written {
+                            let relative_path = path_remove_common_lead(&output_base, path)
+                                .expect("beginnings are ensured to be identical");
+                            out.write_all(relative_path.as_os_str().as_bytes())?;
+                            out.write_all(b"\n")?;
+                        }
                         Ok(())
-                    })
-                    .collect();
-                (option_string, results)
-            },
-        )
+                    })()
+                    .with_context(|| anyhow!("writing to file {list_path:?}"))?;
+                    Ok(())
+                })
+                .collect();
+            (option_string, results)
+        })
         .collect();
 
     results.iter().for_each(|(opt, results)| {
@@ -127,7 +125,7 @@ fn main() -> Result<()> {
     });
 
     let tot_count: usize = results.iter().map(|(_opt, results)| results.len()).sum();
-    let tot_count_alternative = split_options.len() * patch_files.len();
+    let tot_count_alternative = split_args.len() * patch_files.len();
     assert_eq!(tot_count, tot_count_alternative);
     let err_count: usize = results
         .iter()

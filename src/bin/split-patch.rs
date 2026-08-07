@@ -7,7 +7,7 @@ use std::{
 use anyhow::{anyhow, Context, Result};
 use clap_with_warnings::clap_with_warnings;
 
-use split_patch::{core::split_patch, split_options::SplitOptions};
+use split_patch::{core::split_patch, split_options::SplitArgs};
 
 /// Split the given patchfile(s) into new files
 ///
@@ -22,7 +22,7 @@ pub struct Args {
     pub patch_file: Vec<PathBuf>,
 
     #[clap(flatten)]
-    pub split_options: SplitOptions,
+    pub split_args: SplitArgs,
 
     /// Do not print the list of generated files.
     #[clap(short, long)]
@@ -31,9 +31,10 @@ pub struct Args {
 
 fn main() -> Result<()> {
     let args = Args::parse();
+    let split_options = args.split_args.into();
 
     for patch_file in &args.patch_file {
-        let written = split_patch(&patch_file, &args.split_options)
+        let written = split_patch(&patch_file, &split_options)
             .with_context(|| anyhow!("splitting the patch file {patch_file:?}"))?;
 
         if !args.quiet {

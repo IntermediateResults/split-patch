@@ -56,7 +56,7 @@ fn split_diff_in<'a, 'h>(
     let head_with_prefix =
         |prefix_part: &str| _head_with_prefix(split_options, b_path, head, prefix_part, bump);
 
-    if split_options.hunks() {
+    if split_options.mode.hunks() {
         // Old style sequence numbers, increasing monotonically for
         // all files, for when --changes is used with
         // --monotonous-numbers
@@ -72,7 +72,7 @@ fn split_diff_in<'a, 'h>(
 
         if let Some(differences) = &diff.differences {
             for (hunk_i, hunk) in differences.hunks.iter().enumerate() {
-                if split_options.changes {
+                if split_options.mode.changes() {
                     for (change_i, change) in hunk.split_into_changes()?.into_iter().enumerate() {
                         let prefix_part = if split_options.monotonous_numbers {
                             format!("{file_i:03}")
@@ -124,7 +124,7 @@ fn _head_with_prefix<'a, 'h>(
 where
     'a: 'h,
 {
-    if split_options.no_subject_change {
+    if !split_options.subject_change {
         head
     } else {
         let mut head = head.clone();
@@ -136,7 +136,7 @@ where
         head.update_header(
             "Subject",
             |value| {
-                if !split_options.no_insert_after_patch {
+                if split_options.insert_after_patch {
                     if let Some(cap) = re!(r"^(\s*\[PATCH\]\s*)(.*)").captures(value) {
                         return Some(make_bstring!({ &cap[1] } + { &prefix } + { &cap[2] }));
                     }
