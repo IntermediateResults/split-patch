@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 
 use clap::Parser;
-use clap_with_warnings::clap_with_warnings;
 
 #[derive(Debug, Clone, clap::Parser)]
 #[command(allow_hyphen_values = true)]
@@ -54,24 +53,4 @@ impl Default for SplitOptions {
 fn t_config_default_split_options() {
     let d = SplitOptions::default();
     assert_eq!(d.no_insert_after_patch, false);
-}
-
-/// Split the given patchfile(s) into new files
-///
-/// So that each new file only contains the part of the patch for
-/// one particular target file.
-#[clap_with_warnings]
-#[derive(Debug, Clone, clap::Parser)]
-#[command(version, about, long_about, allow_hyphen_values = true)]
-pub struct Args {
-    /// Path(s) to patch file(s)
-    #[clap(required = true)]
-    pub patch_file: Vec<PathBuf>,
-
-    #[clap(flatten)]
-    pub split_options: SplitOptions,
-
-    /// Do not print the list of generated files.
-    #[clap(short, long)]
-    pub quiet: bool,
 }

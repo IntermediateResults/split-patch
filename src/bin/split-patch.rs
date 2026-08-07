@@ -1,11 +1,33 @@
 use std::{
     io::{stdout, BufWriter, Write},
     os::unix::ffi::OsStrExt,
+    path::PathBuf,
 };
 
 use anyhow::{anyhow, Context, Result};
+use clap_with_warnings::clap_with_warnings;
 
-use split_patch::{args::Args, core::split_patch};
+use split_patch::{core::split_patch, split_options::SplitOptions};
+
+/// Split the given patchfile(s) into new files
+///
+/// So that each new file only contains the part of the patch for
+/// one particular target file.
+#[clap_with_warnings]
+#[derive(Debug, Clone, clap::Parser)]
+#[command(version, about, long_about, allow_hyphen_values = true)]
+pub struct Args {
+    /// Path(s) to patch file(s)
+    #[clap(required = true)]
+    pub patch_file: Vec<PathBuf>,
+
+    #[clap(flatten)]
+    pub split_options: SplitOptions,
+
+    /// Do not print the list of generated files.
+    #[clap(short, long)]
+    pub quiet: bool,
+}
 
 fn main() -> Result<()> {
     let args = Args::parse();

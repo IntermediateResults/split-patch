@@ -21,7 +21,7 @@ use patchparser::{
     write_to::WriteTo,
 };
 
-use crate::args::SplitOptions;
+use crate::split_options::SplitOptions;
 use anyhow::{Context, Result};
 
 /// Receives the lines for a single diff. Returns the list of files created
