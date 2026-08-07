@@ -12,7 +12,7 @@ use split_patch::{core::split_patch, split_options::SplitArgs};
 /// Split the given patchfile(s) into new files
 ///
 /// So that each new file only contains the part of the patch for
-/// one particular target file.
+/// one particular target file, or even only one hunk or change.
 #[clap_with_warnings]
 #[derive(Debug, Clone, clap::Parser)]
 #[command(version, about, long_about, allow_hyphen_values = true)]
