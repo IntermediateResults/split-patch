@@ -10,8 +10,9 @@ use anyhow::anyhow;
 use anyhow::{Context, Ok, Result};
 use clap_with_warnings::clap_with_warnings;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
-use split_patch::core::split_patch;
-use split_patch::{args::SplitOptions, path_utils::path_remove_common_lead};
+use split_patch::{
+    core::split_patch, path_utils::path_remove_common_lead, split_options::SplitOptions,
+};
 
 /// Test split patches in directory.
 ///
