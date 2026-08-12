@@ -9,3 +9,11 @@ RUSTSEC-2024-0384
 # adler 1.0.2 affected by RUSTSEC-2025-0056 (unmaintained)
 # -> only used for anyhow backtraces
 RUSTSEC-2025-0056
+
+# crossbeam-epoch 0.9.18 affected by RUSTSEC-2026-0204 (Invalid
+# pointer dereference in `fmt::Pointer` impl for `Atomic` and `Shared`
+# when the underlying pointer is invalid)
+#
+# XXX should look into this. Affected versions: >=0.9.0, <0.9.20, and
+# 0.9.20 is just 1 month old, thus have to review.
+RUSTSEC-2026-0204
