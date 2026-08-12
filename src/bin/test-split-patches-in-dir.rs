@@ -1,4 +1,5 @@
 use std::{
+    alloc::System,
     fs::{self, File},
     io::{BufWriter, Write},
     os::unix::ffi::OsStrExt,
@@ -9,10 +10,14 @@ use std::{
 use anyhow::anyhow;
 use anyhow::{Context, Ok, Result};
 use clap_with_warnings::clap_with_warnings;
+use mockalloc::Mockalloc;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use split_patch::{
     core::split_patch, path_utils::path_remove_common_lead, split_options::SplitArgs,
 };
+
+#[global_allocator]
+static ALLOCATOR: Mockalloc<System> = Mockalloc(System);
 
 /// Test split patches in directory.
 ///
