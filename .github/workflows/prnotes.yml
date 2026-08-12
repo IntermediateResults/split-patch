@@ -1,0 +1,42 @@
+name: PR Notes
+
+on:
+  pull_request_target:
+    types:
+      - closed
+
+permissions:
+  contents: write
+
+jobs:
+  add-note:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-action"
+          git config user.email "ch@christianjaeger.ch"
+
+      - name: Fetch existing notes
+        run: |
+          git fetch origin 'refs/notes/*:refs/notes/*' || true
+
+      - name: Add note
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          COMMIT: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          PR_TITLE_LIT=$(python3 -c 'import json, os; print(json.dumps(os.environ["PR_TITLE"]))')
+          git notes add -m "GitHub PR #${PR_NUMBER} ${PR_TITLE_LIT}" "$COMMIT"
+
+      - name: Push notes
+        run: |
+          git push origin 'refs/notes/*'
