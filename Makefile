@@ -32,7 +32,7 @@ test_integration_opt:
 test: cargo_test test_integration
 
 leak_test:
-	MALLOC_CONF="prof:true,prof_prefix:jeprof.out" make test_integration
+	_RJEM_MALLOC_CONF="prof:true,prof_prefix:jeprof.out" make test_integration
 
 test_deny_warnings:
 	RUSTFLAGS="--deny warnings" make cargo_test
