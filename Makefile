@@ -17,6 +17,19 @@ cargo_check:
 	( cd patchparser && cargo $(OUR_CARGO_FLAGS) test --color=always )
 	cargo $(OUR_CARGO_FLAGS) test --color=always
 
+# This target is to abstract running clippy on everything (and can be run manually)
+clippy:
+	( cd patchparser && cargo clippy --color=always --all-targets --all-features $(CLIPPY_ARGS) )
+	cargo clippy --color=always --all-targets --all-features $(CLIPPY_ARGS)
+
+# This is for use in CI
+clippy_deny:
+	CLIPPY_ARGS="-- -D warnings" make clippy
+
+# This is for manual use
+clippy_fix:
+	CLIPPY_ARGS="--fix" make clippy
+
 test_integration:
 	@echo "++ Run tests on test/div"
 	OUR_CARGO_BUILD_FLAGS="" test/run-test-for-input-dir test/div
@@ -34,7 +47,8 @@ test: cargo_test test_integration
 leak_test:
 	RUSTFLAGS="-Z sanitizer=leak" OUR_CARGO_FLAGS=+nightly make test
 
-test_deny_warnings:
+# This is for use in CI
+test_deny_warnings: clippy_deny
 	RUSTFLAGS="--deny warnings" make cargo_test
 
 miri_test:
