@@ -43,6 +43,8 @@ pub struct TestArgs {
 fn main() -> Result<()> {
     let args = TestArgs::parse();
 
+    let _f = String::from("Heillo").leak();
+
     let mut patch_files: Vec<PathBuf> = args
         .input_dir
         .read_dir()
