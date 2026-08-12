@@ -14,6 +14,14 @@ use split_patch::{
     core::split_patch, path_utils::path_remove_common_lead, split_options::SplitArgs,
 };
 
+/// Use jemalloc as allocator to enable leak testing.
+#[cfg(not(target_env = "msvc"))]
+use tikv_jemallocator::Jemalloc;
+
+#[cfg(not(target_env = "msvc"))]
+#[global_allocator]
+static GLOBAL: Jemalloc = Jemalloc;
+
 /// Test split patches in directory.
 ///
 /// For all files in `input-dir`, split them with `split-patch` into
