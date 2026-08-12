@@ -28,3 +28,25 @@ Run `split-patch --help` for usage help.
 
 This program is a rewrite of a [version written in Perl](https://github.com/pflanze/chj-scripts/blob/7e29f7473f8f874d28914d65a5d0d16b81889945/split-patch).
 
+## Contributions
+
+### PR notes
+
+Instead of mentioning the issue or pull request numbers in the commit
+messages or using GitHub's merge commits, this project uses a GitHub
+action to add Git notes to the commit that was merged. You can get
+those notes by running the following command after cloning the
+repository:
+
+    git fetch origin refs/notes/commits:refs/notes/commits
+
+The notes are shown in "git log" output as "Notes:" at the end of
+commit messages. `gitk` shows them the same way and also shows yellow
+"sticky note" markers in the commit list. Other history viewers
+probably do the same.
+
+To automatically retrieve the notes whenever you fetch from the
+repository, configure the remote correspondingly via:
+
+    git config --add remote.origin.fetch '+refs/notes/commits:refs/notes/commits'
+
