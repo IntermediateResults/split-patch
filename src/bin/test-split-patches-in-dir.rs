@@ -37,7 +37,7 @@ pub struct TestArgs {
     output_base: PathBuf,
 }
 
-fn main() -> Result<()> {
+fn main_() -> Result<()> {
     let args = TestArgs::parse();
 
     let mut patch_files: Vec<PathBuf> = args
@@ -144,4 +144,19 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn main() {
+    let mut exit_code = 0;
+    // assert_allocs does not allow non-() returns; makes sense since
+    // those allocations would be leaks and lead to a panic. But don't
+    // want to exit inside. Thus, pass the integer value out, let it
+    // check, then exit.
+    mockalloc::assert_allocs(|| {
+        if let Err(e) = main_() {
+            eprintln!("Error: {e:#}");
+            exit_code = 1;
+        }
+    });
+    exit(exit_code);
 }
