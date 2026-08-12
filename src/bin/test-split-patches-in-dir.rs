@@ -1,4 +1,5 @@
 use std::{
+    alloc::System,
     fs::{self, File},
     io::{BufWriter, Write},
     os::unix::ffi::OsStrExt,
@@ -9,10 +10,14 @@ use std::{
 use anyhow::anyhow;
 use anyhow::{Context, Ok, Result};
 use clap_with_warnings::clap_with_warnings;
+use mockalloc::Mockalloc;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use split_patch::{
     core::split_patch, path_utils::path_remove_common_lead, split_options::SplitArgs,
 };
+
+#[global_allocator]
+static ALLOCATOR: Mockalloc<System> = Mockalloc(System);
 
 /// Test split patches in directory.
 ///
@@ -32,7 +37,7 @@ pub struct TestArgs {
     output_base: PathBuf,
 }
 
-fn main() -> Result<()> {
+fn main_() -> Result<()> {
     let args = TestArgs::parse();
 
     let mut patch_files: Vec<PathBuf> = args
@@ -139,4 +144,25 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn main() {
+    let mut exit_code = 0;
+    // assert_allocs does not allow non-() returns; makes sense since
+    // those allocations would be leaks and lead to a panic. But don't
+    // want to exit inside. Thus, pass the integer value out, let it
+    // check, then exit.
+    mockalloc::assert_allocs(|| {
+        // Need to set up our own rayon thread pool to ensure that it
+        // is being shut down before doing the leak check.
+        let pool = rayon::ThreadPoolBuilder::new()
+            .build().unwrap();
+        pool.install(|| {
+            if let Err(e) = main_() {
+                eprintln!("Error: {e:#}");
+                exit_code = 1;
+            }
+        });
+    });
+    exit(exit_code);
 }

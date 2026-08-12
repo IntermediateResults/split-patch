@@ -347,6 +347,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "mockalloc"
+version = "0.1.2"
+source = "git+https://github.com/diggsey/mockalloc?rev=103439477d7e6acccef3c203730ed3009f3dec41#103439477d7e6acccef3c203730ed3009f3dec41"
+dependencies = [
+ "mockalloc-macros",
+]
+
+[[package]]
+name = "mockalloc-macros"
+version = "0.1.0"
+source = "git+https://github.com/diggsey/mockalloc?rev=103439477d7e6acccef3c203730ed3009f3dec41#103439477d7e6acccef3c203730ed3009f3dec41"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "nix"
 version = "0.24.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -490,6 +508,7 @@ dependencies = [
  "clap-with-warnings",
  "derive_more",
  "lazy_static",
+ "mockalloc",
  "patchparser",
  "rayon",
  "regex",

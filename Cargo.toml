@@ -16,5 +16,6 @@ clap = { version = "4", features = ["derive"] }
 clap-with-warnings = { version = "0.1.4" }
 derive_more = { version = "2.0.1", features = ["from", "from_str"] }
 lazy_static = "1.4"
+mockalloc = { git = "https://github.com/diggsey/mockalloc", rev = "103439477d7e6acccef3c203730ed3009f3dec41" }
 rayon = "1.10.0"
 regex = "1.4.6"
