@@ -153,10 +153,16 @@ fn main() {
     // want to exit inside. Thus, pass the integer value out, let it
     // check, then exit.
     mockalloc::assert_allocs(|| {
-        if let Err(e) = main_() {
-            eprintln!("Error: {e:#}");
-            exit_code = 1;
-        }
+        // Need to set up our own rayon thread pool to ensure that it
+        // is being shut down before doing the leak check.
+        let pool = rayon::ThreadPoolBuilder::new()
+            .build().unwrap();
+        pool.install(|| {
+            if let Err(e) = main_() {
+                eprintln!("Error: {e:#}");
+                exit_code = 1;
+            }
+        });
     });
     exit(exit_code);
 }
