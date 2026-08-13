@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# do *not* specify -o pipefail, due to "| grep -q" below
+set -meu
+IFS=
+
+usage() {
+    echo "Usage: $0 make-targets..."
+    echo "  Runs the given make targets in parallel but with separated outputs"
+    exit 1
+}
+
+if [ $# -eq 0 ] || [ "$1" = -h -o "$1" = --help ]; then
+   usage
+fi
+
+targets=("$@")
+
+run() {
+    local target=$1
+    echo "+ make $target"
+    if time make "$target"; then
+        echo -e "\n$target: Ok."
+    else
+        echo -e "\n$target: Err: $?"
+    fi
+}
+
+tmpfiles=()
+
+for target in "${targets[@]}"; do
+    tmp=$(mktemp)
+    tmpfiles+=("$tmp")
+    run "$target" > "$tmp" 2>&1 &
+done
+
+for target in "${targets[@]}"; do
+    wait || true
+done
+
+exit_code=0
+
+for tmp in "${tmpfiles[@]}"; do
+    echo "========================================================================================"
+    cat "$tmp"
+    if ! tail -1 "$tmp" | grep -q ": Ok."; then
+        exit_code=$((exit_code + 1))
+    fi
+done
+
+echo "========================================================================================"
+
+exit "$exit_code"

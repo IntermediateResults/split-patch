@@ -48,7 +48,7 @@ leak_test:
 	RUSTFLAGS="-Z sanitizer=leak" OUR_CARGO_FLAGS=+nightly make test
 
 # This is for use in CI
-test_deny_warnings: clippy_deny
+test_deny_warnings:
 	RUSTFLAGS="--deny warnings" make cargo_test
 
 miri_test:
@@ -58,3 +58,7 @@ miri_run:
 	SPLIT_PATCH=test/miri-split-patch test/run-test-for-input-dir test/div
 
 miri: miri_test miri_run
+
+# Run in Github CI
+ci:
+	test/ci-make test_deny_warnings clippy_deny leak_test check_formatting
