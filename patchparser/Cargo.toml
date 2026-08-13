@@ -18,6 +18,13 @@ keywords = [
 [lib]
 name = "patchparser"
 
+[lints.clippy]
+needless_lifetimes = "allow"
+collapsible_else_if = "allow"
+collapsible_if = "allow"
+single_char_add_str = "allow"
+type_complexity = "allow"
+
 [dependencies]
 anyhow = { version = "1.0", features = ["backtrace"] }
 bstr = { version = "1.10", default-features = false, features = ["alloc"] }

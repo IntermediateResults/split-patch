@@ -5,6 +5,13 @@ edition = "2021"
 description = "Split patch files on file, hunk or change boundaries"
 repository = "https://github.com/IntermediateResults/split-patch"
 
+[lints.clippy]
+needless_lifetimes = "allow"
+collapsible_else_if = "allow"
+collapsible_if = "allow"
+single_char_add_str = "allow"
+type_complexity = "allow"
+
 [dependencies]
 patchparser = { path = "patchparser" }
 
