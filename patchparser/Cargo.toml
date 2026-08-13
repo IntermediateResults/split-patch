@@ -19,10 +19,19 @@ keywords = [
 name = "patchparser"
 
 [lints.clippy]
+# Naming lifetimes can be explanatory; even if it's not really, we
+# generally prioritize moving on with the project.
 needless_lifetimes = "allow"
+# Nesting if statements can be clearer
 collapsible_else_if = "allow"
 collapsible_if = "allow"
+# Having to write "x" as 'x' while another branch uses "yz" is
+# silly. It might even be less efficient.
 single_char_add_str = "allow"
+# We should inherently strive for simple types anyway. Having to
+# explicitly allow the cases that are not easy to simplify seems
+# wasteful on our time. (We may run clippy with `-W clippy::all` from
+# time to time.)
 type_complexity = "allow"
 
 [dependencies]
