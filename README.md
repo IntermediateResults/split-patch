@@ -69,3 +69,12 @@ To have clippy fix the warnings according to the project desires:
 
     make clippy_fix
 
+### Testing / CI
+
+GitHub CI runs `make ci`. You can run this locally before
+(re)submitting the PR to speed up checking. This does run `cargo fmt`
+and will output the diff from the last commit.
+
+During development, `make test` is likely what you usually want to
+run. For other, more finegrained test choices, have a look at the
+`Makefile`.
