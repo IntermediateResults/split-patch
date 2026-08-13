@@ -50,3 +50,22 @@ repository, configure the remote correspondingly via:
 
     git config --add remote.origin.fetch '+refs/notes/commits:refs/notes/commits'
 
+### Clippy
+
+A number of warnings deemed not useful enough have been configured as
+"allow" in Cargo.toml.
+
+To run clippy the same way that the CI runs it (except CI runs it in
+error mode, via `make clippy_deny`):
+
+    make clippy
+
+In case you want to see all of the default clippy warnings,
+i.e. ignore the ignores:
+
+    CLIPPY_ARGS="-- -W clippy::all" make clippy
+
+To have clippy fix the warnings according to the project desires:
+
+    make clippy_fix
+
