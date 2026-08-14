@@ -277,7 +277,7 @@ impl<'a> FromLines<'a> for Diff<'a> {
         let diff_line = *lines
             .next()
             .filter(|l| l.starts_with(b"diff "))
-            .with_context(|| "missing `diff ` line".to_string())?;
+            .context("missing `diff ` line")?;
         let (diff_path_a_full, diff_path_b_full);
         {
             let mut parts = diff_line.split(|b| *b == b' ');
