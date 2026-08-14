@@ -47,8 +47,10 @@ test_integration_opt:
 
 test: cargo_test test_integration
 
+# Setting `CARGO_TARGET_DIR` to allow this target to compile fully in
+# parallel to the others
 leak_test:
-	RUSTFLAGS="-Z sanitizer=leak" OUR_CARGO_FLAGS=+nightly make test
+	CARGO_TARGET_DIR=target/nightly RUSTFLAGS="-Z sanitizer=leak" OUR_CARGO_FLAGS=+nightly make test
 
 # This is for use in CI
 test_deny_warnings:
