@@ -5,6 +5,3 @@ target/
 
 # ignore result of running `nix build`
 result
-
-# built from `make log-timestamp`
-log-timestamp
