@@ -22,9 +22,12 @@ clippy:
 	( cd patchparser && cargo clippy --color=always --all-targets --all-features $(CLIPPY_ARGS) )
 	cargo clippy --color=always --all-targets --all-features $(CLIPPY_ARGS)
 
-# This is for use in CI
+# This is for use in CI.
+# Setting `RUSTFLAGS` to the same as in the `test_deny_warnings`
+# target purely so that it can share the compiled binaries (i.e. save
+# on compilation time).
 clippy_deny:
-	CLIPPY_ARGS="-- -D warnings" make clippy
+	RUSTFLAGS="--deny warnings" CLIPPY_ARGS="-- -D warnings" make clippy
 
 # This is for manual use
 clippy_fix:
