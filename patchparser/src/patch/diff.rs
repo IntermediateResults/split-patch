@@ -41,9 +41,9 @@ where
             hunks,
         } = self;
         DiffDifferences {
-            index_line: index_line.clone(),
-            minus_line: minus_line.clone(),
-            plus_line: plus_line.clone(),
+            index_line: *index_line,
+            minus_line: *minus_line,
+            plus_line: *plus_line,
             hunks: hunks.iter().map(|v| v.reborrow_in(bump)).collect_in(bump),
         }
     }
@@ -123,13 +123,13 @@ where
         } = self;
         Diff {
             diff_line: *diff_line,
-            diff_path_a_full: diff_path_a_full.clone(),
-            diff_path_b_full: diff_path_b_full.clone(),
-            newfile_line: newfile_line.clone(),
-            deleted_line: deleted_line.clone(),
-            similarity_line: similarity_line.clone(),
-            rename_from_line: rename_from_line.clone(),
-            rename_to_line: rename_to_line.clone(),
+            diff_path_a_full: *diff_path_a_full,
+            diff_path_b_full: *diff_path_b_full,
+            newfile_line: *newfile_line,
+            deleted_line: *deleted_line,
+            similarity_line: *similarity_line,
+            rename_from_line: *rename_from_line,
+            rename_to_line: *rename_to_line,
             differences: differences.as_ref().map(|v| v.reborrow_in(bump)),
         }
     }
@@ -244,7 +244,7 @@ impl<'a> Diff<'a> {
 
     pub fn diff_path_b(&self) -> Result<&BStr> {
         strip_leading_path_segment(
-            &self.diff_path_b_full.with_context(|| {
+            self.diff_path_b_full.with_context(|| {
                 format!("missing second path in 'diff' line {}", self.diff_line)
             })?,
         )
@@ -272,12 +272,12 @@ impl<'a> WriteTo for Diff<'a> {
 
 impl<'a> FromLines<'a> for Diff<'a> {
     fn from_lines(lines_slice: &'a [Line<'a>], bump: &'a Bump) -> Result<Diff<'a>> {
-        let mut lines = lines_slice.into_iter();
+        let mut lines = lines_slice.iter();
 
         let diff_line = *lines
             .next()
             .filter(|l| l.starts_with(b"diff "))
-            .with_context(|| format!("missing `diff ` line"))?;
+            .with_context(|| "missing `diff ` line".to_string())?;
         let (diff_path_a_full, diff_path_b_full);
         {
             let mut parts = diff_line.split(|b| *b == b' ');

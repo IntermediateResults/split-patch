@@ -44,7 +44,7 @@ impl Default for SplitArgs {
 #[test]
 fn t_default_split_args() {
     let d = SplitArgs::default();
-    assert_eq!(d.no_insert_after_patch, false);
+    assert!(!d.no_insert_after_patch);
 }
 
 pub enum SplitMode {

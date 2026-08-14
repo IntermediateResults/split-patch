@@ -39,7 +39,7 @@ fn split_diff_in<'a, 'h>(
     let path = {
         let path_in_source_dir = add_suffix(
             original_path,
-            OsStr::from_bytes(&*make_bstring!({ b"-" } + { b_path.replace("/", b"_") })),
+            OsStr::from_bytes(&make_bstring!({ b"-" } + { b_path.replace("/", b"_") })),
         )?;
         if let Some(output_dir) = &split_options.output_dir {
             output_dir.join(
@@ -81,9 +81,9 @@ fn split_diff_in<'a, 'h>(
                         };
 
                         let written_path = write_patch_file(
-                            &head_with_prefix(&prefix_part),
+                            head_with_prefix(&prefix_part),
                             diff_with_hunk!(change.to_hunk(bump)),
-                            add_suffix(&path, format!("-{prefix_part}"))?.into(),
+                            add_suffix(&path, format!("-{prefix_part}"))?,
                         )?;
 
                         written_paths.push(written_path);
@@ -173,9 +173,8 @@ pub fn split_patch(patch_file_path: &Path, split_options: &SplitOptions) -> Resu
     // Write the diffs to individual (separate) files
     let mut written = Vec::new();
     for (diff_i, diff) in diffs.iter().enumerate() {
-        let written_paths =
-            split_diff_in(&patch.head, &diff, patch_file_path, split_options, &bump)
-                .with_context(|| format!("splitting diff no. {}/{}", diff_i + 1, diffs.len()))?;
+        let written_paths = split_diff_in(&patch.head, diff, patch_file_path, split_options, &bump)
+            .with_context(|| format!("splitting diff no. {}/{}", diff_i + 1, diffs.len()))?;
 
         written.extend(written_paths);
     }

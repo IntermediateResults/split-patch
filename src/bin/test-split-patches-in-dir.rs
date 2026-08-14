@@ -93,7 +93,7 @@ fn main() -> Result<()> {
                     let mut split_args = split_args.clone();
                     split_args.output_dir = Some(full_output_dir.clone());
 
-                    let written = split_patch(&file, &split_args.into())
+                    let written = split_patch(file, &split_args.into())
                         .with_context(|| anyhow!("splitting the patch file {file:?}"))?;
 
                     let list_path = full_output_dir.join("_list");
