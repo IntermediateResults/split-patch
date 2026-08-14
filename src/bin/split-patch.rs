@@ -34,7 +34,7 @@ fn main() -> Result<()> {
     let split_options = args.split_args.into();
 
     for patch_file in &args.patch_file {
-        let written = split_patch(&patch_file, &split_options)
+        let written = split_patch(patch_file, &split_options)
             .with_context(|| anyhow!("splitting the patch file {patch_file:?}"))?;
 
         if !args.quiet {

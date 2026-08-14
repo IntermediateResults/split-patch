@@ -75,7 +75,7 @@ impl<'b, B: ?Sized + ToOwnedIn<'b>> CloneIn<'b> for BumpaloCow<'b, '_, B> {
     fn clone_from_in(&mut self, source: &Self, bump: &'b Bump) {
         use BumpaloCow::*;
         match (self, source) {
-            (&mut Owned(ref mut dest), &Owned(ref o)) => o.borrow().clone_into_in(dest, bump),
+            (&mut Owned(ref mut dest), Owned(o)) => o.borrow().clone_into_in(dest, bump),
             (t, s) => *t = s.clone_in(bump),
         }
     }
@@ -96,7 +96,7 @@ where
     fn clone_from(&mut self, source: &Self) {
         use BumpaloCow::*;
         match (self, source) {
-            (&mut Owned(ref mut dest), &Owned(ref o)) => o.clone_into(dest),
+            (&mut Owned(ref mut dest), Owned(o)) => o.clone_into(dest),
             (t, s) => *t = s.clone(),
         }
     }

@@ -24,7 +24,7 @@ pub fn string_equal_ci<A: AsRef<[u8]>, B: AsRef<[u8]>>(a: A, b: B) -> bool {
     let b = b.as_ref();
     a.len() == b.len() && {
         for (ac, bc) in a.iter().zip(b) {
-            if ac.to_ascii_lowercase() != bc.to_ascii_lowercase() {
+            if !ac.eq_ignore_ascii_case(bc) {
                 return false;
             }
         }
@@ -352,7 +352,7 @@ impl<'a> FromLines<'a> for Patch<'a> {
                 (&[], &chunks)
             } else {
                 // First part is head
-                (&chunks[0], &chunks[1..])
+                (chunks[0], &chunks[1..])
             };
         if diff_lines_groups.is_empty() {
             // bail!("file does not appear to contain any diffs");
@@ -366,7 +366,7 @@ impl<'a> FromLines<'a> for Patch<'a> {
             .iter()
             .enumerate()
             .map(|(diff_i, diff_lines)| -> Result<_> {
-                Diff::from_lines(*diff_lines, bump).with_context(|| {
+                Diff::from_lines(diff_lines, bump).with_context(|| {
                     format!(
                         "parsing diff no. {}/{}",
                         diff_i + 1,
