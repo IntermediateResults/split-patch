@@ -47,19 +47,10 @@ test_integration_opt:
 
 test: cargo_test test_integration
 
-# Setting `CARGO_TARGET_DIR` to allow the nightly targets to compile
-# fully in parallel to the others
-leak_cargo_test:
-	CARGO_TARGET_DIR=target/nightly RUSTFLAGS="-Z sanitizer=leak" OUR_CARGO_FLAGS=+nightly \
-		make cargo_test
-
-# Setting `CARGO_TARGET_DIR` to allow the nightly targets to compile
-# fully in parallel to the others
-leak_test_integration:
-	CARGO_TARGET_DIR=target/nightly RUSTFLAGS="-Z sanitizer=leak" OUR_CARGO_FLAGS=+nightly \
-		make test_integration
-
-leak_test: leak_cargo_test leak_test_integration
+# Setting `CARGO_TARGET_DIR` to allow this target to compile fully in
+# parallel to the others
+leak_test:
+	CARGO_TARGET_DIR=target/nightly RUSTFLAGS="-Z sanitizer=leak" OUR_CARGO_FLAGS=+nightly make test
 
 # This is for use in CI
 test_deny_warnings:
@@ -75,7 +66,7 @@ miri: miri_test miri_run
 
 # Run in Github CI
 ci: log-timestamp
-	test/ci-make check_formatting test_deny_warnings clippy_deny leak_cargo_test leak_test_integration
+	test/ci-make test_deny_warnings clippy_deny leak_test check_formatting
 
 log-timestamp: src/bin/log-timestamp.rs
 	rustc $< -o $@
