@@ -60,5 +60,9 @@ miri_run:
 miri: miri_test miri_run
 
 # Run in Github CI
-ci:
+ci: log-timestamp
 	test/ci-make test_deny_warnings clippy_deny leak_test check_formatting
+
+log-timestamp: src/bin/log-timestamp.rs
+	rustc $< -o $@
+

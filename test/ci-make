@@ -31,7 +31,7 @@ tmpfiles=()
 for target in "${targets[@]}"; do
     tmp=$(mktemp)
     tmpfiles+=("$tmp")
-    run "$target" > "$tmp" 2>&1 &
+    ( run "$target" 2>&1 | ./log-timestamp > "$tmp" ) &
 done
 
 for target in "${targets[@]}"; do
