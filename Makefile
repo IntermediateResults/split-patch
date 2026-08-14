@@ -8,10 +8,13 @@ fmt:
 check_formatting: fmt
 	git diff --exit-code
 
-cargo_test:
-	@echo "++ Run cargo $(OUR_CARGO_FLAGS) test on both crates"
-	( cd patchparser && cargo $(OUR_CARGO_FLAGS) test )
+cargo_test__patchparser:
+	cd patchparser && cargo $(OUR_CARGO_FLAGS) test
+
+cargo_test__:
 	cargo $(OUR_CARGO_FLAGS) test
+
+cargo_test: cargo_test__ cargo_test__patchparser
 
 cargo_check:
 	( cd patchparser && cargo $(OUR_CARGO_FLAGS) test --color=always )
@@ -49,12 +52,17 @@ test: cargo_test test_integration
 
 # Setting `CARGO_TARGET_DIR` to allow the nightly targets to compile
 # fully in parallel to the others
-leak_cargo_test:
-	CARGO_TARGET_DIR=target/nightly RUSTFLAGS="-Z sanitizer=leak" OUR_CARGO_FLAGS=+nightly \
-		make cargo_test
 
-# Setting `CARGO_TARGET_DIR` to allow the nightly targets to compile
-# fully in parallel to the others
+
+leak_cargo_test__:
+	CARGO_TARGET_DIR=target/nightly RUSTFLAGS="-Z sanitizer=leak" OUR_CARGO_FLAGS=+nightly \
+		make cargo_test__
+leak_cargo_test__patchparser:
+	CARGO_TARGET_DIR=target/nightly RUSTFLAGS="-Z sanitizer=leak" OUR_CARGO_FLAGS=+nightly \
+		make cargo_test__patchparser
+
+leak_cargo_test: leak_cargo_test__ leak_cargo_test__patchparser
+
 leak_test_integration:
 	CARGO_TARGET_DIR=target/nightly RUSTFLAGS="-Z sanitizer=leak" OUR_CARGO_FLAGS=+nightly \
 		make test_integration
@@ -62,8 +70,12 @@ leak_test_integration:
 leak_test: leak_cargo_test leak_test_integration
 
 # This is for use in CI
-test_deny_warnings:
-	RUSTFLAGS="--deny warnings" make cargo_test
+
+test_deny_warnings__patchparser:
+	RUSTFLAGS="--deny warnings" make cargo_test__patchparser
+
+test_deny_warnings__:
+	RUSTFLAGS="--deny warnings" make cargo_test__
 
 miri_test:
 	cargo +nightly miri test --target powerpc-unknown-linux-gnu
@@ -75,7 +87,12 @@ miri: miri_test miri_run
 
 # Run in Github CI
 ci: log-timestamp
-	test/ci-make check_formatting test_deny_warnings clippy_deny leak_cargo_test leak_test_integration
+	test/ci-make \
+		check_formatting \
+		clippy_deny \
+		test_deny_warnings__ test_deny_warnings__patchparser \
+		leak_cargo_test__ leak_cargo_test__patchparser \
+		leak_test_integration
 
 log-timestamp: src/bin/log-timestamp.rs
 	rustc $< -o $@
