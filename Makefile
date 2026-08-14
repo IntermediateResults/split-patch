@@ -68,7 +68,7 @@ miri: miri_test miri_run
 ci: target/debug/log-timestamp
 	test/ci-make test_deny_warnings clippy_deny leak_test check_formatting
 
-target/debug/log-timestamp: src/bin/log-timestamp.rs
+target/debug/log-timestamp: test/log-timestamp.rs
 	mkdir -p target/debug/
 	rustc $< -o $@
 

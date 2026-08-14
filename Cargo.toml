@@ -21,6 +21,14 @@ single_char_add_str = "allow"
 # time to time.)
 type_complexity = "allow"
 
+[[bin]]
+name = "test-split-patches-in-dir"
+path = "test/test-split-patches-in-dir.rs"
+
+[[bin]]
+name = "log-timestamp"
+path = "test/log-timestamp.rs"
+
 [dependencies]
 patchparser = { path = "patchparser" }
 
