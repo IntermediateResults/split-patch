@@ -56,14 +56,16 @@
         system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
-          cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
+          cargoToml = builtins.fromTOML (builtins.readFile ./split-patch/Cargo.toml);
         in
         {
           default = pkgs.rustPlatform.buildRustPackage {
             name = cargoToml.package.name;
             src = ./.;
             version = cargoToml.package.version;
-            cargoLock.lockFile = ./Cargo.lock;
+            cargoLock.lockFile = ./split-patch/Cargo.lock;
+            cargoRoot = "split-patch";
+            buildAndTestSubdir = "split-patch";
             meta = {
               description = cargoToml.package.description;
               homepage = cargoToml.package.homepage || cargoToml.package.repository;
