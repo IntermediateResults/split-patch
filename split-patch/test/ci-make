@@ -31,7 +31,7 @@ tmpfiles=()
 for target in "${targets[@]}"; do
     tmp=$(mktemp)
     tmpfiles+=("$tmp")
-    ( run "$target" 2>&1 | target/debug/log-timestamp > "$tmp" ) &
+    ( run "$target" 2>&1 | split-patch/target/debug/log-timestamp > "$tmp" ) &
 done
 
 for target in "${targets[@]}"; do

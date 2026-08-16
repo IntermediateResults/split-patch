@@ -1,9 +1,9 @@
 build:
-	cargo $(OUR_CARGO_FLAGS) build --release
+	( cd split-patch && cargo $(OUR_CARGO_FLAGS) build --release )
 
 fmt:
 	( cd patchparser && cargo fmt )
-	cargo fmt
+	( cd split-patch && cargo fmt )
 
 check_formatting: fmt
 	git diff --exit-code
@@ -11,16 +11,16 @@ check_formatting: fmt
 cargo_test:
 	@echo "++ Run cargo $(OUR_CARGO_FLAGS) test on both crates"
 	( cd patchparser && cargo $(OUR_CARGO_FLAGS) test )
-	cargo $(OUR_CARGO_FLAGS) test
+	( cd split-patch && cargo $(OUR_CARGO_FLAGS) test )
 
 cargo_check:
 	( cd patchparser && cargo $(OUR_CARGO_FLAGS) test --color=always )
-	cargo $(OUR_CARGO_FLAGS) test --color=always
+	( cd split-patch && cargo $(OUR_CARGO_FLAGS) test --color=always )
 
 # This target is to abstract running clippy on everything (and can be run manually)
 clippy:
 	( cd patchparser && cargo clippy --color=always --all-targets --all-features $(CLIPPY_ARGS) )
-	cargo clippy --color=always --all-targets --all-features $(CLIPPY_ARGS)
+	( cd split-patch && cargo clippy --color=always --all-targets --all-features $(CLIPPY_ARGS) )
 
 # This is for use in CI.
 # Setting `RUSTFLAGS` to the same as in the `test_deny_warnings`
@@ -34,16 +34,20 @@ clippy_fix:
 	CLIPPY_ARGS="--fix" make clippy
 
 test_integration:
-	@echo "++ Run tests on test/div"
-	OUR_CARGO_BUILD_FLAGS="" test/run-test-for-input-dir test/div
-	@echo "++ Run tests on test/chj-home"
-	OUR_CARGO_BUILD_FLAGS="" test/run-test-for-input-dir test/chj-home
+	@echo "++ Run tests on split-patch/test/div"
+	( cd split-patch && \
+		OUR_CARGO_BUILD_FLAGS="" test/run-test-for-input-dir test/div )
+	@echo "++ Run tests on split-patch/test/chj-home"
+	( cd split-patch && \
+		OUR_CARGO_BUILD_FLAGS="" test/run-test-for-input-dir test/chj-home )
 
 test_integration_opt:
-	@echo "++ Run tests on test/div"
-	OUR_CARGO_BUILD_FLAGS="--release" test/run-test-for-input-dir test/div
-	@echo "++ Run tests on test/chj-home"
-	OUR_CARGO_BUILD_FLAGS="--release" test/run-test-for-input-dir test/chj-home
+	@echo "++ Run tests on split-patch/test/div"
+	( cd split-patch && \
+		OUR_CARGO_BUILD_FLAGS="--release" test/run-test-for-input-dir test/div )
+	@echo "++ Run tests on split-patch/test/chj-home"
+	( cd split-patch && \
+		OUR_CARGO_BUILD_FLAGS="--release" test/run-test-for-input-dir test/chj-home )
 
 test: cargo_test test_integration
 
@@ -57,18 +61,19 @@ test_deny_warnings:
 	RUSTFLAGS="--deny warnings" make cargo_test
 
 miri_test:
-	cargo +nightly miri test --target powerpc-unknown-linux-gnu
+	( cd split-patch && cargo +nightly miri test --target powerpc-unknown-linux-gnu )
 
 miri_run:
-	SPLIT_PATCH=test/miri-split-patch test/run-test-for-input-dir test/div
+	( cd split-patch && \
+		SPLIT_PATCH=test/miri-split-patch OUR_CARGO_BUILD_FLAGS="" test/run-test-for-input-dir test/div )
 
 miri: miri_test miri_run
 
 # Run in Github CI
-ci: target/debug/log-timestamp
-	test/ci-make test_deny_warnings clippy_deny leak_test check_formatting
+ci: split-patch/target/debug/log-timestamp
+	split-patch/test/ci-make test_deny_warnings clippy_deny leak_test check_formatting
 
-target/debug/log-timestamp: test/log-timestamp.rs
-	mkdir -p target/debug/
+split-patch/target/debug/log-timestamp: split-patch/test/log-timestamp.rs
+	( cd split-patch && mkdir -p target/debug/ )
 	rustc $< -o $@
 
