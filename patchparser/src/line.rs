@@ -103,14 +103,19 @@ impl<'a> Line<'a> {
     }
 }
 
+/// Write the line string out with line ending added
+pub fn write_line_to<'a>(line: &Line<'a>, mut out: impl Write) -> Result<(), std::io::Error> {
+    out.write_all(line)?;
+    out.write_all(b"\n")
+}
+
 /// Write the line strings out with line endings added
 pub fn write_lines_to<'a>(
     lines: impl IntoIterator<Item = &'a Line<'a>>,
     mut out: impl Write,
 ) -> Result<(), std::io::Error> {
     for line in lines {
-        out.write_all(line)?;
-        out.write_all(b"\n")?;
+        write_line_to(line, &mut out)?;
     }
     Ok(())
 }
