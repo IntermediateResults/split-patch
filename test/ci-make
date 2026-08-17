@@ -42,9 +42,15 @@ exit_code=0
 
 for tmp in "${tmpfiles[@]}"; do
     echo "========================================================================================"
-    cat "$tmp"
-    if ! tail -1 "$tmp" | grep -q ": Ok."; then
+    if tail -1 "$tmp" | grep -q ": Ok."; then
+        if [ "${CI_MAKE_VERBOSE-}" == 1 ]; then
+            cat "$tmp"
+        else
+            tail -1 "$tmp"
+        fi
+    else
         exit_code=$((exit_code + 1))
+        cat "$tmp"
     fi
 done
 
