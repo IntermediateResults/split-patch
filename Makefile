@@ -70,10 +70,11 @@ miri_run:
 miri: miri_test miri_run
 
 # Run in Github CI
-ci: split-patch/target/debug/log-timestamp
-	split-patch/test/ci-make test_deny_warnings clippy_deny leak_test check_formatting
+ci: test/target/debug/log-timestamp
+	test/ci-make test_deny_warnings clippy_deny leak_test check_formatting
 
-split-patch/target/debug/log-timestamp: split-patch/test/log-timestamp.rs
-	( cd split-patch && mkdir -p target/debug/ )
+# Build test utility the fastest way possible
+test/target/debug/log-timestamp: test/src/bin/log-timestamp.rs
+	mkdir -p test/target/debug/
 	rustc $< -o $@
 
