@@ -33,6 +33,12 @@ pub trait CloneIn<'b>: Sized {
     }
 }
 
+impl<'a, T> CloneIn<'a> for &'a T {
+    fn clone_in(&self, _bump: &'a Bump) -> Self {
+        self
+    }
+}
+
 pub enum BumpaloCow<'b, 'a, B: ?Sized + 'a>
 where
     B: ToOwnedIn<'b>,
