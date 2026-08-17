@@ -73,6 +73,9 @@ miri: miri_test miri_run
 ci: test/target/debug/log-timestamp
 	test/ci-make test_deny_warnings clippy_deny leak_test check_formatting
 
+verbose_ci:
+	CI_MAKE_VERBOSE=1 make ci
+
 # Build test utility the fastest way possible
 test/target/debug/log-timestamp: test/src/bin/log-timestamp.rs
 	mkdir -p test/target/debug/

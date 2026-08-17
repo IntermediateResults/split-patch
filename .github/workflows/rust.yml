@@ -25,5 +25,5 @@ jobs:
           target
           patchparser/target
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-withleakchecker
-    - name: Run tests & deny warnings // check leaks // check formatting, in parallel
-      run: make ci
+    - name: Run tests and checks in parallel
+      run: make verbose_ci
