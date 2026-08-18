@@ -67,3 +67,30 @@ fn t_split_before() {
         [vec!["@a"], vec!["@b"], vec!["@c", "d"], vec!["@e"],]
     );
 }
+
+/// Variant of `split_before_in` that stops on errors
+pub fn try_split_before_in<'a, 'b, T, G, E>(
+    items: &'a [T],
+    is_boundary: impl Fn(&'a T) -> bool,
+    group_constructor: impl Fn(&'a [T]) -> Result<G, E>,
+    bump: &'b Bump,
+) -> Result<bc::Vec<'b, G>, E> {
+    let finish_group = |groups: &mut bc::Vec<G>, current_group: &'a [T]| -> Result<(), E> {
+        if !current_group.is_empty() {
+            groups.push(group_constructor(current_group)?);
+        }
+        Ok(())
+    };
+
+    let mut groups = bc::Vec::new_in(bump);
+    let mut current_group_start = 0;
+    for (i, item) in items.iter().enumerate() {
+        if is_boundary(item) {
+            finish_group(&mut groups, &items[current_group_start..i])?;
+            current_group_start = i;
+        }
+    }
+    finish_group(&mut groups, &items[current_group_start..])?;
+
+    Ok(groups)
+}
