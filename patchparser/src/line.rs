@@ -88,6 +88,15 @@ impl<'a> Line<'a> {
         self.line_no0 = usize::MAX;
     }
 
+    /// Keep the original line number; only use for slicing, not new
+    /// content, or errors would be confusing.
+    pub fn with_changed_contents<'b>(&self, contents: &'b BStr) -> Line<'b> {
+        Line {
+            line_no0: self.line_no0,
+            contents,
+        }
+    }
+
     /// 0-based line number; None if the line was generated (has no location)
     pub fn line_no0(&self) -> Option<usize> {
         if self.line_no0 == usize::MAX {
