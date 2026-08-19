@@ -18,6 +18,6 @@ diff --git a/.emacs.d b/.emacs.d
 deleted file mode 120000
 --- a/.emacs.d
 +++ /dev/null
-@@ -1,2 +0,1 @@
+@@ -1,1 +0,0 @@
 -/opt/chj/emacs/.emacs.d
 \ No newline at end of file

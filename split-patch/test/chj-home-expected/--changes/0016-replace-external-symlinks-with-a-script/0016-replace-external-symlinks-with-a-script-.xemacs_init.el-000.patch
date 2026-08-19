@@ -18,6 +18,6 @@ diff --git a/.xemacs/init.el b/.xemacs/init.el
 deleted file mode 120000
 --- a/.xemacs/init.el
 +++ /dev/null
-@@ -1,2 +0,1 @@
+@@ -1,1 +0,0 @@
 -/opt/chj/xemacs/init.el
 \ No newline at end of file

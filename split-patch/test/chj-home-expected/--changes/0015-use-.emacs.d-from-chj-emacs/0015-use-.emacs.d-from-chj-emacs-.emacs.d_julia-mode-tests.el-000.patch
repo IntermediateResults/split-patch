@@ -16,6 +16,6 @@ diff --git a/.emacs.d/julia-mode-tests.el b/.emacs.d/julia-mode-tests.el
 deleted file mode 120000
 --- a/.emacs.d/julia-mode-tests.el
 +++ /dev/null
-@@ -1,2 +0,1 @@
+@@ -1,1 +0,0 @@
 -../src/julia-emacs/julia-mode-tests.el
 \ No newline at end of file
