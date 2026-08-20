@@ -3,16 +3,14 @@ use std::io::Write;
 use anyhow::{bail, Context, Result};
 use bstr::{BStr, BString};
 use bumpalo::{
-    collections::{self as bc, CollectIn},
+    collections::{self as bc},
     Bump,
 };
 
 use crate::{
-    bumpalo_cow::BumpaloCow,
-    bumpalo_utils::split_before_in,
-    from_lines::FromLines,
+    bumpalo_utils::try_split_before_in,
     line::{write_lines_to, Line},
-    patch::hunk::{Hunk, WriteAsHunk},
+    patch::{hunk::Hunk, parsed_hunk::CheckError},
     reborrow_in::ReborrowIn,
     write_to::WriteTo,
 };
@@ -24,7 +22,7 @@ pub struct DiffDifferences<'a> {
     pub index_line: Option<Line<'a>>,
     pub minus_line: Line<'a>,
     pub plus_line: Line<'a>,
-    pub hunks: bc::Vec<'a, Hunk<'a>>,
+    pub hunks: &'a [Hunk<'a>],
 }
 
 impl<'a, 'b> ReborrowIn<'b> for DiffDifferences<'a>
@@ -33,7 +31,7 @@ where
 {
     type Reborrowed = DiffDifferences<'b>;
 
-    fn reborrow_in(&self, bump: &'b Bump) -> DiffDifferences<'b> {
+    fn reborrow_in(&self, _bump: &'b Bump) -> DiffDifferences<'b> {
         let Self {
             index_line,
             minus_line,
@@ -44,7 +42,7 @@ where
             index_line: *index_line,
             minus_line: *minus_line,
             plus_line: *plus_line,
-            hunks: hunks.iter().map(|v| v.reborrow_in(bump)).collect_in(bump),
+            hunks,
         }
     }
 }
@@ -141,11 +139,7 @@ impl<'a> Diff<'a> {
     /// `delete_index_line` is true).
     ///
     /// Panics if self does not contain a `DiffDifferences`.
-    pub fn set_hunks(
-        &mut self,
-        hunks: bc::Vec<'a, Hunk<'a>>,
-        delete_index_line: bool,
-    ) -> &mut Self {
+    pub fn set_hunks(&mut self, hunks: &'a [Hunk<'a>], delete_index_line: bool) -> &mut Self {
         let differences = self
             .differences
             .as_mut()
@@ -228,8 +222,8 @@ impl<'a> Diff<'a> {
 
     pub fn write_hunks_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
         if let Some(differences) = &self.differences {
-            for hunk in &differences.hunks {
-                hunk.write_as_hunk_to(&mut out)?;
+            for hunk in differences.hunks {
+                hunk.write_to(&mut out)?;
             }
         }
         Ok(())
@@ -251,14 +245,16 @@ impl<'a> Diff<'a> {
     }
 }
 
-fn gather_hunks<'s>(lines: &'s [Line<'s>], bump: &'s Bump) -> bc::Vec<'s, Hunk<'s>> {
-    split_before_in(
+fn gather_hunks<'s>(
+    lines: &'s [Line<'s>],
+    bump: &'s Bump,
+    parse: bool,
+    mut handle_check_error: impl FnMut(&dyn Fn() -> Result<(), CheckError>) -> Result<()>,
+) -> Result<bc::Vec<'s, Hunk<'s>>> {
+    try_split_before_in(
         lines,
         |line| line.starts_with(b"@@ "),
-        |group| Hunk {
-            head_line: group[0],
-            remaining_lines: BumpaloCow::Borrowed(&group[1..]),
-        },
+        |group| Hunk::from_lines(group, bump, parse, &mut handle_check_error),
         bump,
     )
 }
@@ -270,8 +266,13 @@ impl<'a> WriteTo for Diff<'a> {
     }
 }
 
-impl<'a> FromLines<'a> for Diff<'a> {
-    fn from_lines(lines_slice: &'a [Line<'a>], bump: &'a Bump) -> Result<Diff<'a>> {
+impl<'a> Diff<'a> {
+    pub fn from_lines(
+        lines_slice: &'a [Line<'a>],
+        bump: &'a Bump,
+        parse: bool,
+        handle_check_error: impl FnMut(&dyn Fn() -> Result<(), CheckError>) -> Result<()>,
+    ) -> Result<Diff<'a>> {
         let mut lines = lines_slice.iter();
 
         let diff_line = *lines
@@ -366,7 +367,8 @@ impl<'a> FromLines<'a> for Diff<'a> {
             }
             let plus_line = line;
 
-            let hunks = gather_hunks(lines.as_slice(), bump);
+            let hunks =
+                gather_hunks(lines.as_slice(), bump, parse, handle_check_error)?.into_bump_slice();
 
             Some(DiffDifferences {
                 index_line,
