@@ -32,7 +32,7 @@ anyhow = { version = "1.0", features = ["backtrace"] }
 bstr = { version = "1.10", default-features = false, features = ["alloc"] }
 bumpalo = { version = "3.19.1", features = ["collections"] }
 cj-path-util = { version = "0.4.0", features = ["unix"] }
-clap = { version = "4", features = ["derive"] }
+clap = { version = "4", features = ["derive", "wrap_help"] }
 clap-with-warnings = { version = "0.1.4" }
 derive_more = { version = "2.0.1", features = ["from", "from_str"] }
 lazy_static = "1.4"
