@@ -1,0 +1,22 @@
+From f3d1fe6c8f7fd7fd5ac21c93cb2ce42294414c75 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 17 May 2018 17:32:58 +0100
+Subject: .bashrc: [PATCH 059/191] .bashrc: remove le function
+
+le is now a script in chj-bin
+---
+ .bashrc | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/.bashrc b/.bashrc
+index 13d8f31..51bfbe6 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -65,7 +65,6 @@ uuu() { cd ../../..; }
+ uuuu() { cd ../../../..; }
+ uuuuu() { cd ../../../../..; }
+ les() { less "$@"; }
+-le() { zless "$@"; }
+ c() { cd "$@"; }
+ cdnewdir() {
+     if [ "$#" -eq 1 ]; then

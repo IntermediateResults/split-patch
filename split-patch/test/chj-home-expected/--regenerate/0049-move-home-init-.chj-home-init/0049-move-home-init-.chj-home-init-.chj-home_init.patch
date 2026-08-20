@@ -1,0 +1,38 @@
+From fa002c681dd12a2470fdfc7dab629e39c59950ea Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 1 Dec 2017 10:40:35 +0000
+Subject: .chj-home/init: [PATCH 049/191] move home-init -> .chj-home/init
+
+---
+ .bash_profile               | 2 +-
+ home-init => .chj-home/init | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+ rename home-init => .chj-home/init (93%)
+
+diff --git a/home-init b/.chj-home/init
+similarity index 93%
+rename from home-init
+rename to .chj-home/init
+index 950aea2..3926178 100755
+--- a/home-init
++++ b/.chj-home/init
+@@ -9,8 +9,8 @@ if [ "$(readlink -f .)" != "$(readlink -f ~)" ]; then
+ fi
+ 
+ 
+-if [ -e .home-init-done ]; then
+-    echo "$0 was already run before; if you want to force re-running it, please run 'rm .home-init-done' first."
++if [ -e .chj-home/init-done ]; then
++    echo "$0 was already run before; if you want to force re-running it, please run 'rm .chj-home/init-done' first."
+     exit 0
+ fi
+ 
+@@ -87,7 +87,7 @@ lesskey
+ chmod a+wxt,g+s DROP
+ touch .ssh/authorized_keys
+ chmod go-w .ssh/authorized_keys
+-touch .home-init-done
++touch .chj-home/init-done
+ 
+ set +x
+ 

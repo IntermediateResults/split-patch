@@ -1,0 +1,33 @@
+From 9cd7125d322391e7d46a70135531cdec58e44b67 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 16 Oct 2021 03:23:42 +0100
+Subject: .bashrc: [PATCH 131/191] .bashrc: add `cgdi`
+
+---
+ .bashrc | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/.bashrc b/.bashrc
+index 2ca519b..e03a880 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -156,6 +156,19 @@ cdn () {
+ 	cdnewdir "$@"
+     fi
+ }
++cgdi () {
++    local res=$(gdi "$@")
++    # I forgot how to do this with builtins:
++    if [ -n "$res" ]; then
++        if [ "$(printf '%s' "$res" | wc -l)" -eq 0 ]; then
++            cd "$res"
++        else
++            printf 'Need exactly one result, found:\n%s' "$res"
++        fi
++    else
++        echo "Nothing found."
++    fi
++}
+ cdt () {
+     if checkcreate-tmp-owner-dir; then
+ 	cd "/tmp/$USER"

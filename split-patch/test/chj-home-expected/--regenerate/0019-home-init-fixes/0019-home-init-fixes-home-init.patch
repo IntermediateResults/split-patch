@@ -1,0 +1,26 @@
+From 82e1d75d2e155bbc9b929cb54d3e3965893c3d1f Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 25 Nov 2017 18:00:06 +0000
+Subject: home-init: [PATCH 019/191] home-init: fixes
+
+---
+ home-init | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/home-init b/home-init
+index 5baa08e..73eedf2 100755
+--- a/home-init
++++ b/home-init
+@@ -5,9 +5,11 @@ IFS=
+ 
+ set -x
+ 
++cd
++
+ ln -s /opt/chj/emacs/.emacs
+ 
+-mkdir .xemacs/
++mkdir .xemacs/ || true
+ ln -s /opt/chj/xemacs/init.el .xemacs/
+ 
+ ln -s /opt/chj/emacs/.emacs.d

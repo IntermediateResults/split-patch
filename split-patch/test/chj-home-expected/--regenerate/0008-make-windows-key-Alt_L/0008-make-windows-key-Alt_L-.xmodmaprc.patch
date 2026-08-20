@@ -1,0 +1,20 @@
+From 3dec5ddec7919870ca5734c97b81cab19c33d776 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Mon, 24 Jul 2017 22:53:27 +0100
+Subject: .xmodmaprc: [PATCH 008/191] make windows key Alt_L ?
+
+idea thanks to Chris D
+---
+ .xmodmaprc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.xmodmaprc b/.xmodmaprc
+index 67a5d38..619a385 100644
+--- a/.xmodmaprc
++++ b/.xmodmaprc
+@@ -17,4 +17,4 @@
+ keycode 133 = less greater less greater backslash brokenbar backslash brokenbar
+ keycode 134 = backslash brokenbar
+ 
+-
++keycode 135 = Alt_L

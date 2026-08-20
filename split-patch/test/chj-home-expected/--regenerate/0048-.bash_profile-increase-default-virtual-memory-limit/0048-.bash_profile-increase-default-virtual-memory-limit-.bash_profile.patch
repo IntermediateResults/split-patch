@@ -1,0 +1,24 @@
+From c9374982fad56d5844278af91fb41608506f6b82 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 1 Dec 2017 10:32:19 +0000
+Subject: .bash_profile: [PATCH 048/191] .bash_profile: increase default virtual memory limit
+
+Firefox in current Debian stable wouldn't work any more with the old
+one.
+---
+ .bash_profile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.bash_profile b/.bash_profile
+index 94cf529..a617064 100644
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -37,7 +37,7 @@ unset GNOME_KEYRING_CONTROL
+ export COLUMNS
+ export HISTSIZE=1500
+ 
+-ulimit -S -v 1200000  # note: can override in .bash_profile_local
++ulimit -S -v 3200000  # note: can override in .bash_profile_local
+ 
+ 
+ # --- Personal env setup: -------

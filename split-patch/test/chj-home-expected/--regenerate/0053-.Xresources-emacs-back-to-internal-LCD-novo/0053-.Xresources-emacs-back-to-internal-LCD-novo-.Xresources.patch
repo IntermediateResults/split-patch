@@ -1,0 +1,24 @@
+From f6fe9127c6c95327149069170347b3d29d82601e Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 14 Apr 2018 22:02:21 +0100
+Subject: .Xresources: [PATCH 053/191] .Xresources: emacs back to internal LCD novo
+
+Stupid. Also, why do I have to trial and error, shown sizes by emacs
+are not the right ones. WTF emacs?
+---
+ .Xresources | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.Xresources b/.Xresources
+index a8ee9dc..5351f20 100644
+--- a/.Xresources
++++ b/.Xresources
+@@ -14,7 +14,7 @@ xpdf.initialZoom: width
+ 
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ 
+-emacs*geometry: 80x65
++emacs*geometry: 80x54
+ 
+ 
+ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -1,0 +1,26 @@
+From 81bd4351661779cccf08d29c4dc7e5d837adfa61 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Wed, 6 Jan 2021 21:22:17 +0000
+Subject: .bashrc: [PATCH 090/191] .bashrc: cdn: ah, I can overload it
+
+---
+ .bashrc | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/.bashrc b/.bashrc
+index 36b3db8..bccbe38 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -124,7 +124,11 @@ cd_newest () {
+     cd "$(find . -maxdepth 1 -type d -print0|grep -zZ -v '^\.*$'|xargs -0 -s 129023 -n 129023 --exit --no-run-if-empty ls -dt|head -1)"
+ }
+ cdn () {
+-    cd_newest
++    if [ $# -eq 0 ]; then
++	cd_newest
++    else
++	cdnewdir "$@"
++    fi
+ }
+ cdt () {
+     if checkcreate-tmp-owner-dir; then

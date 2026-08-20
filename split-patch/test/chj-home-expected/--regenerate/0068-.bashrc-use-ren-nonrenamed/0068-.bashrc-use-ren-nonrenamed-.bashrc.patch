@@ -1,0 +1,22 @@
+From bcd74f2db6782c0b0349998e1be10559f84afe7e Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Mon, 22 Jul 2019 08:23:06 +0100
+Subject: .bashrc: [PATCH 068/191] .bashrc: use ren-nonrenamed
+
+---
+ .bashrc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.bashrc b/.bashrc
+index 187fcfb..a67a962 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -156,7 +156,7 @@ rensn () {
+ 
+ rensnall () {
+     cd scratch/
+-    nonrenamed | ls2list | tac |» ren
++    ren-nonrenamed
+ }
+ 
+ settitle () {

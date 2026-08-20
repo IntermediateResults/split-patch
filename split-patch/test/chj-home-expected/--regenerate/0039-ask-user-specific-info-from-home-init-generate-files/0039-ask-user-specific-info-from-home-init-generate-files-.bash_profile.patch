@@ -1,0 +1,35 @@
+From 47f896faa205419bee6e91c7d8d539199d825afa Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 26 Nov 2017 01:04:27 +0000
+Subject: .bash_profile: [PATCH 039/191] ask user-specific info from home-init, generate files
+
+---
+ .bash_profile |  7 +++---
+ .gitconfig    | 20 -----------------
+ home-init     | 61 +++++++++++++++++++++++++++++++++++++++++++++++----
+ 3 files changed, 60 insertions(+), 28 deletions(-)
+ delete mode 100644 .gitconfig
+
+diff --git a/.bash_profile b/.bash_profile
+index a665dd1..540a729 100644
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -41,15 +41,14 @@ ulimit -S -v 1200000  # note: can override in .bash_profile_local
+ 
+ 
+ # --- Personal env setup: -------
+-export EDITOR=e
+-export BROWSER="chromium-chrissbx -- --new-window"
+-export EMAIL='ch@christianjaeger.ch'
+-export LANG=en_GB.UTF-8
++# see ~/.bash_profile_local
+ 
+ 
+ # --- End -------------------------------------
+ if [ -f ~/.bash_profile_local ]; then
+     source ~/.bash_profile_local
++else
++    echo "NOTE: ~/.bash_profile_local does not exist, please run ~/home-init" >&2
+ fi
+ if [ -f ~/.bashrc ]; then
+     source ~/.bashrc

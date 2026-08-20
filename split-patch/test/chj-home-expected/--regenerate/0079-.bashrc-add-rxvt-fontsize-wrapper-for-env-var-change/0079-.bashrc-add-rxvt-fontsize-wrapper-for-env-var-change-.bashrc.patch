@@ -1,0 +1,25 @@
+From dcad1cb8a1167661514c0b43f0fff859996805f6 Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Fri, 29 May 2020 20:44:22 +0100
+Subject: .bashrc: [PATCH 079/191] .bashrc: add rxvt-fontsize wrapper for env var
+ changes
+
+---
+ .bashrc | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/.bashrc b/.bashrc
+index ecd2109..33f5475 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -218,6 +218,10 @@ lsof () {
+     # -P = no port names
+ }
+ 
++rxvt-fontsize () {
++    eval "$(/opt/chj/bin/rxvt-fontsize "$@")"
++}
++
+ # Utils which might be later in PATH than system ones:
+ 
+ ls () { /opt/chj/bin/ls --color=auto "$@"; } # XX is this still useful?

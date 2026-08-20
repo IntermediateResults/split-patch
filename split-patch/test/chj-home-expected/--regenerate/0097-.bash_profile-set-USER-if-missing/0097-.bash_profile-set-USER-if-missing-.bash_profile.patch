@@ -1,0 +1,25 @@
+From e6e68e28df222b946b5ed696a12e7d7098f95ead Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 11 Mar 2021 15:58:30 +0000
+Subject: .bash_profile: [PATCH 097/191] .bash_profile: set $USER if missing
+
+Since it is used at least for setting the window titles, and in the
+`cdt` function.
+---
+ .bash_profile | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/.bash_profile b/.bash_profile
+index 82efcad..6f5ff60 100644
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -2,6 +2,9 @@
+ # see /usr/share/doc/bash/examples/startup-files for examples.
+ # the files are located in the bash-doc package.
+ 
++# Set $USER if not already set (this is necessary when starting the
++# desktop via crontab (VNC server).)
++export USER=${USER-$(/opt/chj/bin/user "$UID")}
+ 
+ # use path as given in HOME as PWD [if we're in home] to avoid
+ # symlinked paths to be shown

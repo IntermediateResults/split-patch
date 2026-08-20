@@ -1,0 +1,22 @@
+From fb4781b9434fc346718154039f89bf7aad7b63c0 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 4 Mar 2021 17:18:09 +0000
+Subject: .bashrc: [PATCH 096/191] .bashrc: cdn / cdnewdir: use -p mkdir option
+
+---
+ .bashrc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.bashrc b/.bashrc
+index 7be4a36..2a74503 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -80,7 +80,7 @@ les () { less "$@"; }
+ c () { cd "$@"; }
+ cdnewdir () {
+     if [ "$#" -eq 1 ]; then
+-        mkdir "$1" && cd "$1"
++        mkdir -p "$1" && cd "$1"
+     else
+         echo One argument required
+ 	false

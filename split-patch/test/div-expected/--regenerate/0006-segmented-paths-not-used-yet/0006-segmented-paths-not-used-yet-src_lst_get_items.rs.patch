@@ -1,0 +1,236 @@
+From 0deb12a14d7a336245f011135ebd9fe4d45b5a1c Mon Sep 17 00:00:00 2001
+Message-ID: <0deb12a14d7a336245f011135ebd9fe4d45b5a1c.1777272302.git.ch@christianjaeger.ch>
+In-Reply-To: <f3a55cd3c356fdfe5104c5e0596631752bce2c34.1777272302.git.ch@christianjaeger.ch>
+References: <f3a55cd3c356fdfe5104c5e0596631752bce2c34.1777272302.git.ch@christianjaeger.ch>
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 24 Apr 2026 17:40:17 +0200
+Subject: src/lst/get_items.rs: [PATCH 6/8] -segmented paths, not used yet
+
+----------------------------- src/leaked_region.rs -----------------------------
+
+- add unsafe fn return_unused  XXX unfinished
+
+-------------------------- src/lst/segmented_path.rs --------------------------
+create
+
+struct SegmentedPath
+
+---------------------- src/lst/possibly_segmented_path.rs ----------------------
+create
+
+trait PossiblySegmentedPath
+
+----------------------------- src/lst/get_items.rs -----------------------------
+
+- type-parameterize path in Item (P)
+- pass &Path in addition to P
+
+-------------------------------- src/bin/lst.rs --------------------------------
+
+- add type parameter in addition to the lifetime to `Item`
+---
+ src/bin/lst.rs                     |  20 +--
+ src/leaked_region.rs               |   9 ++
+ src/lst/get_items.rs               |  68 +++++----
+ src/lst/mod.rs                     |   2 +
+ src/lst/possibly_segmented_path.rs |  36 +++++
+ src/lst/segmented_path.rs          | 215 +++++++++++++++++++++++++++++
+ 6 files changed, 314 insertions(+), 36 deletions(-)
+ create mode 100644 src/lst/possibly_segmented_path.rs
+ create mode 100644 src/lst/segmented_path.rs
+
+diff --git a/src/lst/get_items.rs b/src/lst/get_items.rs
+index 5611bee..e16fc50 100644
+--- a/src/lst/get_items.rs
++++ b/src/lst/get_items.rs
+@@ -1,6 +1,6 @@
+ use std::{
+     ffi::OsStr,
+-    fmt::Display,
++    fmt::{Debug, Display},
+     fs::Metadata,
+     marker::PhantomData,
+     os::unix::{ffi::OsStrExt, fs::MetadataExt},
+@@ -19,6 +19,7 @@ use crate::{
+     io::{unix_gr::Gid, unix_pw::Uid},
+     io_utils::read_buf::ReadBufStreamError,
+     leaked_region::GlobalLeakedRegions,
++    lst::possibly_segmented_path::PossiblySegmentedPath,
+     path_file_kind::{FileKind, ToFileKind},
+     probe,
+     time::age_at::AgeAt,
+@@ -378,12 +379,16 @@ impl EssentialMetadata {
+     }
+ }
+ 
+-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+-pub struct Item<'t> {
+-    pub path: &'t Path,
++// Need PartialEq, Eq for tests
++#[derive(Debug, Clone, PartialEq, Eq)]
++pub struct Item<'p, P: PossiblySegmentedPath<'p>> {
++    pub path: P,
+     pub metadata: EssentialMetadata,
+     /// Metadata for the path if there was no error getting it
+     pub link_target: Option<(Box<Path>, Option<Box<EssentialMetadata>>)>,
++    // XX wanted to keep this field private to make it impossible to
++    // create?
++    pub _phantom: PhantomData<&'p ()>,
+ }
+ 
+ #[test]
+@@ -400,25 +405,26 @@ fn t_sizes() {
+     assert_eq!(size_of::<EssentialMetadata>(), 64);
+     // 16+64+8+64=152, actually 160 when flat; 104 when boxing
+     // link_target metadata
+-    assert_eq!(size_of::<Item>(), 104);
++    assert_eq!(size_of::<Item<&Path>>(), 104);
+ }
+ 
+-impl<'t> Item<'t> {
+-    pub fn from_path_and_metadata(
+-        path: &'t Path,
++impl<'p, P: PossiblySegmentedPath<'p>> Item<'p, P> {
++    fn from_path_and_metadata(
++        path: P,
++        _path: &Path,
+         read_link: bool,
+         stat_link_target: bool,
+         metadata: Metadata,
+     ) -> Result<Option<Self>> {
+         let metadata = EssentialMetadata::from_symlink_metadata(
+             &metadata,
+-            path.to_file_kind(),
++            _path.to_file_kind(),
+         )?;
+         let link_target = if read_link && metadata.mode.filetype().is_link() {
+-            match path.read_link() {
++            match _path.read_link() {
+                 Ok(t) => {
+                     let metadata2 = if stat_link_target {
+-                        path.metadata().ok().and_then(|m| {
++                        _path.metadata().ok().and_then(|m| {
+                             EssentialMetadata::from_symlink_metadata(
+                                 &m,
+                                 t.to_file_kind(),
+@@ -439,6 +445,7 @@ impl<'t> Item<'t> {
+             path,
+             metadata,
+             link_target,
++            _phantom: PhantomData,
+         }))
+     }
+ 
+@@ -446,13 +453,15 @@ impl<'t> Item<'t> {
+     /// retrieve the link target path; if `stat_link_target` is
+     /// additionally true, try to get the metadata for the target, too
+     pub fn from_path(
+-        path: &'t Path,
++        path: P,
++        _path: &Path,
+         read_link: bool,
+         stat_link_target: bool,
+     ) -> Result<Option<Self>> {
+-        match path.symlink_metadata() {
++        match _path.symlink_metadata() {
+             Ok(metadata) => Self::from_path_and_metadata(
+                 path,
++                _path,
+                 read_link,
+                 stat_link_target,
+                 metadata,
+@@ -497,15 +506,15 @@ impl GetItems {
+         &self,
+         input: impl ParallelIterator<Item = Result<Vec<u8>, ReadBufStreamError>>,
+         input_record_separator: u8,
+-    ) -> (Vec<Item<'static>>, Vec<anyhow::Error>) {
++    ) -> (Vec<Item<'static, &'static Path>>, Vec<anyhow::Error>) {
+         // To avoid appending individual items multiple times (in
+         // multiple reduce layers), collect the original vectors then
+         // flatten them in one go at the end. Also, collect errors
+         // from all chunks together, too, don't stop early except per
+         // chunk.
+-        let (itemss, errors): (Vec<Vec<Item>>, Vec<anyhow::Error>) = input
+-            .map(|chunk| -> (Vec<Vec<Item>>, Vec<anyhow::Error>) {
+-                match (|| -> Result<Vec<Item>> {
++        let (itemss, errors): (Vec<Vec<Item<_>>>, Vec<anyhow::Error>) = input
++            .map(|chunk| -> (Vec<Vec<Item<_>>>, Vec<anyhow::Error>) {
++                match (|| -> Result<Vec<Item<_>>> {
+                     let mut chunk = chunk?;
+                     chomp(&mut chunk, input_record_separator);
+                     // XX hack for now, OK for single-shot program
+@@ -521,10 +530,15 @@ impl GetItems {
+                         .filter(|path: &&Path| -> bool {
+                             !self.ignore_path(path)
+                         })
+-                        .map(|path| -> Result<Option<Item>> {
++                        .map(|path| -> Result<Option<Item<_>>> {
+                             // Only stat linked files if used for
+                             // coloring, and only in long format anyway.
+-                            Item::from_path(path, self.long, self.use_color)
++                            Item::from_path(
++                                path,
++                                path,
++                                self.long,
++                                self.use_color,
++                            )
+                         })
+                         .filter_map(|r| r.transpose())
+                         .collect::<Result<Vec<_>>>()
+@@ -547,13 +561,13 @@ impl GetItems {
+ 
+     /// `(Vec<Item<'static>>, Vec<anyhow::Error>)` is what one dir
+     /// level yields. Vec of that since subdirs, too.
+-    fn _find<'p>(
+-        &self,
++    fn _find<'s, 'p>(
++        &'s self,
+         dir: &'p Path,
+         include_dir: bool,
+         metadata: Metadata,
+         global_leaked_regions: &'p GlobalLeakedRegions,
+-    ) -> (Bag<Item<'p>>, Bag<anyhow::Error>) {
++    ) -> (Bag<Item<'p, &'p Path>>, Bag<anyhow::Error>) {
+         match (|| -> Result<_> {
+             let Self {
+                 ignore: _,
+@@ -561,10 +575,10 @@ impl GetItems {
+                 use_color,
+             } = self;
+ 
+-            let mut items: Vec<Item<'p>> = Vec::new();
++            let mut items: Vec<Item<_>> = Vec::new();
+             if include_dir {
+                 if let Some(item) = Item::from_path_and_metadata(
+-                    dir, *long, *use_color, metadata,
++                    dir, dir, *long, *use_color, metadata,
+                 )? {
+                     items.push(item);
+                 }
+@@ -574,7 +588,7 @@ impl GetItems {
+ 
+             let input = std::fs::read_dir(dir)
+                 .with_context(|| anyhow!("directory {dir:?}"))?;
+-            let subdir_items: Mutex<(Bag<Item<'p>>, Bag<anyhow::Error>)> =
++            let subdir_items: Mutex<(Bag<Item<_>>, Bag<anyhow::Error>)> =
+                 Mutex::new((Bag::new(), Bag::new()));
+             let subdir_items_rf = &subdir_items;
+             rayon::scope(|scope| -> Result<()> {
+@@ -602,7 +616,7 @@ impl GetItems {
+                         });
+                     } else {
+                         if let Some(item) = Item::from_path_and_metadata(
+-                            path, *long, *use_color, metadata,
++                            path, path, *long, *use_color, metadata,
+                         )? {
+                             items.push(item);
+                         }
+@@ -628,7 +642,7 @@ impl GetItems {
+         dir: &Path,
+         include_top: bool,
+         global_leaked_regions: &'p GlobalLeakedRegions,
+-    ) -> Result<(Vec<Item<'p>>, Vec<anyhow::Error>)> {
++    ) -> Result<(Vec<Item<'p, &'p Path>>, Vec<anyhow::Error>)> {
+         // XX .metadata() ?
+         let metadata = dir
+             .symlink_metadata()

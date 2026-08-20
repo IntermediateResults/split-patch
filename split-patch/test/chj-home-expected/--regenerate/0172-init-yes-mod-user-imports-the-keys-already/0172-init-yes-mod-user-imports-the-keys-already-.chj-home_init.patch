@@ -1,0 +1,26 @@
+From a0fca3bae0d5b03241bceb4d49e40d7240da67a5 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 22 Mar 2024 13:10:40 +0100
+Subject: .chj-home/init: [PATCH 172/191] init: yes, mod-user imports the keys already
+
+Of course, to verify chj-home itself.
+
+The confusion was just from the new key.
+---
+ .chj-home/init | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/.chj-home/init b/.chj-home/init
+index 85105b4..a72635d 100755
+--- a/.chj-home/init
++++ b/.chj-home/init
+@@ -115,9 +115,6 @@ EOF
+ set +eu
+ set -x
+ 
+-gpg --import /opt/chj/chjize/cj-key.asc || true
+-gpg --import /opt/chj/chjize/cj-key-2.asc || true
+-
+ /opt/chj/chjize/bin/chj-checkout _ignored_ https://github.com/pflanze/chj-emacs .chj-emacs '^v(\d+)$'
+ 
+ ln -s .chj-emacs/.emacs

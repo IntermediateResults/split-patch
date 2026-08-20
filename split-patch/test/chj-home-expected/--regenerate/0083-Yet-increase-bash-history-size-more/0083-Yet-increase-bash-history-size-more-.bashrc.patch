@@ -1,0 +1,25 @@
+From c92216ba2ba32d40d5d06b148553c2f31606047a Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Wed, 26 Aug 2020 23:07:37 +0100
+Subject: .bashrc: [PATCH 083/191] Yet increase bash history size more
+
+And move variable setting to 'right' place.
+---
+ .bash_profile | 3 ++-
+ .bashrc       | 3 ---
+ 2 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+index 33f5475..318d943 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -6,9 +6,6 @@
+ # If not running interactively, don't do anything
+ [ -z "$PS1" ] && return
+ 
+-# don't put duplicate lines in the history. See bash(1) for more options
+-export HISTCONTROL=ignoredups
+-
+ # check the window size after each command and, if necessary,
+ # update the values of LINES and COLUMNS.
+ shopt -s checkwinsize

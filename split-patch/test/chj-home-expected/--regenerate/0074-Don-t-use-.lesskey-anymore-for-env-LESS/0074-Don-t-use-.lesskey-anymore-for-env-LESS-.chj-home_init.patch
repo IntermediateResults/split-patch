@@ -1,0 +1,31 @@
+From 4a8fe3bac17d3e9446e0bd702f45b116a1004129 Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Thu, 29 Aug 2019 12:48:26 +0100
+Subject: .chj-home/init: [PATCH 074/191] Don't use .lesskey anymore for #env LESS
+
+As less is broken and priorizes .less over the actual LESS env
+var. Which means nothing can be passed via dynamic variable anymore.
+
+Instead set LESS from .bash_profile
+---
+ .bash_profile  | 2 ++
+ .chj-home/init | 4 +++-
+ .lesskey       | 2 --
+ 3 files changed, 5 insertions(+), 3 deletions(-)
+ delete mode 100644 .lesskey
+
+diff --git a/.chj-home/init b/.chj-home/init
+index 0b8249d..99d7584 100755
+--- a/.chj-home/init
++++ b/.chj-home/init
+@@ -80,7 +80,9 @@ ln -s /opt/chj/xemacs/init.el .xemacs/
+ 
+ ln -s /opt/chj/emacs/.emacs.d
+ 
+-lesskey
++if [ -e ~/.lesskey ]; then
++    lesskey
++fi
+ 
+ (
+     umask 077

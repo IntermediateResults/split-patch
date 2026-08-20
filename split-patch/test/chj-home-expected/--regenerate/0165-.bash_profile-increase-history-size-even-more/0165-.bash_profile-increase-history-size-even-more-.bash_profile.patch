@@ -1,0 +1,23 @@
+From 433c451c569bf027e8cc906e3e643191acd406bd Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 13 Jul 2023 14:28:18 +0200
+Subject: .bash_profile: [PATCH 165/191] .bash_profile: increase history size even more
+
+I'm still losing interesting commands.
+---
+ .bash_profile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.bash_profile b/.bash_profile
+index e5dc946..9a19baa 100644
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -48,7 +48,7 @@ export LESS="-i -M -R"
+ unset GNOME_KEYRING_CONTROL
+ export COLUMNS
+ export HISTCONTROL=ignoredups
+-export HISTSIZE=5000
++export HISTSIZE=10000
+ 
+ if [ -n "${DISPLAY-}" ]; then
+     xset -b
