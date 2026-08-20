@@ -1,1 +1,1 @@
-../.rustsec-ignore.txt
+../split-patch/.rustsec-ignore.txt
