@@ -9,11 +9,11 @@ use bstr::{BStr, ByteSlice};
 use bumpalo::Bump;
 use cj_path_util::temp_file::temp_file_for;
 use patchparser::{
-    from_lines::FromLines,
     line::read_lines_in,
     make_bstring,
     patch::{
         diff::Diff,
+        hunk::Hunk,
         patch::{Patch, PatchHead},
     },
     re,
@@ -66,14 +66,25 @@ fn split_diff_in<'a, 'h>(
         macro_rules! diff_with_hunk {
             { $hunk:expr } => {
                 diff.clone()
-                    .set_hunks(bumpalo::vec![in bump; $hunk], delete_index_line)
+                    .set_hunks(bump.alloc([$hunk]), delete_index_line)
             }
         }
 
         if let Some(differences) = &diff.differences {
             for (hunk_i, hunk) in differences.hunks.iter().enumerate() {
                 if split_options.mode.changes() {
-                    for (change_i, change) in hunk.split_into_changes()?.into_iter().enumerate() {
+                    for (change_i, change) in hunk
+                        .parsed(bump, |e_| {
+                            if split_options.ignore_range_errors {
+                                Ok(())
+                            } else {
+                                e_().map_err(Into::into)
+                            }
+                        })?
+                        .split_by_change(bump)
+                        .into_iter()
+                        .enumerate()
+                    {
                         let prefix_part = if split_options.monotonous_numbers {
                             format!("{file_i:03}")
                         } else {
@@ -82,8 +93,9 @@ fn split_diff_in<'a, 'h>(
 
                         let written_path = write_patch_file(
                             head_with_prefix(&prefix_part),
-                            diff_with_hunk!(change.to_hunk(bump)),
+                            diff_with_hunk!(Hunk::Parsed(change)),
                             add_suffix(&path, format!("-{prefix_part}"))?,
+                            split_options,
                         )?;
 
                         written_paths.push(written_path);
@@ -96,6 +108,7 @@ fn split_diff_in<'a, 'h>(
                         head_with_prefix(&prefix_part),
                         diff_with_hunk!(hunk.clone()),
                         add_suffix(&path, format!("-{prefix_part}"))?,
+                        split_options,
                     )?;
 
                     written_paths.push(written_path);
@@ -108,7 +121,7 @@ fn split_diff_in<'a, 'h>(
         }
         Ok(written_paths)
     } else {
-        let written_path = write_patch_file(head_with_prefix(""), diff, path)?;
+        let written_path = write_patch_file(head_with_prefix(""), diff, path, split_options)?;
 
         Ok(vec![written_path])
     }
@@ -154,18 +167,29 @@ fn write_patch_file<'a>(
     head: &PatchHead<'a>,
     diff: &Diff<'a>,
     output_path: PathBuf,
+    split_options: &SplitOptions,
 ) -> Result<Arc<Path>> {
-    let mut file = temp_file_for(&*output_path, None)?;
-    head.write_to(&mut *file)?;
-    diff.write_to(&mut *file)?;
-    Ok(file.persist()?)
+    if split_options.dry_run {
+        Ok(output_path.into())
+    } else {
+        let mut file = temp_file_for(&*output_path, None)?;
+        head.write_to(&mut *file)?;
+        diff.write_to(&mut *file)?;
+        Ok(file.persist()?)
+    }
 }
 
 /// Returns the list of files created
 pub fn split_patch(patch_file_path: &Path, split_options: &SplitOptions) -> Result<Vec<Arc<Path>>> {
     let bump = Bump::new();
     let lines = read_lines_in(patch_file_path, &bump)?.into_bump_slice();
-    let patch = Patch::from_lines(lines, &bump)?;
+    let patch = Patch::from_lines(lines, &bump, split_options.full_check, |e_| {
+        if split_options.ignore_range_errors {
+            Ok(())
+        } else {
+            e_().map_err(Into::into)
+        }
+    })?;
 
     // XX consumes patch.diffs; should make it to be OK with & instead
     let diffs = patch.diffs.into_bump_slice();

@@ -14,12 +14,39 @@ pub(crate) enum ChangeLineKind {
     Backslash,
 }
 
+impl ChangeLineKind {
+    pub fn prefix(self) -> u8 {
+        use ChangeLineKind::*;
+        match self {
+            Context => b' ',
+            Plus => b'+',
+            Minus => b'-',
+            Backslash => b'\\',
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ChangeTerminator {
     // "diff "
     Diff,
     // "@@ "
     Hunk,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum KindOrTerminator {
+    Kind(ChangeLineKind),
+    Terminator(ChangeTerminator),
+}
+
+impl KindOrTerminator {
+    pub(crate) fn kind(&self) -> Option<ChangeLineKind> {
+        match self {
+            KindOrTerminator::Kind(change_line_kind) => Some(*change_line_kind),
+            KindOrTerminator::Terminator(_change_terminator) => None,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -61,6 +88,7 @@ impl From<Line<'_>> for ChangeLineReport {
 
 impl ChangeLineReport {
     /// Returns the type expected by `try_take_while` for predicates
+    #[allow(unused)]
     pub(crate) fn matches_kinds(self, kinds: &[ChangeLineKind]) -> Result<(), ChangeLineReport> {
         match self {
             ChangeLineReport::Kind(change_line_kind) => {
@@ -74,26 +102,11 @@ impl ChangeLineReport {
         }
     }
 
-    pub(crate) fn kind_or_terminator(self) -> Result<ChangeLineReport> {
+    pub(crate) fn kind_or_terminator(self) -> Result<KindOrTerminator> {
         match self {
-            ChangeLineReport::InvalidSyntax(error) => Err(error),
-            t => Ok(t),
-        }
-    }
-}
-
-pub trait SeparateErrors: Sized {
-    type Error;
-    fn separate_errors(self) -> Result<Self, Self::Error>;
-}
-
-impl SeparateErrors for Option<ChangeLineReport> {
-    type Error = anyhow::Error;
-
-    fn separate_errors(self) -> Result<Self, Self::Error> {
-        match self {
-            Some(report) => Ok(Some(report.kind_or_terminator()?)),
-            None => Ok(None),
+            ChangeLineReport::InvalidSyntax(e) => Err(e),
+            ChangeLineReport::Kind(k) => Ok(KindOrTerminator::Kind(k)),
+            ChangeLineReport::Terminator(t) => Ok(KindOrTerminator::Terminator(t)),
         }
     }
 }

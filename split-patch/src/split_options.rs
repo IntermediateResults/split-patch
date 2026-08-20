@@ -13,6 +13,26 @@ pub struct SplitArgs {
     #[clap(short, long)]
     pub changes: bool,
 
+    /// Always check everything (down to the individual changes) for
+    /// correct syntax and change range numbers (unless
+    /// `--ignore-range-errors` is given). By default, only parses
+    /// fully on demand, i.e. when `--changes` is given.
+    #[clap(long)]
+    pub check: bool,
+
+    /// Check everything like `--check`, but do not produce any output
+    /// files.
+    #[clap(long)]
+    pub check_only: bool,
+
+    /// When parsing hunks (i.e. when `--check` or `--changes` was
+    /// given), ignore range lengths in the input files. Range lengths
+    /// used in the output files are always calculated from the actual
+    /// change set bodies if hunks were parsed; this option simply
+    /// omits a comparison with what is provided in the input files.
+    #[clap(long)]
+    pub ignore_range_errors: bool,
+
     /// Omit the addition of a prefix to the subject line of patch
     /// files that have a git style patch header
     #[clap(long)]
@@ -87,6 +107,17 @@ pub struct SplitOptions {
     /// Insert the prefix after "[PATCH]" instead of before
     /// everything.
     pub insert_after_patch: bool,
+    /// Do a full check (down to issues with changes, regardless of
+    /// `mode`) before splitting
+    pub full_check: bool,
+    /// Do not produce any output files (useful for checks).
+    pub dry_run: bool,
+    /// When parsing hunks, ignore range lengths in the input
+    /// files. Range lengths used in the output files are always
+    /// calculated from the actual change set bodies if hunks were
+    /// parsed; this option simply omits a comparison with what is
+    /// provided in the input files.
+    pub ignore_range_errors: bool,
 }
 
 impl From<SplitArgs> for SplitOptions {
@@ -94,6 +125,9 @@ impl From<SplitArgs> for SplitOptions {
         let SplitArgs {
             hunks,
             changes,
+            check,
+            check_only,
+            ignore_range_errors,
             no_subject_change,
             monotonous_numbers,
             output_dir,
@@ -108,6 +142,9 @@ impl From<SplitArgs> for SplitOptions {
             } else {
                 SplitMode::File
             },
+            full_check: check || check_only,
+            ignore_range_errors,
+            dry_run: check_only,
             subject_change: !no_subject_change,
             monotonous_numbers,
             output_dir,
