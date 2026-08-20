@@ -174,7 +174,7 @@ impl<'a> PatchHeadHeader<'a> {
     ///
     /// Returns the old value when the header was updated.
     ///
-    /// The new line contents is allocated from `allocator`.
+    /// The new line contents is allocated from `bump`.
     pub fn update_header(
         &mut self,
         header_name: impl AsRef<BStr>,
