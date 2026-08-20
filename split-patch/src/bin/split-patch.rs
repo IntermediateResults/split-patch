@@ -5,17 +5,23 @@ use std::{
 };
 
 use anyhow::{anyhow, Context, Result};
-use clap_with_warnings::clap_with_warnings;
+use clap::Parser;
 
-use split_patch::{core::split_patch, split_options::SplitArgs};
+use split_patch::{clap_styles::clap_styles, core::split_patch, split_options::SplitArgs};
 
 /// Split the given patchfile(s) into new files
 ///
 /// So that each new file only contains the part of the patch for
 /// one particular target file, or even only one hunk or change.
-#[clap_with_warnings]
 #[derive(Debug, Clone, clap::Parser)]
-#[command(version, about, long_about, allow_hyphen_values = true)]
+#[command(
+    version,
+    about,
+    long_about,
+    allow_hyphen_values = true,
+    next_line_help = true,
+    styles = clap_styles(),
+)]
 pub struct Args {
     /// Path(s) to patch file(s)
     #[clap(required = true)]
