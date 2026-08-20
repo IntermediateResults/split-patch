@@ -183,7 +183,7 @@ fn write_patch_file<'a>(
 pub fn split_patch(patch_file_path: &Path, split_options: &SplitOptions) -> Result<Vec<Arc<Path>>> {
     let bump = Bump::new();
     let lines = read_lines_in(patch_file_path, &bump)?.into_bump_slice();
-    let patch = Patch::from_lines(lines, &bump, split_options.full_check, |e_| {
+    let patch = Patch::from_lines(lines, &bump, split_options.parse_mode, |e_| {
         if split_options.ignore_range_errors {
             Ok(())
         } else {

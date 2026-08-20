@@ -21,6 +21,45 @@ pub enum Hunk<'a> {
     Parsed(ParsedHunk<'a>),
 }
 
+/// How to initially parse the representation, which also has
+/// implication on how it serializes back (use `Parsed`, not `Both`,
+/// if you want serialization to always be regenerated from the parsed
+/// representation)
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ParseMode {
+    /// Only retain the original lines where possible, parse them on
+    /// demand where needed
+    UnParsed,
+    /// Parse immediately, but also retain the original lines where
+    /// possible and use those for writing the serialization
+    Both,
+    /// Parse immediately and do not store the original lines, meaning
+    /// serialization is always recreated from the parsed
+    /// representation
+    Parsed,
+}
+
+impl ParseMode {
+    pub fn from_options(
+        // Do a full parse (down to issues with changes, regardless of
+        // `mode`) before splitting, implying additional checks like the
+        // range checks unless those are disabled (see
+        // `ignore_range_errors`).
+        full_check: bool,
+        // Regenerate the output from the fully parsed version; by
+        // default, even with `full_check`, by default the original data
+        // is re-used where possible. Indirectly implies `full_check` (as
+        // it lazily parses everything anyway).
+        regenerate: bool,
+    ) -> Self {
+        match (full_check, regenerate) {
+            (false, false) => ParseMode::UnParsed,
+            (true, false) => ParseMode::Both,
+            (_, true) => ParseMode::Parsed,
+        }
+    }
+}
+
 impl<'a> WriteTo for Hunk<'a> {
     fn write_to(&self, out: impl Write) -> Result<(), std::io::Error> {
         match self {
@@ -38,16 +77,20 @@ impl<'a> Hunk<'a> {
     pub fn from_lines(
         lines: &'a [Line<'a>],
         bump: &'a Bump,
-        parse: bool,
+        parse_mode: ParseMode,
         handle_check_error: impl FnMut(&dyn Fn() -> Result<(), CheckError>) -> Result<()>,
     ) -> Result<Self> {
-        if parse {
-            Ok(Hunk::Both(
+        match parse_mode {
+            ParseMode::UnParsed => Ok(Hunk::UnParsed(lines)),
+            ParseMode::Both => Ok(Hunk::Both(
                 lines,
                 ParsedHunk::from_lines(lines, bump, handle_check_error)?,
-            ))
-        } else {
-            Ok(Hunk::UnParsed(lines))
+            )),
+            ParseMode::Parsed => Ok(Hunk::Parsed(ParsedHunk::from_lines(
+                lines,
+                bump,
+                handle_check_error,
+            )?)),
         }
     }
 
@@ -98,7 +141,7 @@ mod tests {
             .enumerate()
             .map(|(i, line)| Line::from_tuple((i, line.as_ref())))
             .collect_in(bump);
-        let hunk = Hunk::from_lines(lines.into_bump_slice(), bump, true, |e_| {
+        let hunk = Hunk::from_lines(lines.into_bump_slice(), bump, ParseMode::Parsed, |e_| {
             e_().map_err(Into::into)
         })?;
         Ok(hunk.parsed(bump, |_| unreachable!())?.split_by_change(bump))

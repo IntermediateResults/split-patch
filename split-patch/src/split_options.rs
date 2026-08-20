@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use clap::Parser;
+use patchparser::patch::hunk::ParseMode;
 
 #[derive(Debug, Clone, clap::Parser)]
 #[command(allow_hyphen_values = true)]
@@ -25,11 +26,18 @@ pub struct SplitArgs {
     #[clap(long)]
     pub check_only: bool,
 
-    /// When parsing hunks (i.e. when `--check` or `--changes` was
-    /// given), ignore range lengths in the input files. Range lengths
-    /// used in the output files are always calculated from the actual
-    /// change set bodies if hunks were parsed; this option simply
-    /// omits a comparison with what is provided in the input files.
+    /// Regenerate the output from the fully parsed version; by
+    /// default, even with `--check`, by default the original data is
+    /// re-used where possible. Implies `--check`.
+    #[clap(long)]
+    pub regenerate: bool,
+
+    /// When parsing hunks (i.e. when `--check`, `--changes` or
+    /// `--regenerate` was given), ignore range lengths in the input
+    /// files. Range lengths used in the output files are always
+    /// calculated from the actual change set bodies if hunks were
+    /// parsed; this option simply omits a comparison with what is
+    /// provided in the input files.
     #[clap(long)]
     pub ignore_range_errors: bool,
 
@@ -98,6 +106,12 @@ impl SplitMode {
 /// The options for splitting a patch file (can be converted from
 /// `SplitArgs`)
 pub struct SplitOptions {
+    /// Path to the directory where to write the split files
+    /// to. Default: the same directory as the input file.
+    pub output_dir: Option<PathBuf>,
+    /// Do not produce any output files (useful for checks).
+    pub dry_run: bool,
+    /// Which boundary to split on.
     pub mode: SplitMode,
     /// Add a prefix to the subject line of patch files if present
     pub subject_change: bool,
@@ -105,17 +119,10 @@ pub struct SplitOptions {
     /// generating the ids for the generated output file names and
     /// subject prefixes instead of `{hunk_id}-{change_id}`.
     pub monotonous_numbers: bool,
-    /// Path to the directory where to write the split files
-    /// to. Default: the same directory as the input file.
-    pub output_dir: Option<PathBuf>,
     /// Insert the prefix after "[PATCH]" instead of before
     /// everything.
     pub insert_after_patch: bool,
-    /// Do a full check (down to issues with changes, regardless of
-    /// `mode`) before splitting
-    pub full_check: bool,
-    /// Do not produce any output files (useful for checks).
-    pub dry_run: bool,
+    pub parse_mode: ParseMode,
     /// When parsing hunks, ignore range lengths in the input
     /// files. Range lengths used in the output files are always
     /// calculated from the actual change set bodies if hunks were
@@ -131,6 +138,7 @@ impl From<SplitArgs> for SplitOptions {
             changes,
             check,
             check_only,
+            regenerate,
             ignore_range_errors,
             no_subject_change,
             monotonous_numbers,
@@ -139,7 +147,12 @@ impl From<SplitArgs> for SplitOptions {
             no_insert_after_patch,
         } = value;
 
+        let full_check = check || check_only;
+        let parse_mode = ParseMode::from_options(full_check, regenerate);
+
         SplitOptions {
+            output_dir,
+            dry_run: check_only || dry_run,
             mode: if changes {
                 SplitMode::Change
             } else if hunks {
@@ -147,13 +160,11 @@ impl From<SplitArgs> for SplitOptions {
             } else {
                 SplitMode::File
             },
-            full_check: check || check_only,
-            ignore_range_errors,
-            dry_run: check_only || dry_run,
             subject_change: !no_subject_change,
             monotonous_numbers,
-            output_dir,
             insert_after_patch: !no_insert_after_patch,
+            parse_mode,
+            ignore_range_errors,
         }
     }
 }
