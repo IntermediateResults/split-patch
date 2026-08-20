@@ -55,6 +55,13 @@ fn main() -> Result<()> {
     let split_args = [
         ("--", SplitArgs { ..common() }),
         (
+            "--regenerate",
+            SplitArgs {
+                regenerate: true,
+                ..common()
+            },
+        ),
+        (
             "--hunks",
             SplitArgs {
                 hunks: true,
