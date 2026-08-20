@@ -71,11 +71,11 @@ fn t_split_before() {
 /// Variant of `split_before_in` that stops on errors
 pub fn try_split_before_in<'a, 'b, T, G, E>(
     items: &'a [T],
-    is_boundary: impl Fn(&'a T) -> bool,
-    group_constructor: impl Fn(&'a [T]) -> Result<G, E>,
+    mut is_boundary: impl FnMut(&'a T) -> bool,
+    mut group_constructor: impl FnMut(&'a [T]) -> Result<G, E>,
     bump: &'b Bump,
 ) -> Result<bc::Vec<'b, G>, E> {
-    let finish_group = |groups: &mut bc::Vec<G>, current_group: &'a [T]| -> Result<(), E> {
+    let mut finish_group = |groups: &mut bc::Vec<G>, current_group: &'a [T]| -> Result<(), E> {
         if !current_group.is_empty() {
             groups.push(group_constructor(current_group)?);
         }
