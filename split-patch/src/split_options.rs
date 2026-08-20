@@ -44,6 +44,10 @@ pub struct SplitArgs {
     #[clap(long)]
     pub monotonous_numbers: bool,
 
+    /// Do not produce any output files (useful for checks).
+    #[clap(long)]
+    pub dry_run: bool,
+
     /// Path to the directory where to write the split files
     /// to. Default: the same directory as the input file.
     #[clap(long)]
@@ -130,6 +134,7 @@ impl From<SplitArgs> for SplitOptions {
             ignore_range_errors,
             no_subject_change,
             monotonous_numbers,
+            dry_run,
             output_dir,
             no_insert_after_patch,
         } = value;
@@ -144,7 +149,7 @@ impl From<SplitArgs> for SplitOptions {
             },
             full_check: check || check_only,
             ignore_range_errors,
-            dry_run: check_only,
+            dry_run: check_only || dry_run,
             subject_change: !no_subject_change,
             monotonous_numbers,
             output_dir,
