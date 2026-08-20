@@ -1,0 +1,52 @@
+From 9172035a88746f4e65ae8e1f1065672bbee570ae Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 25 Nov 2017 18:12:53 +0000
+Subject: .bashrc: [PATCH 026/191] cleanup
+
+---
+ .bashrc | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+index 2b1c696..100cdc6 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -76,7 +76,7 @@ cdnewdir() {
+ };
+ mvcdnewdir() {
+     if [ "$#" -gt 1 ]; then
+-        mvnewdir "$@" && cd "${!#}"   # ${!#}: Tip 16Nov02 1544 von #bash
++        mvnewdir "$@" && cd "${!#}"
+     else
+         echo At least two arguments expected
+     fi
+@@ -86,7 +86,7 @@ mvcd() {
+         if [ -d "${!#}" ]; then
+             mv "$@" && cd "${!#}"
+         else
+-            #echo Last argument is not a directory
++            # echo Last argument is not a directory
+             if [ "$#" -eq 2 ]; then
+                 if [ -d "$1" ]; then
+                     mv "$@" && cd "${!#}"
+@@ -115,10 +115,6 @@ cdt() {
+ cdpwd() {
+     cd "`pwd -P`"
+ }
+-# ich benutz doch (wieder?) oefter cdp (Buchsi schwimmbad)
+-cdp() {
+-    cd "`pwd -P`"
+-}
+ 
+ unlimit() {
+     ulimit -S -v unlimited
+@@ -127,9 +123,6 @@ unlimit() {
+ cs() {
+     cd ~/scratch
+ }
+-ct () {
+-    cd ~/Projekte/thesis
+-}
+ 
+ find() { my.find "$@"; }
+ df() { my.df "$@"; }

@@ -1,0 +1,24 @@
+From 0f0e8bf1438da6ae43c8f8ff038bf5926bc0b107 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 25 Nov 2017 18:20:38 +0000
+Subject: .bash_profile: [PATCH 032/191] add note about overridability of ulimit -S
+
+---
+ .bash_profile | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/.bash_profile b/.bash_profile
+index c7a555a..1c648b2 100644
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -34,9 +34,7 @@ unset GNOME_KEYRING_CONTROL
+ export COLUMNS
+ export HISTSIZE=1500
+ 
+-
+-# --- Machine specific env setup: -------
+-ulimit -S -v 1200000
++ulimit -S -v 1200000  # note: can override in .bash_profile_local
+ 
+ 
+ # --- Personal env setup: -------

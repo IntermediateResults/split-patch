@@ -1,0 +1,21 @@
+From 29848423fc9e2a9857dc6dcdba63783a511cd9d0 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 24 Nov 2017 16:20:42 +0000
+Subject: home-init: [PATCH 017/191] home-init: run lesskey
+
+---
+ home-init | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/home-init b/home-init
+index 0d5c99c..5baa08e 100755
+--- a/home-init
++++ b/home-init
+@@ -12,5 +12,7 @@ ln -s /opt/chj/xemacs/init.el .xemacs/
+ 
+ ln -s /opt/chj/emacs/.emacs.d
+ 
++lesskey
++
+ set +x
+ echo done.

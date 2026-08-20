@@ -1,0 +1,28 @@
+From 13bcc6cfd2571a782116adf2a57d4c9d4708209f Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Wed, 6 Apr 2022 17:19:01 +0100
+Subject: .bashrc: [PATCH 143/191] .bashrc: add `ce`
+
+---
+ .bashrc | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/.bashrc b/.bashrc
+index 20e0237..bf16d20 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -220,6 +220,14 @@ cj () {
+     fi
+ }
+ 
++ce () {
++    cd ~/exchange
++    if [ $# -ge 1 ]; then
++	cd "$1"
++    fi
++}
++
++
+ find () { my.find "$@"; }
+ df () { my.df "$@"; }
+ 

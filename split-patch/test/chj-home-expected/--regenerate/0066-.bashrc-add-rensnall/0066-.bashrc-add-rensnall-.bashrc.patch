@@ -1,0 +1,25 @@
+From 2787d545c8b266d888d5a1ae1e5dd850463d1c70 Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Mon, 22 Jul 2019 04:21:05 +0100
+Subject: .bashrc: [PATCH 066/191] .bashrc: add `rensnall`
+
+---
+ .bashrc | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/.bashrc b/.bashrc
+index 1e03400..4ac0453 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -154,6 +154,11 @@ rensn () {
+     ren -- "$(nonrenamed | tail -1 | ls2list)"
+ }
+ 
++rensnall () {
++    cd scratch/
++    nonrenamed | ls2list | tac |» ren
++}
++
+ settitle () {
+     unset PROMPT_COMMAND
+     /opt/chj/bin/settitle "$@"

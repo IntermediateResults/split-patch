@@ -1,0 +1,22 @@
+From 10570bf9a2a538529c32fd9d57b42427d55d64ea Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Thu, 17 Nov 2022 00:56:15 +0100
+Subject: .xmodmaprc: [PATCH 156/191] .xmodmaprc: change print screen button back to Print
+
+---
+ .xmodmaprc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/.xmodmaprc b/.xmodmaprc
+index 88b6baf..b37ccb6 100644
+--- a/.xmodmaprc
++++ b/.xmodmaprc
+@@ -19,7 +19,7 @@ keycode 134 = backslash brokenbar
+ 
+ keycode 135 = Alt_L
+ 
+-keycode 107 = Control_R Control_R Control_R Control_R Control_R Control_R Control_R Control_R
++keycode 107 = Print
+ 
+ add Control = Control_R
+ 

@@ -1,0 +1,352 @@
+From 4c129168dca2a294142e2ecd74731a5bd1130491 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Mon, 27 Apr 2026 08:29:20 +0200
+Subject: [PATCH]  src/lst/segmented_path.rs: PART 3
+
+- Do not use Pin, as we're only ever returning shared `&`, never
+  `&mut`. (Still leave `_pin` in, just in case that changes later.)
+
+-------------------------------- src/bin/lst.rs --------------------------------
+
+- since we now have 2 different path implementations, move the
+  continuation from that point on to its own parameterized
+  continuation function, `main_cont`
+---
+ src/bin/lst.rs                     | 188 +++++++++++++++++--------
+ src/kitschcell.rs                  |  26 ++++
+ src/leaked_region.rs               |   8 +-
+ src/lib.rs                         |   1 +
+ src/lst/get_items.rs               | 188 ++++++++++++++-----------
+ src/lst/possibly_segmented_path.rs |  46 +++---
+ src/lst/segmented_path.rs          | 216 +++++++++++++++++++++++++----
+ 7 files changed, 483 insertions(+), 190 deletions(-)
+ create mode 100644 src/kitschcell.rs
+
+diff --git a/src/lst/segmented_path.rs b/src/lst/segmented_path.rs
+index a6c5090..96ad247 100644
+--- a/src/lst/segmented_path.rs
++++ b/src/lst/segmented_path.rs
+@@ -1,9 +1,17 @@
+ use std::{
+-    cmp::Ordering, ffi::OsStr, path::Path, slice::from_raw_parts,
+-    sync::atomic::AtomicPtr,
++    cmp::Ordering, ffi::OsStr, marker::PhantomPinned, path::Path,
++    slice::from_raw_parts, sync::atomic::AtomicPtr,
+ };
+ 
+-use crate::leaked_region::LeakedRegion;
++use crate::{
++    kitschcell::{KitschCache, KitschCell},
++    leaked_region::{GlobalLeakedRegions, LeakedRegion},
++};
++
++pub fn tmp_path_buffer() -> Vec<u8> {
++    // XXX How much is needed? pathmax; oh, and uninitialized?
++    vec![0; 100000]
++}
+ 
+ /// A `str` with length provided in the allocation together with the
+ /// data following after it
+@@ -40,6 +48,10 @@ pub struct SegmentedPath<'region> {
+     /// generated if `orig_name_len` is longer than 8 B or not ascii,
+     /// because otherwise it's faster to regenerate on the fly?)
+     lc_name: AtomicPtr<LenStr>,
++
++    // XX temporary for debugging to avoid UB when dumping bytes
++    _unused: u32,
++    _pin: PhantomPinned,
+ }
+ 
+ impl<'region> PartialEq for SegmentedPath<'region> {
+@@ -57,31 +69,37 @@ impl<'region> Eq for SegmentedPath<'region> {}
+ // SegmentedPath::cmp instead.
+ 
+ // Both must be of the same depth !
+-fn _segmented_path_ord<'region>(
+-    p1: &'region SegmentedPath<'region>,
+-    p2: &'region SegmentedPath<'region>,
+-    leaked_region: &mut LeakedRegion<'region>,
++fn _segmented_path_ord<'t: 'u, 'u, 'region: 't>(
++    p1: &SegmentedPath<'region>,
++    p2: &SegmentedPath<'region>,
++    get_leaked_region: &mut impl KitschCache<LeakedRegion<'region>>,
+ ) -> Ordering {
+     if let Some(p1p) = p1.parent {
+         let p2p = p2
+             .parent
+             .expect("expect that both segmented paths are of the same length");
+-        _segmented_path_ord(p1p, p2p, leaked_region)
+-            .then_with(|| p1.cmp_file_name(p2, leaked_region))
++        _segmented_path_ord(p1p, p2p, get_leaked_region)
++            .then_with(|| p1.cmp_file_name(p2, get_leaked_region))
+     } else {
+-        p1.cmp_file_name(p1, leaked_region)
++        p1.cmp_file_name(p1, get_leaked_region)
+     }
+ }
+ 
+ fn segmented_path_ord<'region>(
+-    p1: &'region SegmentedPath<'region>,
+-    p2: &'region SegmentedPath<'region>,
+-    leaked_region: &mut LeakedRegion<'region>,
++    p1: &SegmentedPath<'region>,
++    p2: &SegmentedPath<'region>,
++    regions: &'region GlobalLeakedRegions,
+ ) -> Ordering {
+     let shared_len = p1.depth.min(p2.depth);
+     let p1s = p1.take_segments(shared_len).expect("have shared_len");
+     let p2s = p2.take_segments(shared_len).expect("have shared_len");
+-    _segmented_path_ord(p1s, p2s, leaked_region).then_with(|| {
++
++    let mut get_leaked_region =
++        KitschCell::Uninitialized(|| -> LeakedRegion<'region> {
++            regions.get_region()
++        });
++
++    _segmented_path_ord(p1s, p2s, &mut get_leaked_region).then_with(|| {
+         // Which path ran out?
+         if p1.depth < p2.depth {
+             Ordering::Less
+@@ -107,7 +125,7 @@ impl<'region> SegmentedPath<'region> {
+ 
+         let alloc_len = STRUCT_SIZE + orig_name_len;
+         let alloc = leaked_region.allocate::<STRUCT_ALIGN>(alloc_len);
+-        let (alloc_struct, alloc_orig) = alloc.split_at_mut(STRUCT_SIZE);
++        let (_alloc_struct, alloc_orig) = alloc.split_at_mut(STRUCT_SIZE);
+         alloc_orig.copy_from_slice(orig_name_bytes);
+ 
+         let depth = match parent {
+@@ -121,21 +139,58 @@ impl<'region> SegmentedPath<'region> {
+                 .try_into()
+                 .expect("no path segment can be longer than u16::MAX"),
+             lc_name: AtomicPtr::default(),
++            _pin: PhantomPinned,
++            _unused: 0xcafebabe,
+         };
+ 
+-        let self_ptr = alloc_struct.as_mut_ptr() as *mut Self;
++        // MIRI doesn't like using `_alloc_struct`, thus use `alloc`.)
++        let self_ptr = alloc.as_mut_ptr() as *mut Self;
+         unsafe {
+             // SAFETY: We reserved the head for it.
+             std::ptr::write(self_ptr, slf);
+         }
+ 
++        // dbg!(&alloc);
++
+         unsafe {
+             // SAFETY: We just wrote the value. The lifetime is that
+-            // of the allocator, 't, as specified in the return type.
++            // of the allocator, 'region, as specified in the return type.
+             &*self_ptr
+         }
+     }
+ 
++    /// Push another segment at the right (dir item), like
++    /// PathBuf::push but functional. Shallow wrapper around `new`.
++    pub fn add_segment(
++        self: &'region Self,
++        orig_name: &OsStr,
++        leaked_region: &mut LeakedRegion<'region>,
++    ) -> &'region Self {
++        Self::new(Some(self), orig_name, leaked_region)
++    }
++
++    /// Returns None for the path ""
++    pub fn new_from_path(
++        path: &Path,
++        leaked_region: &mut LeakedRegion<'region>,
++    ) -> Option<&'region Self> {
++        let mut p = None;
++        for segment in path {
++            let segment_bytes = segment.as_encoded_bytes();
++            let use_segment = if segment_bytes == &[b'/'] {
++                &[]
++            } else {
++                segment_bytes
++            };
++            let use_segment_osstr: &OsStr = unsafe {
++                // SAFETY: back from what we had, or empty, is OK?
++                OsStr::from_encoded_bytes_unchecked(use_segment)
++            };
++            p = Some(SegmentedPath::new(p, use_segment_osstr, leaked_region));
++        }
++        p
++    }
++
+     pub fn orig_name(&self) -> &'region OsStr {
+         const STRUCT_SIZE: usize = size_of::<SegmentedPath>();
+         let self_ptr: *const Self = self;
+@@ -191,13 +246,24 @@ impl<'region> SegmentedPath<'region> {
+         let tmplen = tmp.len();
+         let rest = self._to_path(tmp);
+         let len_used = tmplen - rest.len();
+-        let used = &tmp[0..len_used - 1];
++        let used = if len_used == 1 {
++            // Path "" is really "/" if XXXX
++            &tmp[0..len_used]
++        } else {
++            &tmp[0..len_used - 1]
++        };
+         let osstr = unsafe { OsStr::from_encoded_bytes_unchecked(used) };
+         osstr.as_ref()
+     }
+ 
+     /// Generates `lc_name` and caches it if not generated already
+-    pub fn lc_name(&self, leaked_region: &mut LeakedRegion<'region>) -> &str {
++    pub fn lc_name<'t>(
++        &self,
++        get_leaked_region: &mut impl KitschCache<LeakedRegion<'region>>,
++    ) -> &'region str
++    where
++        'region: 't,
++    {
+         // XX optimize?: for lc file name lengths <=
+         // `size_of::<self.lc_name>`, store inline in the atomic (as
+         // fake pointer)?
+@@ -210,9 +276,10 @@ impl<'region> SegmentedPath<'region> {
+             const STRUCT_SIZE: usize = size_of::<LenStr>();
+             const STRUCT_ALIGN: usize = align_of::<LenStr>();
+             let alloc_len = STRUCT_SIZE + orig_name_lossy.len() * 4;
++            let leaked_region = get_leaked_region.get();
+             let alloc = leaked_region.allocate::<STRUCT_ALIGN>(alloc_len);
+ 
+-            let (alloc_struct, alloc_data) = alloc.split_at_mut(STRUCT_SIZE);
++            let (_alloc_struct, alloc_data) = alloc.split_at_mut(STRUCT_SIZE);
+ 
+             let mut i = 0;
+             for c in orig_name_lossy.chars() {
+@@ -230,7 +297,9 @@ impl<'region> SegmentedPath<'region> {
+ 
+             let len: u32 =
+                 i.try_into().expect("expect segment name length < u32::MAX");
+-            p = alloc_struct.as_mut_ptr() as *mut LenStr;
++
++            // MIRI doesn't like using `_alloc_struct`, thus use `alloc`.)
++            p = alloc.as_mut_ptr() as *mut LenStr;
+             unsafe {
+                 // SAFETY: using the space reserved for the struct, of
+                 // STRUCT_SIZE length, aligned by STRUCT_ALIGN
+@@ -257,22 +326,57 @@ impl<'region> SegmentedPath<'region> {
+     /// Can't implement PartialOrd / Ord since it needs an allocator,
+     /// hence this method
+     pub fn cmp(
+-        &'region self,
+-        other: &'region Self,
+-        leaked_region: &mut LeakedRegion<'region>,
++        &self,
++        other: &Self,
++        regions: &'region GlobalLeakedRegions,
+     ) -> Ordering {
+-        segmented_path_ord(self, other, leaked_region)
++        segmented_path_ord(self, other, regions)
+     }
+ 
+     /// Compare the file names, only (lower-cased), completely
+     /// ignoring the parents
+-    pub fn cmp_file_name(
++    pub fn cmp_file_name<'t>(
+         &self,
+         other: &Self,
+-        leaked_region: &mut LeakedRegion<'region>,
+-    ) -> Ordering {
+-        self.lc_name(leaked_region)
+-            .cmp(other.lc_name(leaked_region))
++        get_leaked_region: &mut impl KitschCache<LeakedRegion<'region>>,
++    ) -> Ordering
++    where
++        'region: 't,
++    {
++        let n1 = self.lc_name(get_leaked_region);
++        let n2 = other.lc_name(get_leaked_region);
++        n1.cmp(n2)
++    }
++
++    /// From right to left (i.e. in reverse order)
++    pub fn orig_name_segments(&self) -> Vec<&'region OsStr> {
++        let mut v = Vec::new();
++        let mut p = self;
++        loop {
++            v.push(p.orig_name());
++            if let Some(parent) = p.parent {
++                p = parent;
++            } else {
++                return v;
++            }
++        }
++    }
++
++    /// From right to left (i.e. in reverse order)
++    pub fn lc_name_segments(
++        &self,
++        get_leaked_region: &mut impl KitschCache<LeakedRegion<'region>>,
++    ) -> Vec<&'region str> {
++        let mut v = Vec::new();
++        let mut p = self;
++        loop {
++            v.push(p.lc_name(get_leaked_region));
++            if let Some(parent) = p.parent {
++                p = parent;
++            } else {
++                return v;
++            }
++        }
+     }
+ }
+ 
+@@ -281,3 +385,55 @@ fn t_size() {
+     // Should be true even on 32-bit architectures?
+     assert_eq!(size_of::<SegmentedPath>(), 24);
+ }
++
++#[cfg(test)]
++mod tests {
++    use anyhow::Result;
++
++    use super::*;
++
++    fn p<'region>(
++        path: &str,
++        region: &mut LeakedRegion<'region>,
++    ) -> Option<&'region SegmentedPath<'region>> {
++        SegmentedPath::new_from_path(path.as_ref(), region)
++    }
++
++    #[test]
++    fn t_() -> Result<()> {
++        let regions = GlobalLeakedRegions::new(1_000_000);
++        let mut ps = {
++            let mut get_region =
++                KitschCell::Uninitialized(|| -> LeakedRegion {
++                    regions.get_region()
++                });
++            move |path: &str, expected_path2: &str| -> Option<Vec<&str>> {
++                let mut region = get_region.get();
++                let spath = p(path, &mut region)?;
++                let mut tmp = tmp_path_buffer();
++                let path2: &str =
++                    spath.to_path(&mut tmp).to_str().expect("was str");
++                let mut segs = spath.lc_name_segments(&mut get_region);
++                segs.reverse();
++                dbg!((path, &segs));
++                assert_eq!(path2, expected_path2);
++                Some(segs)
++            }
++        };
++
++        assert_eq!(ps("foo/bar", "foo/bar"), Some(vec!["foo", "bar"]));
++        assert_eq!(ps("foo/bar/", "foo/bar"), Some(vec!["foo", "bar"]));
++        assert_eq!(
++            ps("foo//bar/baz", "foo/bar/baz"),
++            Some(vec!["foo", "bar", "baz"])
++        );
++        assert_eq!(ps("/bar", "/bar"), Some(vec!["", "bar"]));
++        assert_eq!(ps("./bar", "./bar"), Some(vec![".", "bar"]));
++        assert_eq!(ps("bar", "bar"), Some(vec!["bar"]));
++        assert_eq!(ps(".", "."), Some(vec!["."]));
++        assert_eq!(ps("/", "/"), Some(vec![""]));
++        assert_eq!(ps("", ""), None);
++
++        Ok(())
++    }
++}

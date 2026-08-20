@@ -1,0 +1,38 @@
+From eff17834fd4eb720f2150fc1431ad537628c7250 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 24 Nov 2017 16:20:25 +0000
+Subject: home-init: [PATCH 016/191] replace external symlinks with a script
+
+---
+ .emacs          |  1 -
+ .emacs.d        |  1 -
+ .xemacs/init.el |  1 -
+ home-init       | 16 ++++++++++++++++
+ 4 files changed, 16 insertions(+), 3 deletions(-)
+ delete mode 120000 .emacs
+ delete mode 120000 .emacs.d
+ delete mode 120000 .xemacs/init.el
+ create mode 100755 home-init
+
+diff --git a/home-init b/home-init
+new file mode 100755
+index 0000000..0d5c99c
+--- /dev/null
++++ b/home-init
+@@ -0,0 +1,16 @@
++#!/bin/bash
++
++set -euo pipefail
++IFS=
++
++set -x
++
++ln -s /opt/chj/emacs/.emacs
++
++mkdir .xemacs/
++ln -s /opt/chj/xemacs/init.el .xemacs/
++
++ln -s /opt/chj/emacs/.emacs.d
++
++set +x
++echo done.

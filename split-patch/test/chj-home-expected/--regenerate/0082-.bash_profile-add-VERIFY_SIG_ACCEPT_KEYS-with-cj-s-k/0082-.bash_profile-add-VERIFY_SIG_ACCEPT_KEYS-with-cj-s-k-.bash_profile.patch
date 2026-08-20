@@ -1,0 +1,31 @@
+From 5c1734bd3f0f7510e71fc5d08995fd44828f0a9b Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Wed, 29 Jul 2020 23:25:55 +0100
+Subject: .bash_profile: [PATCH 082/191] .bash_profile: add VERIFY_SIG_ACCEPT_KEYS with cj's
+ key
+
+---
+ .bash_profile | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/.bash_profile b/.bash_profile
+index c42e861..e072030 100644
+--- a/.bash_profile
++++ b/.bash_profile
+@@ -45,12 +45,12 @@ if [ -n "${DISPLAY-}" ]; then
+     xset -b
+ fi
+ 
+-
+-# --- Personal env setup: -------
+-# see ~/.bash_profile_local
++# cj's key (since you're trusting his repo already, why not also trust
++# his key?)
++export VERIFY_SIG_ACCEPT_KEYS=A54A1D7CA1F94C866AC81A1F0FA5B21104EDB072
+ 
+ 
+-# --- End -------------------------------------
++# --- Personal env setup: -------
+ if [ -f ~/.bash_profile_local ]; then
+     source ~/.bash_profile_local
+ else

@@ -1,0 +1,33 @@
+From 3167633ffd1a9f58ae867e34de51bf131f1ca28f Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sat, 27 Nov 2021 04:54:37 +0000
+Subject: .chj-home/.xscreensaver: [PATCH 139/191] .xscreensaver: blank only
+
+A pity, but I've got enough from the power usage and ventilator use,
+it would just not turn off.
+---
+ .chj-home/.xscreensaver | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/.chj-home/.xscreensaver b/.chj-home/.xscreensaver
+index 4ed1365..658f7b8 100644
+--- a/.chj-home/.xscreensaver
++++ b/.chj-home/.xscreensaver
+@@ -1,5 +1,5 @@
+ # XScreenSaver Preferences File
+-# Written by xscreensaver-demo 5.45 for chris on Sat Nov 27 03:04:22 2021.
++# Written by xscreensaver-demo 5.45 for chris on Sat Nov 27 04:54:28 2021.
+ # https://www.jwz.org/xscreensaver/
+ 
+ timeout:	0:10:00
+@@ -34,8 +34,8 @@ grabVideoFrames:    False
+ chooseRandomImages: False
+ imageDirectory:	
+ 
+-mode:		random
+-selected:	-1
++mode:		blank
++selected:	227
+ 
+ textMode:	program
+ textLiteral:	XScreenSaver

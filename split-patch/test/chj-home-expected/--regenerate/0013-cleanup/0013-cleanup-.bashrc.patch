@@ -1,0 +1,23 @@
+From 17340a482aecca851dc24e3a9218ce78756de3e5 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Fri, 24 Nov 2017 16:05:07 +0000
+Subject: .bashrc: [PATCH 013/191] cleanup
+
+---
+ .bashrc | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+index 628e493..3376988 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -141,9 +141,6 @@ mv() { mv -i "$@"; }
+ cp() { cp -i "$@"; }
+ #rm() { rm -i "$@"; }
+ 
+-alias cdth=ct
+-alias cdc='cd ~/Projekte/categorical'
+-
+ rens () {
+     cd scratch/
+     ren -- "`lastfile .`"

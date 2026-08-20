@@ -1,0 +1,26 @@
+From 7025d50b32c893b075d27db467a1869c147f3bd4 Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Sun, 3 Feb 2019 11:39:25 +0000
+Subject: .bashrc: [PATCH 063/191] .bashrc: silence error message when in scratch
+
+---
+ .bashrc | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/.bashrc b/.bashrc
+index 0335adf..4e3c51c 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -143,8 +143,10 @@ cp() { command cp -i "$@"; }
+ #rm() { command rm -i "$@"; }
+ 
+ rens () {
+-    cd scratch/
+-    ren -- "`lastfile .`"
++    if [ scratch != "$(basename "$(pwd)")" ]; then
++	cd scratch
++    fi
++    ren -- "$(lastfile .)"
+ }
+ 
+ settitle () {

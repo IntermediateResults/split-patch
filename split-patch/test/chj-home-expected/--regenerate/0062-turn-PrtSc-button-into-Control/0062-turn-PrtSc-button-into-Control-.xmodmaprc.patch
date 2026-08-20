@@ -1,0 +1,22 @@
+From 31d18331ee97fcbbfdf67f8ab28ec51db31d937c Mon Sep 17 00:00:00 2001
+From: Christian Jaeger <ch@christianjaeger.ch>
+Date: Tue, 28 Aug 2018 14:34:43 +0100
+Subject: .xmodmaprc: [PATCH 062/191] turn PrtSc button into Control
+
+---
+ .xmodmaprc | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/.xmodmaprc b/.xmodmaprc
+index 619a385..88b6baf 100644
+--- a/.xmodmaprc
++++ b/.xmodmaprc
+@@ -18,3 +18,8 @@ keycode 133 = less greater less greater backslash brokenbar backslash brokenbar
+ keycode 134 = backslash brokenbar
+ 
+ keycode 135 = Alt_L
++
++keycode 107 = Control_R Control_R Control_R Control_R Control_R Control_R Control_R Control_R
++
++add Control = Control_R
++

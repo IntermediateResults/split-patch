@@ -1,0 +1,29 @@
+From 2690ebb1944db25305b8a1362cc09893f6fe478a Mon Sep 17 00:00:00 2001
+From: "Christian Jaeger (Rustaceans)" <ch@christianjaeger.ch>
+Date: Fri, 16 Aug 2019 01:21:13 +0100
+Subject: .bashrc: [PATCH 073/191] .bashrc: cb: do it better?
+
+This correctly handles absolute paths (not that this would be
+usesful?). Also, still goes to bookmarks folder even if mistyped,
+which *might* be useful (already decided to go there, so presumably
+always fine).
+---
+ .bashrc | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/.bashrc b/.bashrc
+index 7c8cd3c..b5e18ef 100644
+--- a/.bashrc
++++ b/.bashrc
+@@ -136,7 +136,10 @@ cs () {
+ }
+ 
+ cb () {
+-    cd ~/bookmarks/"${1-}"
++    cd ~/bookmarks
++    if [ $# -ge 1 ]; then
++	cd "$1"
++    fi
+ }
+ 
+ find () { my.find "$@"; }
