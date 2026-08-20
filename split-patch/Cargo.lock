@@ -516,6 +516,7 @@ checksum = "8cdd151213925e7f1ab45a9bbfb129316bd00799784b174b7cc7bcd16961c49e"
 name = "split-patch"
 version = "0.1.0"
 dependencies = [
+ "anstyle",
  "anyhow",
  "bstr",
  "bumpalo",
