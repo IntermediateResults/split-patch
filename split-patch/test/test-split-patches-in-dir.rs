@@ -47,32 +47,24 @@ fn main() -> Result<()> {
     fs::create_dir_all(args.output_base.clone()).expect("creating output_base directory");
 
     let output_base = args.output_base;
+    let common = || SplitArgs {
+        monotonous_numbers: true,
+        ..Default::default()
+    };
     let split_args = [
-        (
-            "--",
-            SplitArgs {
-                hunks: false,
-                changes: false,
-                monotonous_numbers: true,
-                ..Default::default()
-            },
-        ),
+        ("--", SplitArgs { ..common() }),
         (
             "--hunks",
             SplitArgs {
                 hunks: true,
-                changes: false,
-                monotonous_numbers: true,
-                ..Default::default()
+                ..common()
             },
         ),
         (
             "--changes",
             SplitArgs {
-                hunks: false,
                 changes: true,
-                monotonous_numbers: true,
-                ..Default::default()
+                ..common()
             },
         ),
     ];
