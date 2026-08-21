@@ -5,7 +5,7 @@ use std::{
 
 use anyhow::{Context, Result};
 
-pub fn take_while<'a, T>(lines: &'a [T], predicate: impl Fn(&T) -> bool) -> (&'a [T], &'a [T]) {
+pub fn take_while<T>(lines: &[T], predicate: impl Fn(&T) -> bool) -> (&[T], &[T]) {
     let count = lines.iter().take_while(|l| predicate(l)).count();
 
     lines.split_at(count)
@@ -15,10 +15,10 @@ pub fn take_while<'a, T>(lines: &'a [T], predicate: impl Fn(&T) -> bool) -> (&'a
 /// its reason; this reason is then also returned with the matched
 /// area and rest, unless matching was successful until the end of the
 /// input, in which case None is returned for the reason.
-pub fn try_take_while<'a, T, E>(
-    items: &'a [T],
+pub fn try_take_while<T, E>(
+    items: &[T],
     predicate: impl Fn(&T) -> Result<(), E>,
-) -> (&'a [T], &'a [T], Option<E>) {
+) -> (&[T], &[T], Option<E>) {
     for (i, item) in items.iter().enumerate() {
         match predicate(item) {
             Ok(()) => (),
