@@ -90,6 +90,7 @@ impl<'a> Line<'a> {
 
     /// Keep the original line number; only use for slicing, not new
     /// content, or errors would be confusing.
+    #[must_use]
     pub fn with_changed_contents<'b>(&self, contents: &'b BStr) -> Line<'b> {
         Line {
             line_no0: self.line_no0,
@@ -132,7 +133,7 @@ pub fn write_lines_to<'a>(
 pub fn read_in<'b, P: AsRef<Path>>(path: P, bump: &'b Bump) -> Result<bc::Vec<'b, u8>> {
     let mut input = std::fs::File::open(path).context("opening file for reading")?;
     let len = input.metadata()?.len();
-    let len_usize = usize::try_from(len).expect("file is too large");
+    let len_usize = usize::try_from(len).context("file is too large")?;
     let mut contents = bc::Vec::<u8>::with_capacity_in(len_usize, bump);
     unsafe {
         // Safe because we'll never read from the bytes unless they

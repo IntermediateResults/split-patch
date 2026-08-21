@@ -23,13 +23,14 @@ pub trait ToOwnedIn<'b> {
 
 // Also see `ReborrowIn`
 pub trait CloneIn<'b>: Sized {
+    #[must_use]
     fn clone_in(&self, bump: &'b Bump) -> Self;
 
     fn clone_from_in(&mut self, source: &Self, bump: &'b Bump)
     // where
     //     Self: ~const Destruct,
     {
-        *self = source.clone_in(bump)
+        *self = source.clone_in(bump);
     }
 }
 

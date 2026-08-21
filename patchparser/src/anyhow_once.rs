@@ -6,9 +6,9 @@ use anyhow::anyhow;
 /// generic error
 ///
 /// This is a work-around for the issue with lazy wrappers that errors
-/// must be stored, but anyhow::Error does not implement Clone, and
-/// Arc<anyhow::Error> is not anyhow-compatible (i.e. cannot be used
-/// with .context)
+/// must be stored, but `anyhow::Error` does not implement `Clone`,
+/// and `Arc<anyhow::Error>` is not anyhow-compatible (i.e. cannot be
+/// used with .context)
 pub struct AnyhowOnce(Mutex<Option<anyhow::Error>>);
 
 impl From<anyhow::Error> for AnyhowOnce {
@@ -18,6 +18,7 @@ impl From<anyhow::Error> for AnyhowOnce {
 }
 
 impl AnyhowOnce {
+    /// Remove the error, or panics if called a second time.
     pub fn take(&self) -> anyhow::Error {
         let mut guard = self.0.lock().expect("no panics");
         if let Some(e) = guard.take() {
