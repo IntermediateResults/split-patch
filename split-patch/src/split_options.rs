@@ -134,6 +134,8 @@ pub struct SplitOptions {
 }
 
 impl From<SplitArgs> for SplitOptions {
+    /// Prints a warning to stderr when options do not make sense, but
+    /// proceeds anyway.
     fn from(value: SplitArgs) -> Self {
         let SplitArgs {
             hunks,
@@ -152,9 +154,18 @@ impl From<SplitArgs> for SplitOptions {
         let full_check = check || check_only;
         let parse_mode = ParseMode::from_options(full_check, regenerate);
 
+        let dry = check_only || dry_run;
+        if dry && regenerate {
+            eprintln!(
+                "split-patch: note: combining --check-only or --dry-run \
+                 with --regenerate only makes partial sense; use \
+                 --ignore-range-errors instead of --regenerate"
+            );
+        }
+
         SplitOptions {
             output_dir,
-            dry_run: check_only || dry_run,
+            dry_run: dry,
             mode: if changes {
                 SplitMode::Change
             } else if hunks {
