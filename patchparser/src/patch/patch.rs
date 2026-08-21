@@ -12,7 +12,7 @@ use crate::{
     bumpalo_cow::{BumpaloCow, ToOwnedIn},
     from_lines::FromLines,
     line::{write_lines_to, Line},
-    patch::{diff::Diff, hunk::ParseMode, parsed_hunk::CheckErrorHandler},
+    patch::{diff::Diff, hunk::ParseMode, parsed_hunk::HandleCheckError},
     reborrow_in::ReborrowIn,
     utils::split_before,
     write_to::WriteTo,
@@ -334,7 +334,7 @@ impl<'a> Patch<'a> {
         lines: &'a [Line<'a>],
         bump: &'a Bump,
         parse_mode: ParseMode,
-        handle_check_error: &mut CheckErrorHandler,
+        mut handle_check_error: impl HandleCheckError,
     ) -> Result<Self> {
         // Split off the footer, if any
         let (lines, footer) = if let Some(rev_i) = lines
@@ -371,15 +371,14 @@ impl<'a> Patch<'a> {
             .iter()
             .enumerate()
             .map(|(diff_i, diff_lines)| -> Result<_> {
-                Diff::from_lines(diff_lines, bump, parse_mode, handle_check_error).with_context(
-                    || {
+                Diff::from_lines(diff_lines, bump, parse_mode, &mut handle_check_error)
+                    .with_context(|| {
                         format!(
                             "parsing diff no. {}/{}",
                             diff_i + 1,
                             diff_lines_groups.len()
                         )
-                    },
-                )
+                    })
             })
             .collect_in::<Result<_>>(bump)?;
 
