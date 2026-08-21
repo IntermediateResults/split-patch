@@ -52,7 +52,7 @@ fn main() -> Result<()> {
                 }
                 Ok(())
             })()
-            .context("writing to stdout")?
+            .context("writing to stdout")?;
         }
     }
 

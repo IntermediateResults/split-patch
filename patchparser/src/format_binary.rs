@@ -1,4 +1,4 @@
-//! A bit of a hack to make creating BString instances easier, from a
+//! A bit of a hack to make creating `BString` instances easier, from a
 //! mix of byte sequences and Display and Debug based format strings.
 //!
 //! Does not allocate, although it does use some indirections (could
@@ -130,7 +130,7 @@ macro_rules! ___make_bstring {
 /// Usage: use `+` to join segments, each of which can either be a
 /// format string instance in round parens (which can only deal with
 /// proper strings), or between curly braces any expression that
-/// evaluates to a byte slice / vector or BStr / BString or normal
+/// evaluates to a byte slice / vector or `BStr` / `BString` or normal
 /// string, which is then added directly as bytes.
 ///
 /// See example in the module docs.

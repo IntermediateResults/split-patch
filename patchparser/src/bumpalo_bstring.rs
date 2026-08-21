@@ -11,6 +11,7 @@ impl<'bump> BString<'bump> {
         Self(Vec::new_in(bump))
     }
 
+    #[must_use]
     pub fn into_bump_slice(self) -> &'bump BStr {
         self.0.into_bump_slice().as_ref()
     }

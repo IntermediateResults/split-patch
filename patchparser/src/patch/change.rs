@@ -83,7 +83,7 @@ impl<'a> Change<'a> {
         )
     }
 
-    /// Can't implement WriteTo trait as `position` argument is
+    /// Can't implement `WriteTo` trait as `position` argument is
     /// needed.
     pub fn write_to(
         &self,

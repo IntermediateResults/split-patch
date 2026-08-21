@@ -121,7 +121,7 @@ fn main() -> Result<()> {
             .filter_map(|result| result.as_ref().err())
             .for_each(|err| {
                 eprintln!("Failed with option {opt}: {err:#}");
-            })
+            });
     });
 
     let tot_count: usize = results.iter().map(|(_opt, results)| results.len()).sum();

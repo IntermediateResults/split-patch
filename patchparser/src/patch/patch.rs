@@ -237,7 +237,7 @@ impl<'a> PatchHeadHeader<'a> {
 #[derive(Clone, PartialEq, Eq)]
 pub struct PatchHead<'a> {
     pub header: Option<PatchHeadHeader<'a>>,
-    /// If a header is given, remaining_lines starts with the empty
+    /// If a header is given, `remaining_lines` starts with the empty
     /// line that follows the header. If no header was found, this
     /// holds all the lines found.
     pub remaining_lines: &'a [Line<'a>],
@@ -352,7 +352,7 @@ impl<'a> Patch<'a> {
         let is_diff_line = |line: &Line| line.starts_with(b"diff ");
         let chunks = split_before(lines, is_diff_line, |slice| slice);
         let (head_lines, diff_lines_groups): (&[Line], &[&[Line]]) =
-            if chunks[0].first().map(is_diff_line).unwrap_or(false) {
+            if chunks[0].first().is_some_and(is_diff_line) {
                 // No head
                 (&[], &chunks)
             } else {
