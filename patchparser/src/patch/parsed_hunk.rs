@@ -198,11 +198,13 @@ impl Display for CheckError {
 
 impl std::error::Error for CheckError {}
 
+pub type CheckErrorHandler = dyn FnMut(&dyn Fn() -> Result<(), CheckError>) -> Result<()>;
+
 impl<'a> ParsedHunk<'a> {
     pub fn from_lines(
         lines: &'a [Line<'a>],
         bump: &'a Bump,
-        mut handle_check_error: impl FnMut(&dyn Fn() -> Result<(), CheckError>) -> Result<()>,
+        handle_check_error: &mut CheckErrorHandler,
     ) -> Result<Self> {
         // (XX how was that with hunk-less diffs? Does it works out
         // OK? Add tests!)
