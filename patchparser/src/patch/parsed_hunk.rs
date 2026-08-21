@@ -181,6 +181,8 @@ where
     }
 }
 
+// --------------------------------------------
+
 #[derive(Debug)]
 pub enum CheckError {
     InconsistentHunkHead(anyhow::Error),
@@ -198,13 +200,40 @@ impl Display for CheckError {
 
 impl std::error::Error for CheckError {}
 
-pub type CheckErrorHandler = dyn FnMut(&dyn Fn() -> Result<(), CheckError>) -> Result<()>;
+pub trait HandleCheckError {
+    fn handle_check_error(&mut self, run_check: &dyn Fn() -> Result<(), CheckError>) -> Result<()>;
+}
+
+// This is necessary to be able to share them. (Question: why do we
+// have to do that manually?)
+impl<T: HandleCheckError> HandleCheckError for &mut T {
+    fn handle_check_error(&mut self, run_check: &dyn Fn() -> Result<(), CheckError>) -> Result<()> {
+        (*self).handle_check_error(run_check)
+    }
+}
+
+// Optional utility to allow to use closures for HandleCheckError:
+
+pub struct CheckErrorClosure<F>(pub F)
+where
+    F: FnMut(&dyn Fn() -> Result<(), CheckError>) -> Result<()>;
+
+impl<F> HandleCheckError for CheckErrorClosure<F>
+where
+    F: FnMut(&dyn Fn() -> Result<(), CheckError>) -> Result<()>,
+{
+    fn handle_check_error(&mut self, run_check: &dyn Fn() -> Result<(), CheckError>) -> Result<()> {
+        self.0(run_check)
+    }
+}
+
+// --------------------------------------------
 
 impl<'a> ParsedHunk<'a> {
     pub fn from_lines(
         lines: &'a [Line<'a>],
         bump: &'a Bump,
-        handle_check_error: &mut CheckErrorHandler,
+        mut handle_check_error: impl HandleCheckError,
     ) -> Result<Self> {
         // (XX how was that with hunk-less diffs? Does it works out
         // OK? Add tests!)
@@ -229,7 +258,7 @@ impl<'a> ParsedHunk<'a> {
                 Ok(())
             }
         };
-        handle_check_error(&check)?;
+        handle_check_error.handle_check_error(&check)?;
 
         Ok(parsed_hunk)
     }

@@ -5,7 +5,7 @@ use bumpalo::Bump;
 
 use crate::{
     line::{write_lines_to, Line},
-    patch::parsed_hunk::{CheckErrorHandler, ParsedHunk},
+    patch::parsed_hunk::{HandleCheckError, ParsedHunk},
     write_to::WriteTo,
 };
 
@@ -78,7 +78,7 @@ impl<'a> Hunk<'a> {
         lines: &'a [Line<'a>],
         bump: &'a Bump,
         parse_mode: ParseMode,
-        handle_check_error: &mut CheckErrorHandler,
+        handle_check_error: impl HandleCheckError,
     ) -> Result<Self> {
         match parse_mode {
             ParseMode::UnParsed => Ok(Hunk::UnParsed(lines)),
@@ -97,7 +97,7 @@ impl<'a> Hunk<'a> {
     pub fn parsed<'b>(
         &self,
         bump: &'b Bump,
-        handle_check_error: &mut CheckErrorHandler,
+        handle_check_error: impl HandleCheckError,
     ) -> Result<Cow<'_, ParsedHunk<'b>>>
     where
         'a: 'b,
@@ -122,7 +122,10 @@ mod tests {
         Bump,
     };
 
-    use crate::patch::{change::Change, parsed_hunk::MinimalHunkHead};
+    use crate::patch::{
+        change::Change,
+        parsed_hunk::{CheckErrorClosure, MinimalHunkHead},
+    };
 
     use super::*;
 
@@ -145,10 +148,10 @@ mod tests {
             lines.into_bump_slice(),
             bump,
             ParseMode::Parsed,
-            &mut |e_| e_().map_err(Into::into),
+            CheckErrorClosure(|e_| e_().map_err(Into::into)),
         )?;
         Ok(hunk
-            .parsed(bump, &mut |_| unreachable!())?
+            .parsed(bump, CheckErrorClosure(|_| unreachable!()))?
             .split_by_change(bump))
     }
 

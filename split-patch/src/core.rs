@@ -14,7 +14,7 @@ use patchparser::{
     patch::{
         diff::Diff,
         hunk::Hunk,
-        parsed_hunk::{CheckError, CheckErrorHandler},
+        parsed_hunk::{CheckError, HandleCheckError},
         patch::{Patch, PatchHead},
     },
     re,
@@ -74,9 +74,8 @@ fn split_diff_in<'a, 'h>(
         if let Some(differences) = &diff.differences {
             for (hunk_i, hunk) in differences.hunks.iter().enumerate() {
                 if split_options.mode.changes() {
-                    let mut handler = check_handler_for(split_options);
                     for (change_i, change) in hunk
-                        .parsed(bump, &mut handler)?
+                        .parsed(bump, split_options)?
                         .split_by_change(bump)
                         .into_iter()
                         .enumerate()
@@ -175,27 +174,21 @@ fn write_patch_file<'a>(
     }
 }
 
-fn check_handler_for(split_options: &SplitOptions) -> Box<CheckErrorHandler> {
-    let ignore_range_errors = split_options.ignore_range_errors;
-    Box::new(move |e_: &dyn Fn() -> Result<(), CheckError>| {
-        if ignore_range_errors {
+impl HandleCheckError for &SplitOptions {
+    fn handle_check_error(&mut self, run_check: &dyn Fn() -> Result<(), CheckError>) -> Result<()> {
+        if self.ignore_range_errors {
             Ok(())
         } else {
-            e_().map_err(Into::into)
+            run_check().map_err(Into::into)
         }
-    })
+    }
 }
 
 /// Returns the list of files created
 pub fn split_patch(patch_file_path: &Path, split_options: &SplitOptions) -> Result<Vec<Arc<Path>>> {
     let bump = Bump::new();
     let lines = read_lines_in(patch_file_path, &bump)?.into_bump_slice();
-    let patch = Patch::from_lines(
-        lines,
-        &bump,
-        split_options.parse_mode,
-        &mut check_handler_for(split_options),
-    )?;
+    let patch = Patch::from_lines(lines, &bump, split_options.parse_mode, split_options)?;
 
     // XX consumes patch.diffs; should make it to be OK with & instead
     let diffs = patch.diffs.into_bump_slice();
