@@ -48,6 +48,7 @@ fn main() -> Result<()> {
 
     let output_base = args.output_base;
     let common = || SplitArgs {
+        check: true,
         monotonous_numbers: true,
         ..Default::default()
     };
