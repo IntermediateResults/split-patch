@@ -243,7 +243,7 @@ mod tests {
                     head: MinimalHunkHead {
                         orig_start: 550,
                         patched_start: 552,
-                        head_post: b"@@ fn cmp_function(".as_bstr(),
+                        head_post: Some(b"fn cmp_function(".as_bstr()),
                     },
                     changes: ba![change1],
                 },
@@ -251,7 +251,7 @@ mod tests {
                     head: MinimalHunkHead {
                         orig_start: 554,
                         patched_start: 556,
-                        head_post: b"@@ fn cmp_function(".as_bstr(),
+                        head_post: Some(b"fn cmp_function(".as_bstr()),
                     },
                     changes: ba![change2],
                 },
@@ -339,7 +339,7 @@ mod tests {
                     head: MinimalHunkHead {
                         orig_start: 381,
                         patched_start: 384,
-                        head_post: b"@@ impl EssentialMetadata {".as_bstr(),
+                        head_post: Some(b"impl EssentialMetadata {".as_bstr()),
                     },
                     changes: ba![change1],
                 },
@@ -347,7 +347,7 @@ mod tests {
                     head: MinimalHunkHead {
                         orig_start: 381 + 4,
                         patched_start: 384 + 4,
-                        head_post: b"@@ impl EssentialMetadata {".as_bstr(),
+                        head_post: Some(b"impl EssentialMetadata {".as_bstr()),
                     },
                     changes: ba![change2],
                 },

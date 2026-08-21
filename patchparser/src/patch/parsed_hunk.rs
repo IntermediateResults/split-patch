@@ -29,7 +29,7 @@ pub struct FullHunkHead<'a> {
     pub orig_len: usize,
     pub patched_start: usize,
     pub patched_len: usize,
-    pub head_post: &'a BStr,
+    pub head_post: Option<&'a BStr>,
 }
 
 impl<'a> FullHunkHead<'a> {
@@ -38,7 +38,7 @@ impl<'a> FullHunkHead<'a> {
         // @@ -42 42 @@
         // @@ -42 +1,2 @@
         // @@ -0,0 +1 @@
-        let caps = re!(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? (.*)")
+        let caps = re!(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))?(?: *@@(?: ?( *[^ ].*))?)$")
             .captures(head_line)
             .with_context(|| format!("invalid hunk head on line {head_line}"))?;
 
@@ -46,7 +46,7 @@ impl<'a> FullHunkHead<'a> {
         let orig_len: usize = caps.get_str_then_parse(2, *head_line)?.unwrap_or(1);
         let patched_start: usize = caps.str_then_parse(3, *head_line)?;
         let patched_len: usize = caps.get_str_then_parse(4, *head_line)?.unwrap_or(1);
-        let head_post = caps.str(5).as_bstr();
+        let head_post = caps.get_str(5).map(ByteSlice::as_bstr);
         Ok(FullHunkHead {
             orig_start,
             orig_len,
@@ -75,12 +75,15 @@ impl<'a> FullHunkHead<'a> {
         let mut content = BString::new_in(bump);
         content.extend_from_slice(
             format!(
-                "@@ -{},{} +{},{} ",
+                "@@ -{},{} +{},{} @@",
                 orig_start, orig_len, patched_start, patched_len
             )
             .as_bytes(),
         );
-        content.extend_from_slice(head_post);
+        if let Some(head_post) = head_post {
+            content.push(b' ');
+            content.extend_from_slice(head_post);
+        }
         Line::from_generated_content(content.into_bump_slice())
     }
 
@@ -97,7 +100,7 @@ impl<'a> FullHunkHead<'a> {
             MinimalHunkHead {
                 orig_start: *orig_start,
                 patched_start: *patched_start,
-                head_post,
+                head_post: *head_post,
             },
             (*orig_len, *patched_len),
         )
@@ -108,7 +111,7 @@ impl<'a> FullHunkHead<'a> {
 pub struct MinimalHunkHead<'a> {
     pub orig_start: usize,
     pub patched_start: usize,
-    pub head_post: &'a BStr,
+    pub head_post: Option<&'a BStr>,
 }
 
 impl<'a> MinimalHunkHead<'a> {
