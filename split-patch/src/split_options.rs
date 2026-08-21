@@ -28,16 +28,18 @@ pub struct SplitArgs {
 
     /// Regenerate the output from the fully parsed version; by
     /// default, even with `--check`, by default the original data is
-    /// re-used where possible. Implies `--check`.
+    /// re-used where possible. Implies `--ignore-range-errors` (but
+    /// also giving `--check` disables the ignoring).
     #[clap(short, long)]
     pub regenerate: bool,
 
     /// When parsing hunks (i.e. when `--check`, `--changes` or
-    /// `--regenerate` was given), ignore range lengths in the input
-    /// files. Range lengths used in the output files are always
-    /// calculated from the actual change set bodies if hunks were
-    /// parsed; this option simply omits a comparison with what is
-    /// provided in the input files.
+    /// `--regenerate` was given, although the latter implies this
+    /// option), ignore range lengths in the input files. Range
+    /// lengths used in the output files are always calculated from
+    /// the actual change set bodies if hunks were parsed; this option
+    /// simply omits a comparison with what is provided in the input
+    /// files.
     #[clap(long)]
     pub ignore_range_errors: bool,
 
@@ -164,7 +166,7 @@ impl From<SplitArgs> for SplitOptions {
             monotonous_numbers,
             insert_after_patch: !no_insert_after_patch,
             parse_mode,
-            ignore_range_errors,
+            ignore_range_errors: ignore_range_errors || (regenerate && !check),
         }
     }
 }
