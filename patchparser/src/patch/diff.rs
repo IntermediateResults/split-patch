@@ -12,7 +12,7 @@ use crate::{
     line::{write_lines_to, Line},
     patch::{
         hunk::{Hunk, ParseMode},
-        parsed_hunk::CheckError,
+        parsed_hunk::CheckErrorHandler,
     },
     reborrow_in::ReborrowIn,
     write_to::WriteTo,
@@ -252,12 +252,12 @@ fn gather_hunks<'s>(
     lines: &'s [Line<'s>],
     bump: &'s Bump,
     parse_mode: ParseMode,
-    mut handle_check_error: impl FnMut(&dyn Fn() -> Result<(), CheckError>) -> Result<()>,
+    handle_check_error: &mut CheckErrorHandler,
 ) -> Result<bc::Vec<'s, Hunk<'s>>> {
     try_split_before_in(
         lines,
         |line| line.starts_with(b"@@ "),
-        |group| Hunk::from_lines(group, bump, parse_mode, &mut handle_check_error),
+        |group| Hunk::from_lines(group, bump, parse_mode, handle_check_error),
         bump,
     )
 }
@@ -274,7 +274,7 @@ impl<'a> Diff<'a> {
         lines_slice: &'a [Line<'a>],
         bump: &'a Bump,
         parse_mode: ParseMode,
-        handle_check_error: impl FnMut(&dyn Fn() -> Result<(), CheckError>) -> Result<()>,
+        handle_check_error: &mut CheckErrorHandler,
     ) -> Result<Diff<'a>> {
         let mut lines = lines_slice.iter();
 
