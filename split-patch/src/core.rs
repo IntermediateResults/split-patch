@@ -26,8 +26,8 @@ use crate::split_options::SplitOptions;
 use anyhow::{Context, Result};
 
 /// Receives the lines for a single diff. Returns the list of files created
-fn split_diff_in<'a, 'h>(
-    head: &'h PatchHead<'a>,
+fn split_diff_in<'a>(
+    head: &PatchHead<'a>,
     // Guaranteed to be at least the "diff " line
     diff: &'a Diff<'a>,
     original_path: &Path,

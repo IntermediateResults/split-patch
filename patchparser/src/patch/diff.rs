@@ -88,7 +88,7 @@ fn strip_leading_path_segment(s: &BStr) -> Result<&BStr> {
 
 #[test]
 fn t_strip_leading_path_segment() {
-    fn b<'t>(s: &'t str) -> &'t BStr {
+    fn b(s: &str) -> &BStr {
         s.as_ref()
     }
     let t = strip_leading_path_segment;
