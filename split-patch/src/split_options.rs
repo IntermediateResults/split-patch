@@ -29,7 +29,7 @@ pub struct SplitArgs {
     /// Regenerate the output from the fully parsed version; by
     /// default, even with `--check`, by default the original data is
     /// re-used where possible. Implies `--check`.
-    #[clap(long)]
+    #[clap(short, long)]
     pub regenerate: bool,
 
     /// When parsing hunks (i.e. when `--check`, `--changes` or
