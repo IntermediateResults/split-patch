@@ -10,7 +10,7 @@ usage() {
     exit 1
 }
 
-if [ $# -eq 0 ] || [ "$1" = -h -o "$1" = --help ]; then
+if [ $# -eq 0 ] || [ "$1" = -h ] || [ "$1" = --help ]; then
    usage
 fi
 
