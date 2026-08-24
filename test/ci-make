@@ -26,21 +26,25 @@ run() {
     fi
 }
 
-tmpfiles=()
+tmpdir=$(mktemp -d)
 
+i=0
 for target in "${targets[@]}"; do
-    tmp=$(mktemp)
-    tmpfiles+=("$tmp")
+    tmp="$tmpdir/$i"
+    i=$(( i + 1 ))
     ( run "$target" 2>&1 | test/target/debug/log-timestamp > "$tmp" ) &
 done
 
-for target in "${targets[@]}"; do
+for _target in "${targets[@]}"; do
     wait || true
 done
 
 exit_code=0
 
-for tmp in "${tmpfiles[@]}"; do
+i=0
+for _target in "${targets[@]}"; do
+    tmp="$tmpdir/$i"
+    i=$(( i + 1 ))
     echo "========================================================================================"
     if tail -1 "$tmp" | grep -q ": Ok."; then
         if [ "${CI_MAKE_VERBOSE-}" == 1 ]; then
