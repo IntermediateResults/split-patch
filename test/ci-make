@@ -27,6 +27,8 @@ run() {
 }
 
 tmpdir=$(mktemp -d)
+# Leak the files in tmpdir on purpose so that they can be examined.
+echo "ci-make writing to $tmpdir"
 
 i=0
 for target in "${targets[@]}"; do
