@@ -331,6 +331,17 @@ pub struct Patch<'a> {
     pub footer: &'a [Line<'a>],
 }
 
+impl<'a> WriteTo for Patch<'a> {
+    fn write_to(&self, mut out: impl Write) -> Result<(), std::io::Error> {
+        self.head.write_to(&mut out)?;
+        self.diffs
+            .iter()
+            .try_for_each(|diff| diff.write_to(&mut out))?;
+        write_lines_to(self.footer, &mut out)?;
+        Ok(())
+    }
+}
+
 impl<'a> Patch<'a> {
     pub fn from_lines(
         lines: &'a [Line<'a>],
