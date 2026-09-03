@@ -167,10 +167,12 @@ impl<'a> PatchHeadHeader<'a> {
         None
     }
 
-    /// `header_name` is case insensitive. `f` is called with the
-    /// remainder after the key, colon and optional first space, if a
-    /// header with that name is found, and when it returns a value,
-    /// that value is used to replace the part that was passed in.
+    /// Find a header, if found change it in place
+    ///
+    /// `header_name` is case insensitive. `f` is called with the remainder after the key,
+    /// colon and optional first space, if a header with that name is found, and when the
+    /// function when called on it returns a value, that value is used to replace the part
+    /// that was passed in.
     ///
     /// Returns the old value when the header was updated.
     ///
