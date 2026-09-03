@@ -122,20 +122,16 @@ fn split_diff_in<'a>(
     }
 }
 
-fn _head_with_prefix<'a, 'h>(
+fn _head_with_prefix<'a>(
     split_options: &SplitOptions,
     b_path: &BStr,
-    head: &'h PatchHead<'a>,
+    head: &'a PatchHead<'a>,
     prefix_part: &str,
     bump: &'a Bump,
-) -> &'h PatchHead<'a>
-where
-    'a: 'h,
-{
+) -> &'a PatchHead<'a> {
     if !split_options.subject_change {
         head
     } else {
-        let mut head = head.clone();
         let prefix = if prefix_part.is_empty() {
             make_bstring!({ b_path } + { ": " })
         } else {
@@ -153,8 +149,8 @@ where
                 Some(make_bstring!({ &prefix } + { value }))
             },
             bump,
-        );
-        bump.alloc(head)
+        )
+        .0
     }
 }
 
@@ -167,9 +163,14 @@ fn write_patch_file<'a>(
     if split_options.dry_run {
         Ok(output_path.into())
     } else {
+        let diffs = [(*diff).clone()];
+        let patch = Patch {
+            head,
+            diffs: &diffs,
+            footer: &[],
+        };
         let mut file = temp_file_for(&*output_path, None)?;
-        head.write_to(&mut *file)?;
-        diff.write_to(&mut *file)?;
+        patch.write_to(&mut *file)?;
         Ok(file.persist()?)
     }
 }
@@ -190,13 +191,12 @@ pub fn split_patch(patch_file_path: &Path, split_options: &SplitOptions) -> Resu
     let lines = read_lines_in(patch_file_path, &bump)?.into_bump_slice();
     let patch = Patch::from_lines(lines, &bump, split_options.parse_mode, split_options)?;
 
-    // XX consumes patch.diffs; should make it to be OK with & instead
-    let diffs = patch.diffs.into_bump_slice();
+    let diffs = patch.diffs;
 
     // Write the diffs to individual (separate) files
     let mut written = Vec::new();
     for (diff_i, diff) in diffs.iter().enumerate() {
-        let written_paths = split_diff_in(&patch.head, diff, patch_file_path, split_options, &bump)
+        let written_paths = split_diff_in(patch.head, diff, patch_file_path, split_options, &bump)
             .with_context(|| format!("splitting diff no. {}/{}", diff_i + 1, diffs.len()))?;
 
         written.extend(written_paths);

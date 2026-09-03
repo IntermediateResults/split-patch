@@ -8,5 +8,5 @@ use crate::line::Line;
 /// it was originally for converting stringified representations
 /// automatically back, but that has been removed.
 pub trait FromLines<'t>: Sized {
-    fn from_lines(lines: &'t [Line<'t>], bump: &'t Bump) -> Result<Self, anyhow::Error>;
+    fn from_lines(lines: &'t [Line<'t>], bump: &'t Bump) -> Result<&'t mut Self, anyhow::Error>;
 }
