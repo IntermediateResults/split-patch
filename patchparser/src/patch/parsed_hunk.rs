@@ -107,10 +107,14 @@ impl<'a> FullHunkHead<'a> {
     }
 }
 
+/// The minimal header information for a hunk.
+///
+/// This only contains the starting line numbers. The range length is computed on serialization.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MinimalHunkHead<'a> {
     pub orig_start: usize,
     pub patched_start: usize,
+    /// The part after "@@"
     pub head_post: Option<&'a BStr>,
 }
 

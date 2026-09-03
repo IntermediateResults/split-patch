@@ -94,6 +94,7 @@ impl<'a> Hunk<'a> {
         }
     }
 
+    /// Give the parsed representation of the hunk. If the hunk was not already parsed, this can return errors.
     pub fn parsed<'b>(
         &self,
         bump: &'b Bump,
