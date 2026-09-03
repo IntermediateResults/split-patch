@@ -59,6 +59,18 @@ impl<'a> Display for Line<'a> {
     }
 }
 
+impl<'a> From<&'a str> for Line<'a> {
+    fn from(value: &'a str) -> Self {
+        Self::from_generated_content(value.into())
+    }
+}
+
+impl<'a> From<&'a BStr> for Line<'a> {
+    fn from(value: &'a BStr) -> Self {
+        Self::from_generated_content(value)
+    }
+}
+
 impl<'a> Line<'a> {
     pub fn from_lineno0_bstr(line_no0: usize, contents: &'a BStr) -> Self {
         Self { line_no0, contents }
