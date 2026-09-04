@@ -1,12 +1,10 @@
 pub mod anyhow_once;
 pub mod bumpalo_bstring;
-pub mod bumpalo_cow;
 pub mod bumpalo_utils;
 pub mod format_binary;
 pub mod from_lines;
 pub mod line;
 pub mod patch;
-pub mod reborrow_in;
 pub mod regex_utils;
 pub mod utils;
 pub mod write_to;
