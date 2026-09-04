@@ -220,7 +220,7 @@ impl<'a> Diff<'a> {
         bump: &'a Bump,
         parse_mode: ParseMode,
         handle_check_error: impl HandleCheckError,
-    ) -> Result<Diff<'a>> {
+    ) -> Result<&'a mut Diff<'a>> {
         let mut lines = lines_slice.iter();
 
         let diff_line = *lines
@@ -328,7 +328,7 @@ impl<'a> Diff<'a> {
             None
         };
 
-        Ok(Diff {
+        Ok(bump.alloc(Diff {
             diff_line,
             diff_path_a_full,
             diff_path_b_full,
@@ -338,6 +338,6 @@ impl<'a> Diff<'a> {
             rename_from_line,
             rename_to_line,
             differences,
-        })
+        }))
     }
 }

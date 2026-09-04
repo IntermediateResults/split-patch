@@ -163,7 +163,7 @@ fn write_patch_file<'a>(
     if split_options.dry_run {
         Ok(output_path.into())
     } else {
-        let diffs = [(*diff).clone()];
+        let diffs = [diff];
         let patch = Patch {
             head,
             diffs: &diffs,

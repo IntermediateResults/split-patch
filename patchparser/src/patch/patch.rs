@@ -303,7 +303,7 @@ pub struct Patch<'a> {
     /// The head represents the lines found before the first "diff "
     /// line.
     pub head: &'a PatchHead<'a>,
-    pub diffs: &'a [Diff<'a>],
+    pub diffs: &'a [&'a Diff<'a>],
     /// The lines from "-- " onwards in "git format-patch" style
     /// files, including the "-- " line.
     pub footer: &'a [Line<'a>],
@@ -370,6 +370,7 @@ impl<'a> Patch<'a> {
                             diff_lines_groups.len()
                         )
                     })
+                    .map(|reference| &*reference)
             })
             .collect_in::<Result<bc::Vec<_>>>(bump)?;
 
