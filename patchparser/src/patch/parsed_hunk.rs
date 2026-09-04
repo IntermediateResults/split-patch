@@ -15,7 +15,6 @@ use crate::{
         change_line::{ChangeLineKind, ChangeLineReport},
     },
     re,
-    reborrow_in::ReborrowIn,
     regex_utils::GetStr,
     write_to::WriteTo,
 };
@@ -163,25 +162,6 @@ impl<'a> WriteTo for ParsedHunk<'a> {
             change.write_to(&mut out, position, MAX_CONTEXT_LEN)?;
         }
         Ok(())
-    }
-}
-
-// XX do we still want that?
-impl<'a, 'b> ReborrowIn<'b> for ParsedHunk<'a>
-where
-    'a: 'b,
-{
-    type Reborrowed = ParsedHunk<'b>;
-
-    fn reborrow_in(&self, _bump: &'b Bump) -> Self::Reborrowed
-    where
-        'a: 'b,
-    {
-        let Self { head, changes } = self;
-        ParsedHunk {
-            head: head.clone(),
-            changes,
-        }
     }
 }
 

@@ -14,7 +14,6 @@ use crate::{
         hunk::{Hunk, ParseMode},
         parsed_hunk::HandleCheckError,
     },
-    reborrow_in::ReborrowIn,
     write_to::WriteTo,
 };
 
@@ -26,28 +25,6 @@ pub struct DiffDifferences<'a> {
     pub minus_line: Line<'a>,
     pub plus_line: Line<'a>,
     pub hunks: &'a [Hunk<'a>],
-}
-
-impl<'a, 'b> ReborrowIn<'b> for DiffDifferences<'a>
-where
-    'a: 'b,
-{
-    type Reborrowed = DiffDifferences<'b>;
-
-    fn reborrow_in(&self, _bump: &'b Bump) -> DiffDifferences<'b> {
-        let Self {
-            index_line,
-            minus_line,
-            plus_line,
-            hunks,
-        } = self;
-        DiffDifferences {
-            index_line: *index_line,
-            minus_line: *minus_line,
-            plus_line: *plus_line,
-            hunks,
-        }
-    }
 }
 
 /// A bare diff for a single file. (A Patch file represents any number
@@ -102,38 +79,6 @@ fn t_strip_leading_path_segment() {
         t(b("/a/hey")).err().unwrap().to_string(),
         "path is absolute: \"/a/hey\""
     );
-}
-
-impl<'a, 'b> ReborrowIn<'b> for Diff<'a>
-where
-    'a: 'b,
-{
-    type Reborrowed = Diff<'b>;
-
-    fn reborrow_in(&self, bump: &'b Bump) -> Diff<'b> {
-        let Self {
-            diff_line,
-            diff_path_a_full,
-            diff_path_b_full,
-            newfile_line,
-            deleted_line,
-            similarity_line,
-            rename_from_line,
-            rename_to_line,
-            differences,
-        } = self;
-        Diff {
-            diff_line: *diff_line,
-            diff_path_a_full: *diff_path_a_full,
-            diff_path_b_full: *diff_path_b_full,
-            newfile_line: *newfile_line,
-            deleted_line: *deleted_line,
-            similarity_line: *similarity_line,
-            rename_from_line: *rename_from_line,
-            rename_to_line: *rename_to_line,
-            differences: differences.as_ref().map(|v| v.reborrow_in(bump)),
-        }
-    }
 }
 
 impl<'a> Diff<'a> {
