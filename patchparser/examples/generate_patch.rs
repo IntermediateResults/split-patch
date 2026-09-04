@@ -77,7 +77,7 @@ fn main() -> Result<()> {
                 }),
                 remaining_lines: &["Hey there!".into(), "".into()],
             },
-            diffs: bump.alloc([&diff]),
+            diffs: &[&diff],
             footer: &[],
         };
 
