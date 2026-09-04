@@ -162,16 +162,18 @@ impl<'a> PatchHeadHeader<'a> {
         bump: &'a Bump,
     ) -> (&'a Self, Option<&'a BStr>) {
         let header_name = header_name.as_ref();
-        let header_lines = bump.alloc_slice_copy(self.header_lines);
-        for line in header_lines.iter_mut() {
-            if let Some(header_line) = HeaderLine::from_line(*line) {
+
+        for (header_line_i, header_line) in self.header_lines.iter().enumerate() {
+            if let Some(header_line) = HeaderLine::from_line(*header_line) {
                 if string_equal_ci(header_line.mixed_case_header_name, header_name) {
                     if let Some(replacement) = f(header_line.value.as_ref()) {
                         let mut contents = b::BString::new_in(bump);
                         contents.extend_from_slice(header_line.mixed_case_header_name);
                         contents.extend_from_slice(header_line.separator);
                         contents.extend_from_slice(&replacement);
-                        line.set_contents(contents.into_bump_slice());
+                        let header_lines = bump.alloc_slice_copy(self.header_lines);
+                        header_lines[header_line_i].set_contents(contents.into_bump_slice());
+
                         let this = bump.alloc(Self {
                             from_line: self.from_line,
                             header_lines,
