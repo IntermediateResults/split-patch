@@ -43,7 +43,7 @@ pub struct Diff<'a> {
     pub similarity_line: Option<Line<'a>>,
     pub rename_from_line: Option<Line<'a>>,
     pub rename_to_line: Option<Line<'a>>,
-    pub differences: Option<DiffDifferences<'a>>,
+    pub differences: Option<&'a DiffDifferences<'a>>,
 }
 
 fn strip_leading_path_segment(s: &BStr) -> Result<&BStr> {
@@ -87,15 +87,24 @@ impl<'a> Diff<'a> {
     /// `delete_index_line` is true).
     ///
     /// Panics if self does not contain a `DiffDifferences`.
-    pub fn set_hunks(&mut self, hunks: &'a [Hunk<'a>], delete_index_line: bool) -> &mut Self {
+    pub fn set_hunks(
+        &mut self,
+        hunks: &'a [Hunk<'a>],
+        delete_index_line: bool,
+        bump: &'a Bump,
+    ) -> &mut Self {
         let differences = self
             .differences
             .as_mut()
             .expect("`differences` required for setting hunks on Diff");
-        differences.hunks = hunks;
+        let differences = bump.alloc(DiffDifferences {
+            hunks,
+            ..**differences
+        });
         if delete_index_line {
             differences.index_line = None;
         }
+        self.differences = Some(differences);
         self
     }
 
@@ -318,12 +327,12 @@ impl<'a> Diff<'a> {
             let hunks = gather_hunks(lines.as_slice(), bump, parse_mode, handle_check_error)?
                 .into_bump_slice();
 
-            Some(DiffDifferences {
+            Some(&*bump.alloc(DiffDifferences {
                 index_line,
                 minus_line,
                 plus_line,
                 hunks,
-            })
+            }))
         } else {
             None
         };

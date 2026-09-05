@@ -60,7 +60,7 @@ fn main() -> Result<()> {
             similarity_line: None,
             rename_from_line: None,
             rename_to_line: None,
-            differences: Some(DiffDifferences {
+            differences: Some(&DiffDifferences {
                 index_line: Some("index line".into()),
                 minus_line: "minus line".into(),
                 plus_line: "plus line".into(),
