@@ -9,6 +9,7 @@ use bumpalo::{
 
 use crate::{
     bumpalo_bstring::BString,
+    coerce_ref::CoerceRef,
     line::{write_lines_to, Line},
     patch::{
         change::{Change, Position},
@@ -364,14 +365,16 @@ fn split_hunk_into_changes<'a>(
             false
         };
 
-        let change = &*bump.alloc(Change {
-            post_from_previous_change,
-            pre: pre.into_bump_slice(),
-            minus: minus.into_bump_slice(),
-            plus: plus.into_bump_slice(),
-            post: post.into_bump_slice(),
-            backslash,
-        });
+        let change = bump
+            .alloc(Change {
+                post_from_previous_change,
+                pre: pre.into_bump_slice(),
+                minus: minus.into_bump_slice(),
+                plus: plus.into_bump_slice(),
+                post: post.into_bump_slice(),
+                backslash,
+            })
+            .coerce_ref();
         post_from_previous_change = change.post;
         changes.push(change);
 

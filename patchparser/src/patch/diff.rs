@@ -9,6 +9,7 @@ use bumpalo::{
 
 use crate::{
     bumpalo_utils::try_split_before_in,
+    coerce_ref::CoerceRef,
     line::{write_lines_to, Line},
     patch::{
         hunk::{Hunk, ParseMode},
@@ -329,12 +330,15 @@ impl<'a> Diff<'a> {
             let hunks = gather_hunks(lines.as_slice(), bump, parse_mode, handle_check_error)?
                 .into_bump_slice();
 
-            Some(&*bump.alloc(DiffDifferences {
-                index_line,
-                minus_line,
-                plus_line,
-                hunks,
-            }))
+            Some(
+                bump.alloc(DiffDifferences {
+                    index_line,
+                    minus_line,
+                    plus_line,
+                    hunks,
+                })
+                .coerce_ref(),
+            )
         } else {
             None
         };

@@ -1,6 +1,7 @@
 pub mod anyhow_once;
 pub mod bumpalo_bstring;
 pub mod bumpalo_utils;
+pub mod coerce_ref;
 pub mod format_binary;
 pub mod from_lines;
 pub mod line;

@@ -9,6 +9,7 @@ use bumpalo::{
 
 use crate::{
     bumpalo_bstring as b,
+    coerce_ref::CoerceRef,
     from_lines::FromLines,
     line::{write_lines_to, Line},
     patch::{diff::Diff, hunk::ParseMode, parsed_hunk::HandleCheckError},
@@ -361,7 +362,7 @@ impl<'a> Patch<'a> {
         let diffs = diff_lines_groups
             .iter()
             .enumerate()
-            .map(|(diff_i, diff_lines)| -> Result<_> {
+            .map(|(diff_i, diff_lines)| -> Result<&Diff> {
                 Diff::from_lines(diff_lines, bump, parse_mode, &mut handle_check_error)
                     .with_context(|| {
                         format!(
@@ -370,7 +371,7 @@ impl<'a> Patch<'a> {
                             diff_lines_groups.len()
                         )
                     })
-                    .map(|reference| &*reference)
+                    .coerce_ref()
             })
             .collect_in::<Result<bc::Vec<_>>>(bump)?;
 
