@@ -10,14 +10,9 @@ check_formatting: fmt
 
 cargo_test:
 	@echo "++ Run cargo $(OUR_CARGO_FLAGS) test on both crates"
-	( cd patchparser && cargo $(OUR_CARGO_FLAGS) test )
-	( cd patchparser && cargo $(OUR_CARGO_FLAGS) test --examples )
-	( cd split-patch && cargo $(OUR_CARGO_FLAGS) test )
-
-cargo_check:
-	( cd patchparser && cargo $(OUR_CARGO_FLAGS) test --color=always )
-	( cd patchparser && cargo $(OUR_CARGO_FLAGS) build --examples --color=always )
-	( cd split-patch && cargo $(OUR_CARGO_FLAGS) test --color=always )
+	( cd patchparser && cargo $(OUR_CARGO_FLAGS) test --color=always)
+	( cd patchparser && cargo $(OUR_CARGO_FLAGS) test --examples --color=always )
+	( cd split-patch && cargo $(OUR_CARGO_FLAGS) test --color=always)
 
 # This target is to abstract running clippy on everything (and can be run manually)
 clippy:
