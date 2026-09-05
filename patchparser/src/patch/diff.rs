@@ -88,14 +88,14 @@ impl<'a> Diff<'a> {
     ///
     /// Panics if self does not contain a `DiffDifferences`.
     pub fn set_hunks(
-        &mut self,
+        &self,
         hunks: &'a [Hunk<'a>],
         delete_index_line: bool,
         bump: &'a Bump,
     ) -> &mut Self {
         let differences = self
             .differences
-            .as_mut()
+            .as_ref()
             .expect("`differences` required for setting hunks on Diff");
         let differences = bump.alloc(DiffDifferences {
             hunks,
@@ -104,8 +104,10 @@ impl<'a> Diff<'a> {
         if delete_index_line {
             differences.index_line = None;
         }
-        self.differences = Some(differences);
-        self
+        bump.alloc(Self {
+            differences: Some(differences),
+            ..*self
+        })
     }
 
     /// Not the head of the patch (i.e. mail headers / commit

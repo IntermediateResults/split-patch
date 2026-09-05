@@ -66,8 +66,7 @@ fn split_diff_in<'a>(
 
         macro_rules! diff_with_hunk {
             { $hunk:expr } => {
-                diff.clone()
-                    .set_hunks(bump.alloc([$hunk]), delete_index_line, bump)
+                diff.set_hunks(bump.alloc([$hunk]), delete_index_line, bump)
             }
         }
 
